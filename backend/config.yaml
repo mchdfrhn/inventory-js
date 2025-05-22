@@ -1,0 +1,11 @@
+server:
+  port: "8080"
+  mode: "debug"
+
+database:
+  host: "localhost"
+  port: "5432"
+  user: "postgres"
+  password: 123
+  dbname: "inventaris"
+  sslmode: "disable"
