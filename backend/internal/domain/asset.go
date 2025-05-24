@@ -37,6 +37,7 @@ func (Asset) TableName() string {
 
 type AssetCategory struct {
 	ID          uuid.UUID `json:"id" gorm:"type:uuid;primary_key"`
+	Code        string    `json:"code" binding:"required" gorm:"size:50;not null;unique"`
 	Name        string    `json:"name" binding:"required" gorm:"size:255;not null;unique"`
 	Description string    `json:"description" gorm:"type:text"`
 	CreatedAt   time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`

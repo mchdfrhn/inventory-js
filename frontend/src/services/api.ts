@@ -83,6 +83,7 @@ export interface Asset {
 
 export interface Category {
   id: string;
+  code: string;        // New field for category code
   name: string;
   description: string;
   created_at: string;

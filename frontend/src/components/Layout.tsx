@@ -357,8 +357,8 @@ export default function Layout() {
                 </Menu>
               </div>
             </div>
-          </div>          <main className="py-6">
-            <div className="px-4 sm:px-6 lg:px-8">
+          </div>          <main className="py-6 min-h-[calc(100vh-64px)]">
+            <div className="px-4 sm:px-6 lg:px-8 h-full">
               <Outlet />
             </div>
           </main>

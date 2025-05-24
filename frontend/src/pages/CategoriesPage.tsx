@@ -56,10 +56,10 @@ export default function CategoriesPage() {
       console.error('Delete error:', err);
     }
   });
-
   // Filter categories based on search term
   const filteredCategories = data?.data.filter((category: Category) => {
     return searchTerm === '' || 
+      category.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       category.description.toLowerCase().includes(searchTerm.toLowerCase());
   });
@@ -145,9 +145,12 @@ export default function CategoriesPage() {
         <div className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-300/50">
-              <thead className="bg-gray-50/70">
-                <tr>
-                  <th scope="col" className="py-3.5 pl-6 pr-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">                    Nama
+              <thead className="bg-gray-50/70">                <tr>
+                  <th scope="col" className="py-3.5 pl-6 pr-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Kode
+                  </th>
+                  <th scope="col" className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nama
                   </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Deskripsi
@@ -164,7 +167,9 @@ export default function CategoriesPage() {
                 {filteredCategories && filteredCategories.length > 0 ? (
                   filteredCategories.map((category: Category) => (
                     <tr key={category.id} className="table-row-hover hover:bg-blue-50/30 transition-all">
-                      <td className="whitespace-nowrap py-4 pl-6 pr-3">
+                      <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-mono text-gray-700">
+                        {category.code}
+                      </td>                      <td className="whitespace-nowrap py-4 pl-3 pr-3">
                         <div className="flex items-center">
                           <div className="flex items-center justify-center h-8 w-8 rounded-md bg-blue-100/80 mr-3">
                             <TagIcon className="h-5 w-5 text-blue-600" />
@@ -174,7 +179,7 @@ export default function CategoriesPage() {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 max-w-xs truncate">
                         {category.description}
-                      </td>                      <td className="whitespace-nowrap px-3 py-4 text-sm">                        <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 border border-blue-200 shadow-sm transition-all duration-300 hover:scale-105">                          {category.asset_count || 0} aset
+                      </td><td className="whitespace-nowrap px-3 py-4 text-sm">                        <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 border border-blue-200 shadow-sm transition-all duration-300 hover:scale-105">                          {category.asset_count || 0} aset
                         </span>
                       </td>                      <td className="whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
                         <div className="flex justify-end space-x-5">
@@ -197,7 +202,7 @@ export default function CategoriesPage() {
                     </tr>
                   ))
                 ) : (
-                  <tr>                    <td colSpan={4} className="py-10 text-center">                      <div className="flex flex-col items-center justify-center">
+                  <tr>                    <td colSpan={5} className="py-10 text-center">                      <div className="flex flex-col items-center justify-center">
                         <div className="rounded-full bg-gray-100/80 p-4">
                           <TagIcon className="h-8 w-8 text-gray-400" />
                         </div>

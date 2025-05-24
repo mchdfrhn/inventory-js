@@ -2,7 +2,7 @@ import { useState, useEffect, Fragment } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { assetApi, categoryApi, locationApi } from '../services/api';
-import type { Asset } from '../services/api';
+import type { Asset, Location } from '../services/api';
 import { Dialog, Transition } from '@headlessui/react';
 import { 
   XCircleIcon, 
@@ -39,11 +39,16 @@ export default function AssetForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const isEditMode = Boolean(id);
-  const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const isEditMode = Boolean(id);  const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
+  const [newCategory, setNewCategory] = useState({ code: '', name: '', description: '' });
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
+  
+  // New state for location modal
+  const [showNewLocationModal, setShowNewLocationModal] = useState(false);
+  const [newLocation, setNewLocation] = useState({ code: '', name: '', description: '', building: '', floor: '', room: '' });
+  const [isCreatingLocation, setIsCreatingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const { addNotification } = useNotification();
   
   // State for form handling and validation
@@ -204,7 +209,7 @@ export default function AssetForm() {
 
   // Create category mutation
   const createCategoryMutation = useMutation({
-    mutationFn: (categoryData: { name: string; description: string }) => {
+    mutationFn: (categoryData: { code: string; name: string; description: string }) => {
       return categoryApi.create(categoryData);
     },
     onSuccess: (response) => {
@@ -227,7 +232,7 @@ export default function AssetForm() {
 
       // Reset and close modal
       setShowNewCategoryModal(false);
-      setNewCategory({ name: '', description: '' });
+      setNewCategory({ code: '', name: '', description: '' });
       setCategoryError(null);
       setIsCreatingCategory(false);
     },
@@ -237,7 +242,46 @@ export default function AssetForm() {
       addNotification('error', errorMessage);
       setIsCreatingCategory(false);
     }
-  });  // Validate a single field - only check numeric values since HTML5 validation handles required fields
+  });
+
+  // Create location mutation
+  const createLocationMutation = useMutation({
+    mutationFn: (locationData: Omit<Location, 'id' | 'created_at' | 'updated_at'>) => {
+      return locationApi.create(locationData);
+    },
+    onSuccess: (response) => {
+      const createdLocation = response.data;
+      
+      // Add the new location to the locations cache
+      queryClient.setQueryData(['locations'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          data: [...oldData.data, createdLocation],
+        };
+      });
+      
+      // Update the form data with the new location
+      setFormData(prev => ({ ...prev, lokasi_id: createdLocation.id }));
+      
+      // Show success notification
+      addNotification('success', `Lokasi '${createdLocation.name}' berhasil dibuat`);
+
+      // Reset and close modal
+      setShowNewLocationModal(false);
+      setNewLocation({ code: '', name: '', description: '', building: '', floor: '', room: '' });
+      setLocationError(null);
+      setIsCreatingLocation(false);
+    },
+    onError: (err: Error) => {
+      const errorMessage = `Gagal membuat lokasi: ${err.message}`;
+      setLocationError(errorMessage);
+      addNotification('error', errorMessage);
+      setIsCreatingLocation(false);
+    }
+  });
+
+  // Validate a single field - only check numeric values since HTML5 validation handles required fields
   const validateField = (name: string, value: any): string => {
     switch (name) {
       case 'quantity':
@@ -303,6 +347,27 @@ export default function AssetForm() {
     setCategoryError(null);
     setIsCreatingCategory(true);
     createCategoryMutation.mutate(newCategory);  
+  };    // Handle new location form changes
+  const handleNewLocationChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewLocation(prev => ({ ...prev, [name]: value }));
+    
+    // Clear any previous error when typing
+    if (locationError) {
+      setLocationError(null);
+    }
+  };
+  
+  // Handle new location submission
+  const handleNewLocationSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Let the browser's native validation handle the required fields
+    // If required fields are empty, the form won't be submitted
+    
+    setLocationError(null);
+    setIsCreatingLocation(true);
+    createLocationMutation.mutate(newLocation);  
   };    // Using the currency utilities imported from utils/currencyFormatter.ts
   
   // All currency handling functions and behavior have been moved directly inline in the JSX  
@@ -483,17 +548,16 @@ export default function AssetForm() {
                     onBlur={() => setTouched(prev => ({ ...prev, category_id: true }))}
                     aria-required="true"
                   >
-                    <option value="">Pilih Kategori</option>
-                    {categoriesData?.data.map((category: any) => (
+                    <option value="">Pilih Kategori</option>                    {categoriesData?.data.map((category: any) => (
                       <option key={category.id} value={category.id}>
-                        {category.name}
+                        {category.name} {category.code ? `(${category.code})` : ''}
                       </option>
                     ))}
                   </select>
                   <button
                     type="button"
                     onClick={() => {
-                      setNewCategory({ name: '', description: '' });
+                      setNewCategory({ code: '', name: '', description: '' });
                       setShowNewCategoryModal(true);
                     }}
                     className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -523,11 +587,26 @@ export default function AssetForm() {
               </div>
             </div>
           </div>
-          
-          {/* Quantity and Value Section */}
+            {/* Quantity and Value Section */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4">Kuantitas dan Nilai</h3>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <label htmlFor="tanggal_perolehan" className="block text-sm font-medium text-gray-700 mb-1">
+                  Tanggal Perolehan <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="tanggal_perolehan"
+                  id="tanggal_perolehan"
+                  required
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  value={formData.tanggal_perolehan}
+                  onChange={handleChange}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
               <div>
                 <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
                   Jumlah <span className="text-red-500">*</span>
@@ -740,31 +819,40 @@ export default function AssetForm() {
               </div>              <div>
                 <label htmlFor="lokasi_id" className="block text-sm font-medium text-gray-700 mb-1">
                   Lokasi <span className="text-red-500">*</span>
-                </label>                <select
-                  name="lokasi_id"
-                  id="lokasi_id"
-                  required
-                  className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                    touched.lokasi_id && fieldErrors.lokasi_id ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' : ''
-                  }`}
-                  value={formData.lokasi_id === undefined ? '' : formData.lokasi_id}
-                  onChange={handleChange}
-                  onBlur={() => setTouched(prev => ({ ...prev, lokasi_id: true }))}
-                  aria-required="true"
-                >
-                  <option value="">Pilih Lokasi</option>
-                  {locationsData?.data?.map((location: any) => (
-                    <option key={location.id} value={location.id}>
-                      {location.name} ({location.code}) - {location.building} {location.floor ? `Lt. ${location.floor}` : ''} {location.room || ''}
-                    </option>
-                  ))}
-                </select>
+                </label>                <div className="flex space-x-2">
+                  <select
+                    name="lokasi_id"
+                    id="lokasi_id"
+                    required
+                    className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                      touched.lokasi_id && fieldErrors.lokasi_id ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' : ''
+                    }`}
+                    value={formData.lokasi_id === undefined ? '' : formData.lokasi_id}
+                    onChange={handleChange}
+                    onBlur={() => setTouched(prev => ({ ...prev, lokasi_id: true }))}
+                    aria-required="true"
+                  >
+                    <option value="">Pilih Lokasi</option>                    {locationsData?.data?.map((location: any) => (
+                      <option key={location.id} value={location.id}>
+                        {location.name} {location.code ? `(${location.code})` : ''} - {location.building} {location.floor ? `Lt. ${location.floor}` : ''} {location.room || ''}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewLocation({ code: '', name: '', description: '', building: '', floor: '', room: '' });
+                      setShowNewLocationModal(true);
+                    }}
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    title="Tambah Lokasi Baru"
+                  >
+                    <PlusIcon className="h-4 w-4 mr-1" /> Baru
+                  </button>
+                </div>
                 {touched.lokasi_id && fieldErrors.lokasi_id && (
                   <p className="mt-2 text-sm text-red-600">{fieldErrors.lokasi_id}</p>
                 )}
-                <div className="mt-1 text-sm text-gray-500">
-                  <Link to="/locations" className="text-blue-600 hover:text-blue-800">Kelola lokasi</Link> jika tidak menemukan lokasi yang sesuai
-                </div>
               </div><div>
                 <label htmlFor="asal_pengadaan" className="block text-sm font-medium text-gray-700 mb-1">
                   Asal Pengadaan <span className="text-red-500">*</span>
@@ -900,6 +988,20 @@ export default function AssetForm() {
                 <div className="mt-5 sm:mt-6">
                   <form onSubmit={handleNewCategorySubmit}>
                     <div>
+                      <label htmlFor="new-category-code" className="block text-sm font-medium text-gray-700">
+                        Kode Kategori <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="code"
+                        id="new-category-code"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={newCategory.code}
+                        onChange={handleNewCategoryChange}
+                        required
+                      />
+                    </div>
+                    <div className="mt-4">
                       <label htmlFor="new-category-name" className="block text-sm font-medium text-gray-700">
                         Nama Kategori <span className="text-red-500">*</span>
                       </label>
@@ -943,6 +1045,174 @@ export default function AssetForm() {
                         disabled={isCreatingCategory}
                       >
                         {isCreatingCategory ? 'Menyimpan...' : 'Simpan'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition.Root>
+
+      {/* New Location Modal */}
+      <Transition.Root show={showNewLocationModal} as={Fragment}>
+        <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" onClose={setShowNewLocationModal}>
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" />
+            </Transition.Child>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <Dialog.Panel className="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div>
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                    <PlusIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-5">
+                    <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
+                      Tambah Lokasi Baru
+                    </Dialog.Title>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        Silakan isi informasi lokasi baru untuk aset Anda
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {locationError && (
+                  <div className="mt-4 rounded-md bg-red-50 p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">Error</h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          <p>{locationError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-5 sm:mt-6">
+                  <form onSubmit={handleNewLocationSubmit}>
+                    <div>
+                      <label htmlFor="new-location-name" className="block text-sm font-medium text-gray-700">
+                        Nama Lokasi <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        id="new-location-name"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={newLocation.name}
+                        onChange={handleNewLocationChange}
+                        required
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <label htmlFor="new-location-code" className="block text-sm font-medium text-gray-700">
+                        Kode Lokasi <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="code"
+                        id="new-location-code"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={newLocation.code}
+                        onChange={handleNewLocationChange}
+                        required
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <label htmlFor="new-location-description" className="block text-sm font-medium text-gray-700">
+                        Deskripsi
+                      </label>
+                      <textarea
+                        name="description"
+                        id="new-location-description"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={newLocation.description}
+                        onChange={handleNewLocationChange}
+                        rows={3}
+                      ></textarea>
+                    </div>
+                    <div className="mt-4">
+                      <label htmlFor="new-location-building" className="block text-sm font-medium text-gray-700">
+                        Gedung
+                      </label>
+                      <input
+                        type="text"
+                        name="building"
+                        id="new-location-building"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={newLocation.building}
+                        onChange={handleNewLocationChange}
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <label htmlFor="new-location-floor" className="block text-sm font-medium text-gray-700">
+                        Lantai
+                      </label>
+                      <input
+                        type="text"
+                        name="floor"
+                        id="new-location-floor"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={newLocation.floor}
+                        onChange={handleNewLocationChange}
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <label htmlFor="new-location-room" className="block text-sm font-medium text-gray-700">
+                        Ruangan
+                      </label>
+                      <input
+                        type="text"
+                        name="room"
+                        id="new-location-room"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={newLocation.room}
+                        onChange={handleNewLocationChange}
+                      />
+                    </div>
+                    
+                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
+                      <button
+                        type="button"
+                        className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                        onClick={() => setShowNewLocationModal(false)}
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="submit"
+                        className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm ${
+                          isCreatingLocation ? 'opacity-75 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isCreatingLocation}
+                      >
+                        {isCreatingLocation ? 'Menyimpan...' : 'Simpan'}
                       </button>
                     </div>
                   </form>

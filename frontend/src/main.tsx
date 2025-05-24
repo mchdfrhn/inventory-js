@@ -1,7 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import './main.css' // Custom CSS for layout fixes
 import './assets/glass-styles-fixed.css' // Fixed modern UI styles with glass morphism
 import App from './App.tsx'
 

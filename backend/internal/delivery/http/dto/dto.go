@@ -108,11 +108,13 @@ type UpdateAssetRequest struct {
 
 // Category Request DTOs
 type CreateCategoryRequest struct {
+	Code        string `json:"code" binding:"required"`
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 }
 
 type UpdateCategoryRequest struct {
+	Code        string `json:"code" binding:"required"`
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 }
@@ -255,6 +257,7 @@ func (r *UpdateAssetRequest) ToAsset(id uuid.UUID) (*domain.Asset, error) {
 // ToCategory converts CreateCategoryRequest to domain.AssetCategory
 func (r *CreateCategoryRequest) ToCategory() *domain.AssetCategory {
 	return &domain.AssetCategory{
+		Code:        r.Code,
 		Name:        r.Name,
 		Description: r.Description,
 	}
@@ -264,6 +267,7 @@ func (r *CreateCategoryRequest) ToCategory() *domain.AssetCategory {
 func (r *UpdateCategoryRequest) ToCategory(id uuid.UUID) *domain.AssetCategory {
 	return &domain.AssetCategory{
 		ID:          id,
+		Code:        r.Code,
 		Name:        r.Name,
 		Description: r.Description,
 	}

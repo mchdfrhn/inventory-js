@@ -8,6 +8,7 @@ import { ArrowLeftIcon, PencilIcon, XCircleIcon } from '@heroicons/react/24/outl
 
 // Define the required fields for category creation/update
 type CategoryFormData = {
+  code: string;
   name: string;
   description: string;
 };
@@ -18,9 +19,9 @@ export default function CategoryForm() {
   const queryClient = useQueryClient();
   const isEditMode = Boolean(id);
   const { addNotification } = useNotification();
-
   // Form state with correct typing
   const [formData, setFormData] = useState<CategoryFormData>({
+    code: '',
     name: '',
     description: '',
   });
@@ -34,12 +35,12 @@ export default function CategoryForm() {
     queryFn: () => categoryApi.getById(id as string),
     enabled: isEditMode,
   });
-
   // Update form data when category data is loaded
   useEffect(() => {
     if (categoryData?.data) {
-      const { name, description } = categoryData.data;
+      const { code, name, description } = categoryData.data;
       setFormData({
+        code,
         name,
         description,
       });
@@ -142,9 +143,24 @@ export default function CategoryForm() {
             <XCircleIcon className="h-5 w-5 text-red-500 mr-2" />
             <span className="text-sm">{error}</span>
           </div>
-        )}        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Kategori</h3>
+        )}        <div>          <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Kategori</h3>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
+                Kode Kategori <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="code"
+                id="code"
+                required
+                placeholder="CAT-001"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                value={formData.code}
+                onChange={handleChange}
+              />
+              <p className="mt-1 text-xs text-gray-500">Kode kategori harus unik</p>
+            </div>
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                 Nama Kategori <span className="text-red-500">*</span>
@@ -159,7 +175,7 @@ export default function CategoryForm() {
                 onChange={handleChange}
               />
               <p className="mt-1 text-xs text-gray-500">Nama kategori harus unik</p>
-            </div>          <div>
+            </div><div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
               Deskripsi
             </label>

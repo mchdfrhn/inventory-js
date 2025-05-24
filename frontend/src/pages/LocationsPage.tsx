@@ -131,10 +131,6 @@ export default function LocationsPage() {
             <p className="mt-1 text-sm text-gray-500">
               Kelola lokasi aset untuk organisasi yang lebih baik
             </p>
-            {/* Add a temporary debug section */}
-            <p className="mt-1 text-xs text-blue-600 font-mono">
-              Debug: {debugInfo}
-            </p>
           </div>
           <Link to="/locations/new">
             <GradientButton variant="primary" className="flex items-center">
@@ -200,7 +196,7 @@ export default function LocationsPage() {
                       key={location.id} 
                       className="table-row-hover hover:bg-blue-50/30 transition-all"
                     >
-                      <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-gray-900">{location.code}</td>
+                      <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-mono text-gray-700">{location.code}</td>
                       <td className="px-3 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex items-center justify-center h-8 w-8 rounded-md bg-blue-100/80 mr-3">
