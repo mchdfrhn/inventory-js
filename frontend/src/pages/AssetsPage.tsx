@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { assetApi, locationApi } from '../services/api';
@@ -16,13 +16,13 @@ import {
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
 import ExportButton from '../components/ExportButton';
 import AssetCard from '../components/AssetCard';
 import ViewToggle from '../components/ViewToggle';
+import PageSizeSelector from '../components/PageSizeSelector';
 import { useNotification } from '../context/NotificationContext';
 
 // Status styling with gradient backgrounds for a more modern look
@@ -48,8 +48,13 @@ const formatStatus = (status: string): string => {
 
 
 
-export default function AssetsPage() {  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+export default function AssetsPage() {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => {
+    // Try to get pageSize from localStorage, default to 10 if not found
+    const savedPageSize = localStorage.getItem('assetPageSize');
+    return savedPageSize ? parseInt(savedPageSize, 10) : 10;
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<string | null>(null);
   const [depreciationFilter, setDepreciationFilter] = useState<string>('all');
@@ -68,19 +73,23 @@ export default function AssetsPage() {  const [page, setPage] = useState(1);
   const [viewType, setViewType] = useState<'table' | 'grid'>(
     localStorage.getItem('assetViewType') as 'table' | 'grid' || 'table'
   );
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);  const [mounted, setMounted] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   
   // Add notification hook
   const { addNotification } = useNotification();
-
-  // Save view type preference
+  // Save view type preference  
   useEffect(() => {
     localStorage.setItem('assetViewType', viewType);
   }, [viewType]);
   
-  const queryClient = useQueryClient();  // Effect for page load animation
+  // Save pageSize to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('assetPageSize', pageSize.toString());
+  }, [pageSize]);
+    const queryClient = useQueryClient();  
+  
+  // Effect for page load animation
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -169,18 +178,19 @@ export default function AssetsPage() {  const [page, setPage] = useState(1);
            matchesDepreciationFilter && 
            matchesAcquisitionYearFilter && 
            matchesAcquisitionSourceFilter;
-  });
-  // Handle Enter key press for delete confirmation
+  });  // Handle Enter key press for delete confirmation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (deleteModalOpen && event.key === 'Enter' && !deleteMutation.isPending) {
-        confirmDelete();
+        if (assetToDelete) {
+          deleteMutation.mutate(assetToDelete.id);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [deleteModalOpen, confirmDelete, deleteMutation.isPending]);  // Initialize temporary filter states with current filter values when panel opens
+  }, [deleteModalOpen, deleteMutation.isPending, assetToDelete, confirmDelete, deleteMutation]);  // Initialize temporary filter states with current filter values when panel opens
   useEffect(() => {
     if (filterPanelOpen) {
       console.log('Filter panel opened, setting temporary filters:', { 
@@ -192,13 +202,14 @@ export default function AssetsPage() {  const [page, setPage] = useState(1);
       setTempAcquisitionSourceFilter(acquisitionSourceFilter);
     }
   }, [filterPanelOpen, filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter]);
-  
   // Watch for changes in the actual filter values for debugging
   useEffect(() => {
     console.log('Filter value changed:', { 
       filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter 
     });
-  }, [filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter]);// Function to apply filters
+  }, [filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter]);
+  
+  // Function to apply filters
   const applyFilters = () => {
     console.log('Applying filters:', { 
       tempFilter, 
@@ -881,19 +892,27 @@ export default function AssetsPage() {  const [page, setPage] = useState(1);
               </tbody>
             </table>
           </div>
-        )}
-        
-        {/* Pagination */}
-        {data?.pagination && data.pagination.total_pages > 1 && (
+        )}          {/* Pagination */}
+        {data?.pagination && (
           <div className="bg-white/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 sm:px-6">
-            <div className="hidden sm:block">
-              <p className="text-sm text-gray-700">
-                Menampilkan <span className="font-medium">{(page - 1) * pageSize + 1}</span> sampai{' '}
-                <span className="font-medium">
-                  {Math.min(page * pageSize, data.pagination.total_items)}
-                </span>{' '}
-                dari <span className="font-medium">{data.pagination.total_items}</span> data
-              </p>
+            <div className="flex items-center space-x-4">
+              <div className="hidden sm:block">
+                <p className="text-sm text-gray-700">
+                  Menampilkan <span className="font-medium">{(page - 1) * pageSize + 1}</span> sampai{' '}
+                  <span className="font-medium">
+                    {Math.min(page * pageSize, data.pagination.total_items)}
+                  </span>{' '}
+                  dari <span className="font-medium">{data.pagination.total_items}</span> data
+                </p>
+              </div>
+              <PageSizeSelector 
+                pageSize={pageSize} 
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setPage(1); // Reset to first page when changing page size
+                }}
+                options={[10, 25, 50, 100]}
+              />
             </div>
             <div className="flex-1 flex justify-between sm:justify-end space-x-3">
               <button

@@ -172,6 +172,7 @@ export default function LocationForm() {
                 type="text"
                 name="code"
                 id="code"
+                placeholder="001"
                 required
                 value={formData.code}
                 onChange={handleChange}

@@ -154,7 +154,7 @@ export default function CategoryForm() {
                 name="code"
                 id="code"
                 required
-                placeholder="CAT-001"
+                placeholder="10"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 value={formData.code}
                 onChange={handleChange}

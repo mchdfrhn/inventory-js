@@ -11,30 +11,29 @@ export default function DepreciationChart({ asset, className = '' }: Depreciatio
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
   
   // Calculate depreciation data points
+  // Dashboard logic: straight-line depreciation, min 20% residual value
   const calculateDepreciationData = () => {
     const { harga_perolehan, umur_ekonomis_tahun } = asset;
     const yearlyData = [];
-    
-    // Calculate yearly depreciation (straight-line method)
-    const yearlyDepreciation = harga_perolehan / umur_ekonomis_tahun;
-    
-    // Generate data points for each year
+    const minValue = harga_perolehan * 0.2;
+    const depreciatableValue = harga_perolehan - minValue;
     for (let i = 0; i <= umur_ekonomis_tahun; i++) {
-      const remainingValue = Math.max(0, harga_perolehan - (yearlyDepreciation * i));
+      // Depreciation fraction
+      const depreciation = umur_ekonomis_tahun > 0 ? Math.min(1, i / umur_ekonomis_tahun) : 1;
+      const value = Math.max(minValue, harga_perolehan - (depreciatableValue * depreciation));
       yearlyData.push({
         year: i,
-        value: Math.round(remainingValue * 100) / 100,
-        percentage: Math.round((remainingValue / harga_perolehan) * 100)
+        value: Math.round(value * 100) / 100,
+        percentage: Math.round((value / harga_perolehan) * 100)
       });
     }
-    
     return yearlyData;
   };
-  
   const depreciationData = calculateDepreciationData();
   
   // Calculate the max height of the chart
   const maxValue = asset.harga_perolehan;
+  const minValue = asset.harga_perolehan * 0.2;
   
   // Format currency for labels
   const formatCurrency = (value: number) => {
@@ -70,6 +69,10 @@ export default function DepreciationChart({ asset, className = '' }: Depreciatio
           <div className="w-3 h-3 bg-blue-600 mr-1"></div>
           <span>Tahun Berjalan</span>
         </div>
+        <div className="flex items-center">
+          <div className="w-3 h-3 bg-gray-300 mr-1"></div>
+          <span>Nilai Minimum (20%)</span>
+        </div>
       </div>
       
       <div className="mt-4 h-64 relative">
@@ -78,7 +81,7 @@ export default function DepreciationChart({ asset, className = '' }: Depreciatio
           <div>{formatCurrency(maxValue)}</div>
           <div>{formatCurrency(maxValue * 0.75)}</div>
           <div>{formatCurrency(maxValue * 0.5)}</div>
-          <div>{formatCurrency(maxValue * 0.25)}</div>
+          <div>{formatCurrency(minValue)}</div>
           <div>{formatCurrency(0)}</div>
         </div>
         
@@ -92,7 +95,8 @@ export default function DepreciationChart({ asset, className = '' }: Depreciatio
             {/* Bars */}
           <div className="flex items-end justify-around w-full absolute bottom-0 left-0 right-0">
             {depreciationData.map((point, index) => {
-              const heightPercent = (point.value / maxValue) * 100;
+              // Height is from minValue to maxValue
+              const heightPercent = ((point.value - minValue) / (maxValue - minValue)) * 100;
               const isCurrentYear = index === currentYearIndex;
               return (
                 <div 
@@ -112,7 +116,6 @@ export default function DepreciationChart({ asset, className = '' }: Depreciatio
                     }}
                   ></div>
                   <div className="text-xs text-gray-500 mt-1">{point.year}</div>
-                  
                   {/* Tooltip */}
                   {hoveredBar === index && (
                     <div className="absolute bottom-full mb-2 bg-gray-800 text-white text-xs rounded p-2 z-10 w-36">
@@ -124,6 +127,8 @@ export default function DepreciationChart({ asset, className = '' }: Depreciatio
                 </div>
               );
             })}
+            {/* Draw a line for the minimum value (20%) */}
+            <div className="absolute left-0 right-0" style={{ bottom: 0, height: '2px', background: '#d1d5db', zIndex: 1, top: `${((minValue - minValue) / (maxValue - minValue)) * 100}%` }} />
           </div>
             {/* Animation keyframes */}
           <style>{`
@@ -138,7 +143,7 @@ export default function DepreciationChart({ asset, className = '' }: Depreciatio
               className="absolute z-10 transform -translate-x-1/2"
               style={{ 
                 left: `${((currentYearIndex / asset.umur_ekonomis_tahun) * 100)}%`,
-                bottom: `${(depreciationData[currentYearIndex].value / maxValue) * 100}%` 
+                bottom: `${((depreciationData[currentYearIndex].value - minValue) / (maxValue - minValue)) * 100}%` 
               }}
             >
               <div 
@@ -156,29 +161,28 @@ export default function DepreciationChart({ asset, className = '' }: Depreciatio
         <div>Umur Ekonomis: {asset.umur_ekonomis_tahun} tahun</div>
       </div>
       
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div className="border rounded p-3 bg-blue-50">
-          <div className="text-sm text-gray-500">Nilai Awal</div>
-          <div className="font-semibold text-lg">
-            {new Intl.NumberFormat('id-ID', {
-              style: 'currency',
-              currency: 'IDR',
-              maximumFractionDigits: 0
-            }).format(asset.harga_perolehan)}
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="border rounded p-3 bg-blue-50">
+            <div className="text-sm text-gray-500">Nilai Awal</div>
+            <div className="font-semibold text-lg">
+              {new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                maximumFractionDigits: 0
+              }).format(asset.harga_perolehan)}
+            </div>
+          </div>
+          <div className="border rounded p-3 bg-blue-50">
+            <div className="text-sm text-gray-500">Estimasi Nilai Saat Ini</div>
+            <div className="font-semibold text-lg">
+              {new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                maximumFractionDigits: 0
+              }).format(depreciationData[currentYearIndex]?.value || asset.harga_perolehan)}
+            </div>
           </div>
         </div>
-        
-        <div className="border rounded p-3 bg-blue-50">
-          <div className="text-sm text-gray-500">Nilai Saat Ini</div>
-          <div className="font-semibold text-lg">
-            {new Intl.NumberFormat('id-ID', {
-              style: 'currency',
-              currency: 'IDR',
-              maximumFractionDigits: 0
-            }).format(asset.nilai_sisa)}
-          </div>
-        </div>
-      </div>
       
       <div className="mt-4 grid grid-cols-2 gap-4">
         <div className="border rounded p-3 bg-gray-50">

@@ -105,7 +105,7 @@ export default function AssetDetailView({ asset }: AssetDetailViewProps) {const 
             </dl>
           </div>
           
-          {/* Financial Info */}
+          {/* Financial Info - Updated for new dashboard logic */}
           <div className="bg-blue-50 p-5 rounded-lg">
             <h3 className="font-medium text-gray-900 mb-3 border-b pb-2">Informasi Keuangan</h3>
             <dl className="grid grid-cols-1 gap-y-3">
@@ -113,53 +113,65 @@ export default function AssetDetailView({ asset }: AssetDetailViewProps) {const 
                 <dt className="text-sm font-medium text-gray-500">Tanggal Perolehan</dt>
                 <dd className="text-sm text-gray-900 col-span-2">{formatDate(asset.tanggal_perolehan)}</dd>
               </div>
-              
               <div className="grid grid-cols-3">
-                <dt className="text-sm font-medium text-gray-500">Harga Perolehan</dt>
+                <dt className="text-sm font-medium text-gray-500">Asal Perolehan</dt>
+                <dd className="text-sm text-gray-900 col-span-2">{asset.asal_pengadaan || 'Tidak Diketahui'}</dd>
+              </div>
+              <div className="grid grid-cols-3">
+                <dt className="text-sm font-medium text-gray-500">Nominal Perolehan</dt>
                 <dd className="text-sm text-gray-900 col-span-2 font-semibold">{formatCurrency(asset.harga_perolehan)}</dd>
               </div>
-              
               <div className="grid grid-cols-3">
                 <dt className="text-sm font-medium text-gray-500">Umur Ekonomis</dt>
                 <dd className="text-sm text-gray-900 col-span-2">{asset.umur_ekonomis_tahun} tahun ({asset.umur_ekonomis_bulan} bulan)</dd>
               </div>
-              
+              {/* Estimasi Nilai Saat Ini (dashboard logic) */}
+              {(() => {
+                // Dashboard logic: straight-line depreciation, min 20% residual value
+                const acquisitionDate = new Date(asset.tanggal_perolehan);
+                const currentDate = new Date();
+                const ageInMonths = (currentDate.getFullYear() - acquisitionDate.getFullYear()) * 12 + (currentDate.getMonth() - acquisitionDate.getMonth());
+                const economicLifeMonths = (asset.umur_ekonomis_tahun || 1) * 12;
+                const depreciation = economicLifeMonths > 0 ? Math.min(1, ageInMonths / economicLifeMonths) : 1;
+                const residualValue = 0.2 * asset.harga_perolehan;
+                const depreciatableValue = asset.harga_perolehan - residualValue;
+                const currentValue = asset.harga_perolehan - (depreciatableValue * depreciation);
+                const penyusutanPersen = Math.round(100 - ((currentValue / asset.harga_perolehan) * 100));
+                return (
+                  <>
+                  <div className="grid grid-cols-3">
+                    <dt className="text-sm font-medium text-gray-500">Estimasi Nilai Saat Ini</dt>
+                    <dd className="text-sm text-gray-900 col-span-2 font-bold">{formatCurrency(Math.round(currentValue))}</dd>
+                  </div>
+                  <div className="grid grid-cols-3">
+                    <dt className="text-sm font-medium text-gray-500">Penyusutan</dt>
+                    <dd className="text-sm text-gray-900 col-span-2">{penyusutanPersen}%</dd>
+                  </div>
+                  </>
+                );
+              })()}
               <div className="grid grid-cols-3">
                 <dt className="text-sm font-medium text-gray-500">Akumulasi Penyusutan</dt>
                 <dd className="text-sm text-gray-900 col-span-2">{formatCurrency(asset.akumulasi_penyusutan)}</dd>
               </div>
-                <div className="grid grid-cols-3">
+              <div className="grid grid-cols-3">
                 <dt className="text-sm font-medium text-gray-500">Nilai Buku Saat Ini</dt>
                 <dd className="text-sm text-gray-900 col-span-2 font-bold">{formatCurrency(asset.nilai_sisa)}</dd>
               </div>
-              
-              {/* Calculate remaining useful life */}
+              {/* Sisa masa manfaat */}
               {(() => {
                 const acquisitionDate = new Date(asset.tanggal_perolehan);
                 const currentDate = new Date();
-                
-                // Calculate months passed
-                const monthsPassed = 
-                  (currentDate.getFullYear() - acquisitionDate.getFullYear()) * 12 + 
-                  (currentDate.getMonth() - acquisitionDate.getMonth());
-                
+                const monthsPassed = (currentDate.getFullYear() - acquisitionDate.getFullYear()) * 12 + (currentDate.getMonth() - acquisitionDate.getMonth());
                 const remainingMonths = Math.max(0, asset.umur_ekonomis_bulan - monthsPassed);
                 const remainingYears = Math.floor(remainingMonths / 12);
                 const extraMonths = remainingMonths % 12;
-                
-                // Calculate percentage remaining
                 const percentRemaining = Math.max(0, Math.min(100, Math.round((remainingMonths / asset.umur_ekonomis_bulan) * 100)));
-                
-                // Determine color based on remaining percentage
                 let barColor = "bg-red-500";
                 if (percentRemaining > 75) barColor = "bg-green-500";
                 else if (percentRemaining > 50) barColor = "bg-blue-500";
                 else if (percentRemaining > 25) barColor = "bg-yellow-500";
-                
-                const remainingText = remainingMonths <= 0 
-                  ? "Habis masa pakai" 
-                  : `${remainingYears} tahun ${extraMonths} bulan`;
-                
+                const remainingText = remainingMonths <= 0 ? "Habis masa pakai" : `${remainingYears} tahun ${extraMonths} bulan`;
                 return (
                   <div className="grid grid-cols-3 mt-2">
                     <dt className="text-sm font-medium text-gray-500">Sisa Masa Manfaat</dt>

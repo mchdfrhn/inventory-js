@@ -175,11 +175,10 @@ export const categoryApi = {
     const response = await api.delete<{ status: string; message: string }>(`/categories/${id}`);
     return response.data;
   },
-  
-  // New function to get categories with asset counts
+    // New function to get categories with asset counts and proper pagination
   listWithAssetCounts: async (page = 1, pageSize = 10) => {
     try {
-      // Get categories
+      // Get categories with server-side pagination
       const categoriesResponse = await api.get<PaginatedResponse<Category>>(`/categories?page=${page}&page_size=${pageSize}`);
       const categories = categoriesResponse.data.data;
       
@@ -259,21 +258,22 @@ export const locationApi = {
       const response = await api.get<{ status: string; message: string; data: Location }>(`/locations/${lokasiId}`);
       return response.data.data;    } catch (error) {
       console.error("Error fetching location for asset:", error);
-      return null;
-    }  },
+      return null;    }
+  },
   
   // Function to get locations with asset counts
-  listWithAssetCounts: async () => {
+  listWithAssetCounts: async (page = 1, pageSize = 10) => {
     try {
-      // Get all locations
-      const locationsResponse = await api.get<PaginatedResponse<Location>>(`/locations?page=1&page_size=100`);
+      // Get locations with pagination
+      const locationsResponse = await api.get<PaginatedResponse<Location>>(`/locations?page=${page}&page_size=${pageSize}`);
       const locations = locationsResponse.data.data;
       
+      // The backend already supports pagination, so let's get just the locations from this page
       // Get count of assets first to determine how many to fetch
       const countResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&page_size=1`);
       const totalItems = countResponse.data.pagination.total_items;
       
-      // Fetch all assets in one request
+      // Get assets for asset counts
       const assetsResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&page_size=${totalItems > 0 ? totalItems : 10}`);
       const allAssets = assetsResponse.data.data;
       

@@ -25,12 +25,19 @@ const getRecentMonthsData = () => {
     const date = new Date(currentDate);
     date.setMonth(currentDate.getMonth() - i);
     
-    const monthName = new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(date);
+    // Set tanggal ke awal bulan untuk mendapatkan timestamp awal bulan
+    const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+    // Set tanggal ke akhir bulan untuk mendapatkan timestamp akhir bulan
+    const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0); 
+      const monthName = new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(date);
     months.push({
       month: monthName,
       year: date.getFullYear(),
       monthIndex: date.getMonth(),
-      count: 0 // Will be populated with actual data
+      startDate: startDate,
+      endDate: endDate,
+      count: 0, // Will be populated with actual data
+      growthPercentage: 0 // Persentase pertumbuhan dari bulan sebelumnya
     });
   }
   
@@ -52,25 +59,28 @@ const statusLabels = {
 };
 
 // Simple animated bar chart component
-function BarChart({ data }: { data: Array<{month: string; count: number}> }) {
-  const maxValue = Math.max(...data.map(item => item.count));
+function BarChart({ data }: { data: Array<{month: string; year: number; count: number}> }) {
+  const maxValue = Math.max(...data.map(item => item.count), 1); // Minimal 1 untuk menghindari pembagian dengan nol
   
   return (
-    <div className="pt-6">
-      <div className="flex items-end h-48 space-x-2">
+    <div className="pt-4">
+      <div className="flex items-end h-40 space-x-2">
         {data.map((item, index) => {
-          const heightPercent = (item.count / maxValue) * 100;
+          const heightPercent = maxValue > 0 ? (item.count / maxValue) * 100 : 0;
           
           return (
             <div 
-              key={item.month} 
-              className="flex-1 flex flex-col items-center"
+              key={`${item.month}-${item.year}`} 
+              className="flex-1 flex flex-col items-center group"
             >
-              <div className="relative w-full">
+              <div className="text-xs font-semibold text-gray-700 mb-1">
+                {item.count}
+              </div>
+              <div className="relative w-full cursor-pointer" title={`${item.month} ${item.year}: ${item.count} aset`}>
                 <div 
-                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-blue-300 rounded-t-md opacity-80 group-hover:opacity-100 transition-all duration-300"
+                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-md opacity-80 group-hover:opacity-100 transition-all duration-300"
                   style={{ 
-                    height: `${heightPercent}%`,
+                    height: `${Math.max(heightPercent, 5)}%`, // Minimal height untuk bars dengan nilai 0
                     animation: `growHeight 1.5s ease-out forwards`,
                     animationDelay: `${index * 120}ms`
                   }}
@@ -81,10 +91,18 @@ function BarChart({ data }: { data: Array<{month: string; count: number}> }) {
                       backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.5' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E\")",
                     }}></div>
                   </div>
+                  
+                  {/* Tooltip yang muncul saat hover */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                      {item.count} aset pada {item.month} {item.year}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="h-8 flex items-center justify-center">
-                <span className="text-xs font-medium mt-1 text-gray-600">{item.month}</span>
+              <div className="h-6 flex flex-col items-center justify-center">
+                <span className="text-xs font-medium text-gray-700">{item.month}</span>
+                <span className="text-[10px] text-gray-500">{item.year}</span>
               </div>
             </div>
           );
@@ -460,9 +478,10 @@ export default function DashboardPage() {
     }
     
     const assetsByLocation: LocationCount[] = [];
-    locationData.data.forEach(location => {
-      const locationAssets = assets.filter(asset => asset.lokasi_id === location.id);
+    locationData.data.forEach(location => {      const locationAssets = assets.filter(asset => asset.lokasi_id === location.id);
       const count = locationAssets.length;
+      // Nilai tidak digunakan untuk assetsByLocation saat ini
+      
       if (count > 0) {
         assetsByLocation.push({
           id: location.id,
@@ -483,17 +502,34 @@ export default function DashboardPage() {
     assets.forEach(asset => {
       if (asset.tanggal_perolehan) {
         const acquisitionDate = new Date(asset.tanggal_perolehan);
-        const acquisitionMonth = acquisitionDate.getMonth();
-        const acquisitionYear = acquisitionDate.getFullYear();
         
-        // Find matching month in our data and increment count
+        // Periksa asset masuk dalam rentang waktu bulan mana
         monthlyGrowth.forEach(month => {
-          if (month.monthIndex === acquisitionMonth && month.year === acquisitionYear) {
+          // Periksa apakah tanggal perolehan berada dalam rentang waktu bulan ini
+          if (acquisitionDate >= month.startDate && acquisitionDate <= month.endDate) {
             month.count++;
           }
         });
       }
     });
+
+    // Hitung persentase pertumbuhan bulanan
+    for (let i = 1; i < monthlyGrowth.length; i++) {
+      const prevMonth = monthlyGrowth[i-1];
+      const currMonth = monthlyGrowth[i];
+      
+      if (prevMonth.count === 0) {
+        // Jika bulan sebelumnya tidak ada aset, hitung sebagai pertumbuhan 100% jika ada aset di bulan ini
+        currMonth.growthPercentage = currMonth.count > 0 ? 100 : 0;
+      } else {
+        // Hitung persentase perubahan
+        const change = ((currMonth.count - prevMonth.count) / prevMonth.count) * 100;
+        currMonth.growthPercentage = Math.round(change);
+      }
+    }
+    
+    // Bulan pertama tidak memiliki data pertumbuhan
+    monthlyGrowth[0].growthPercentage = 0;
     
     // Top value by category
     const topCategoriesByValue = [...assetsByCategory]
@@ -608,38 +644,6 @@ export default function DashboardPage() {
           trend={(stats?.baikAssetsPercent || 0) > 50 ? "up" : "down"}
           suffix={`(${stats?.baikAssetsPercent || 0}%)`}
         />
-      </div><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Aset"
-          value={stats?.totalAssets || 0}
-          icon={CircleStackIcon}
-          color="blue"
-        />
-        <StatCard
-          title="Total Perolehan Aset (Rp)"
-          value={Math.round((stats?.totalValue || 0) / 1000000)}
-          icon={ArrowTrendingUpIcon}
-          color="blue"
-          suffix="juta"
-        />
-        <StatCard
-          title="Estimasi Nilai Aset (Rp)"
-          value={Math.round((stats?.estimatedCurrentValue || 0) / 1000000)}
-          icon={ArrowTrendingUpIcon}
-          color="green"
-          change={-1 * (100 - (stats?.depreciationPercentage || 0))}
-          trend="down"
-          suffix="juta"
-        />
-        <StatCard
-          title="Aset Kondisi Baik"
-          value={stats?.statusCounts?.baik || 0}
-          icon={CheckCircleIcon}
-          change={stats?.baikAssetsPercent || 0}
-          color="green"
-          trend={(stats?.baikAssetsPercent || 0) > 50 ? "up" : "down"}
-          suffix={`(${stats?.baikAssetsPercent || 0}%)`}
-        />
       </div>
 
       {/* Main content grid - Restructured to 2 columns top, 1 column bottom */}
@@ -718,7 +722,7 @@ export default function DashboardPage() {
         </GlassCard>
 
         {/* Monthly statistics and Asal Perolehan Aset */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:col-span-2">
           {/* Monthly Asset Statistics */}
           <GlassCard className="p-4">
             <div className="flex justify-between items-center mb-2">
@@ -727,16 +731,49 @@ export default function DashboardPage() {
               </h2>
               <div className="text-sm text-gray-500">6 bulan terakhir</div>
             </div>
-            
-            <div className="bg-white/80 rounded-lg p-3">
-              <div className="text-sm font-medium mb-2">Perolehan aset per bulan</div>
-              <BarChart data={stats?.monthlyGrowth || []} />              <div className="mt-2 grid grid-cols-3 gap-2">
-                {(stats?.monthlyGrowth || []).slice(-3).map((item) => (
-                  <div key={`${item.month}-${item.year}`} className="bg-gray-50 p-2 rounded-lg">
-                    <div className="text-xs text-gray-500">{item.month} {item.year}</div>
-                    <div className="font-medium">{item.count} aset</div>
+              <div className="bg-white/80 rounded-lg p-3">
+              <div className="flex justify-between items-center mb-2">
+                <div className="text-sm font-medium">Perolehan aset per bulan</div>
+                {stats?.monthlyGrowth && (
+                  <div className="text-xs bg-blue-100 text-blue-800 font-medium px-2 py-1 rounded-full">
+                    Total: {stats.monthlyGrowth.reduce((sum, item) => sum + item.count, 0)} aset
                   </div>
-                ))}
+                )}
+              </div>              {stats?.monthlyGrowth && stats.monthlyGrowth.some(item => item.count > 0) ? (
+                <BarChart data={stats.monthlyGrowth} />
+              ) : (
+                <div className="h-40 flex flex-col items-center justify-center text-gray-500 bg-gray-50/50 rounded-lg border border-gray-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <p>Tidak ada perolehan aset dalam 6 bulan terakhir</p>
+                </div>
+              )}<div className="mt-2">
+                <h3 className="text-xs font-medium text-gray-700 mb-1">3 bulan terakhir:</h3>                <div className="grid grid-cols-3 gap-2">
+                  {(stats?.monthlyGrowth || []).slice(-3).map((item) => (
+                    <div 
+                      key={`${item.month}-${item.year}`} 
+                      className={`${item.count > 0 ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'} 
+                        border p-2 rounded-lg transition-colors`}
+                    >
+                      <div className="text-xs text-gray-500">{item.month} {item.year}</div>
+                      <div className="font-medium flex items-center">
+                        <span className={`${item.count > 0 ? 'text-blue-600' : 'text-gray-500'}`}>
+                          {item.count}
+                        </span>
+                        <span className="text-xs ml-1 text-gray-500">aset</span>
+                        
+                        {item.growthPercentage !== 0 && (
+                          <span className={`text-xs ml-auto px-1 py-0.5 rounded
+                            ${item.growthPercentage > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                          >
+                            {item.growthPercentage > 0 ? '+' : ''}{item.growthPercentage}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </GlassCard>
@@ -787,7 +824,7 @@ export default function DashboardPage() {
                   return (
                     <div className="flex flex-col">
                       {/* Bar chart visualization - more compact */}
-                      <div className="flex h-32 mb-2">
+                      <div className="flex h-20 mb-1">
                         {chartData.map((item, index) => {
                           const maxValue = Math.max(...chartData.map(d => d.count));
                           const heightPercent = maxValue > 0 ? Math.max(5, Math.round((item.count / maxValue) * 100)) : 0;
@@ -826,11 +863,11 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Enhanced visual legend - compact grid layout */}
-                      <div className="grid grid-cols-3 gap-1">
+                      <div className="grid grid-cols-3 gap-0.5">
                         {chartData.map((item, index) => (
                           <div 
                             key={item.source}
-                            className="flex items-center p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                            className="flex items-center p-1 rounded bg-gray-50 hover:bg-gray-100 transition-colors"
                             style={{
                               animation: 'fadeIn 0.5s ease-out forwards',
                               animationDelay: `${index * 0.05 + 0.3}s`,
@@ -840,7 +877,7 @@ export default function DashboardPage() {
                             <div className={`w-2 h-2 rounded-sm ${barColors[index % barColors.length]}`}></div>
                             <div className="ml-1 flex-1 min-w-0">
                               <div className="text-xs font-medium text-gray-900 truncate">{item.source}</div>
-                              <div className="text-xs text-gray-500 truncate">{(item.value / 1000000).toFixed(1)} jt</div>
+                              <div className="text-[10px] text-gray-500 truncate">{(item.value / 1000000).toFixed(1)} jt</div>
                             </div>
                           </div>
                         ))}

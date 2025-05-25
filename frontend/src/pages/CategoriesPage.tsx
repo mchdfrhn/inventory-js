@@ -9,12 +9,15 @@ import {
   PlusIcon, 
   MagnifyingGlassIcon,
   ExclamationCircleIcon,
-  TagIcon
+  TagIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import type { Category } from '../services/api';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
+import PageSizeSelector from '../components/PageSizeSelector';
 import { useNotification } from '../context/NotificationContext';
 
 export default function CategoriesPage() {
@@ -22,6 +25,8 @@ export default function CategoriesPage() {
   const [mounted, setMounted] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const { addNotification } = useNotification();
   
   const queryClient = useQueryClient();
@@ -31,10 +36,14 @@ export default function CategoriesPage() {
     setMounted(true);
   }, []);
   
-  // Updated to use new API function that includes asset counts
+  // Save pageSize to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('categoryPageSize', pageSize.toString());
+  }, [pageSize]);
+    // Updated to use new API function that includes asset counts with server pagination
   const { data, isLoading, error } = useQuery({
-    queryKey: ['categoriesWithCounts'],
-    queryFn: () => categoryApi.listWithAssetCounts(),
+    queryKey: ['categoriesWithCounts', currentPage, pageSize],
+    queryFn: () => categoryApi.listWithAssetCounts(currentPage, pageSize),
   });
   // Delete mutation
   const [deleteError, setDeleteError] = useState<string | null>(null);  
@@ -55,14 +64,15 @@ export default function CategoriesPage() {
       addNotification('error', errorMessage);
       console.error('Delete error:', err);
     }
-  });
-  // Filter categories based on search term
+  });  // Filter categories based on search term
+  // In the future, we should move search to the server side
   const filteredCategories = data?.data.filter((category: Category) => {
     return searchTerm === '' || 
       category.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       category.description.toLowerCase().includes(searchTerm.toLowerCase());
   });
+
     // Open delete confirmation modal
   const openDeleteModal = (category: Category) => {
     setCategoryToDelete(category);
@@ -163,8 +173,7 @@ export default function CategoriesPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200/50">
-                {filteredCategories && filteredCategories.length > 0 ? (
+              <tbody className="divide-y divide-gray-200/50">                {filteredCategories && filteredCategories.length > 0 ? (
                   filteredCategories.map((category: Category) => (
                     <tr key={category.id} className="table-row-hover hover:bg-blue-50/30 transition-all">
                       <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-mono text-gray-700">
@@ -224,7 +233,59 @@ export default function CategoriesPage() {
                 )}
               </tbody>
             </table>
-          </div>        </div>
+          </div>
+        </div>
+
+        {/* Pagination controls */}
+        {filteredCategories && filteredCategories.length > 0 && (
+          <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200/50">            <div className="flex-1 flex items-center">
+              <span className="text-sm text-gray-500">
+                Menampilkan{' '}
+                <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span>
+                {' - '}
+                <span className="font-medium">{Math.min(currentPage * pageSize, filteredCategories.length)}</span>
+                {' dari '}
+                <span className="font-medium">{filteredCategories.length}</span>
+                {' kategori'}
+              </span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <PageSizeSelector 
+                pageSize={pageSize}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+                options={[10, 25, 50, 100]}
+              />
+              
+              {Math.ceil(filteredCategories.length / pageSize) > 1 && (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(curr => Math.max(1, curr - 1))}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200
+                      ${currentPage === 1 
+                        ? 'text-gray-300 cursor-not-allowed bg-white/50' 
+                        : 'text-gray-700 hover:-translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+                  >
+                    <ChevronLeftIcon className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(curr => Math.min(Math.ceil(filteredCategories.length / pageSize), curr + 1))}
+                    disabled={currentPage >= Math.ceil(filteredCategories.length / pageSize)}
+                    className={`relative inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200
+                      ${currentPage >= Math.ceil(filteredCategories.length / pageSize)
+                        ? 'text-gray-300 cursor-not-allowed bg-white/50' 
+                        : 'text-gray-700 hover:translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+                  >
+                    <ChevronRightIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </GlassCard>
 
       {/* Delete Category Modal */}

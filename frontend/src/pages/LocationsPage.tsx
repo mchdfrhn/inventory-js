@@ -10,14 +10,23 @@ import {
   PlusIcon, 
   MagnifyingGlassIcon,
   ExclamationCircleIcon,
-  MapPinIcon
+  MapPinIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
+import PageSizeSelector from '../components/PageSizeSelector';
 import { useNotification } from '../context/NotificationContext';
   
 export default function LocationsPage() {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => {
+    // Try to get pageSize from localStorage, default to 10 if not found
+    const savedPageSize = localStorage.getItem('locationPageSize');
+    return savedPageSize ? parseInt(savedPageSize, 10) : 10;
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
@@ -33,9 +42,14 @@ export default function LocationsPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  // Save pageSize to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('locationPageSize', pageSize.toString());
+  }, [pageSize]);
   const { data, isLoading, error } = useQuery({
-    queryKey: ['locationsWithCounts'],
-    queryFn: () => locationApi.listWithAssetCounts(),
+    queryKey: ['locationsWithCounts', page, pageSize],
+    queryFn: () => locationApi.listWithAssetCounts(page, pageSize),
   });
     // Delete mutation
   const deleteMutation = useMutation({
@@ -66,8 +80,8 @@ export default function LocationsPage() {
     if (locationToDelete) {
       deleteMutation.mutate(locationToDelete.id);
     }
-  };
-  // Filter locations based on search term
+  };  // Filter locations based on search term - we'll handle this client-side for now
+  // but could be moved to the server API with a search parameter
   const filteredLocations = data?.data.filter((location: Location) => {
     if (!searchTerm) return true;
     
@@ -114,12 +128,7 @@ export default function LocationsPage() {
           </div>
         </div>
       </GlassCard>
-    );
-  }
-  // Add debug info for the issue
-  const debugInfo = data?.data?.map(location => {
-    return `${location.name}: ${location.asset_count} aset`;
-  }).join(', ');
+    );  }
   
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
@@ -189,9 +198,8 @@ export default function LocationsPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200/50">
-                {filteredLocations && filteredLocations.length > 0 ? (
-                  filteredLocations.map((location) => (
+              <tbody className="divide-y divide-gray-200/50">                {filteredLocations && filteredLocations.length > 0 ? (
+                  filteredLocations.map((location: Location) => (
                     <tr 
                       key={location.id} 
                       className="table-row-hover hover:bg-blue-50/30 transition-all"
@@ -257,8 +265,59 @@ export default function LocationsPage() {
                   </tr>
                 )}
               </tbody>
-            </table>
-          </div>          {/* No pagination needed as we're loading all locations at once */}
+            </table>          </div>
+          
+          {/* Pagination controls */}
+          {filteredLocations && filteredLocations.length > 0 && (
+            <div className="bg-white/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 sm:px-6">
+              <div className="flex items-center space-x-4">
+                <div className="hidden sm:block">
+                  <p className="text-sm text-gray-700">
+                    Menampilkan <span className="font-medium">{(page - 1) * pageSize + 1}</span> sampai{' '}
+                    <span className="font-medium">
+                      {Math.min(page * pageSize, filteredLocations.length)}
+                    </span>{' '}
+                    dari <span className="font-medium">{filteredLocations.length}</span> lokasi
+                  </p>
+                </div>
+                <PageSizeSelector 
+                  pageSize={pageSize} 
+                  onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setPage(1); // Reset to first page when changing page size
+                  }}
+                  options={[10, 25, 50, 100]}
+                />
+              </div>
+              
+              {Math.ceil(filteredLocations.length / pageSize) > 1 && (
+                <div className="flex-1 flex justify-between sm:justify-end space-x-3">
+                  <button
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
+                      ${page === 1 
+                        ? 'text-gray-300 cursor-not-allowed bg-white/50' 
+                        : 'text-gray-700 hover:-translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+                  >
+                    <ChevronLeftIcon className="h-5 w-5 mr-1" />
+                    Sebelumnya
+                  </button>
+                  <button
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === Math.ceil(filteredLocations.length / pageSize)}
+                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
+                      ${page === Math.ceil(filteredLocations.length / pageSize) 
+                        ? 'text-gray-300 cursor-not-allowed bg-white/50' 
+                        : 'text-gray-700 hover:translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+                  >
+                    Berikutnya
+                    <ChevronRightIcon className="h-5 w-5 ml-1" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </GlassCard>
 
