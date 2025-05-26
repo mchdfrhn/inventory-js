@@ -1,8 +1,8 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { assetApi, locationApi } from '../services/api';
-import type { Asset } from '../services/api';
+import { assetApi, categoryApi, locationApi } from '../services/api';
+import type { Asset, Category, Location } from '../services/api';
 import { 
   PencilIcon, 
   TrashIcon, 
@@ -60,11 +60,15 @@ export default function AssetsPage() {
   const [depreciationFilter, setDepreciationFilter] = useState<string>('all');
   const [acquisitionYearFilter, setAcquisitionYearFilter] = useState<string | null>(null);
   const [acquisitionSourceFilter, setAcquisitionSourceFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [locationFilter, setLocationFilter] = useState<string | null>(null);
   // Temporary filter states that will only be applied when clicking "Terapkan Filter"
   const [tempFilter, setTempFilter] = useState<string | null>(null);
   const [tempDepreciationFilter, setTempDepreciationFilter] = useState<string>('all');
   const [tempAcquisitionYearFilter, setTempAcquisitionYearFilter] = useState<string | null>(null);
   const [tempAcquisitionSourceFilter, setTempAcquisitionSourceFilter] = useState<string | null>(null);
+  const [tempCategoryFilter, setTempCategoryFilter] = useState<string | null>(null);
+  const [tempLocationFilter, setTempLocationFilter] = useState<string | null>(null);
   // Loading state for filter button
   const [isApplyingFilter, setIsApplyingFilter] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -91,8 +95,7 @@ export default function AssetsPage() {
   }, [pageSize]);
   
   const queryClient = useQueryClient();  
-  
-  // Effect for page load animation
+    // Effect for page load animation
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -100,6 +103,17 @@ export default function AssetsPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['assets', page, pageSize],
     queryFn: () => assetApi.list(page, pageSize),
+  });
+    // Fetch categories for filter
+  const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useQuery({
+    queryKey: ['categories_for_filter'],
+    queryFn: () => categoryApi.list(),
+  });
+  
+  // Fetch locations for filter
+  const { data: locationsData, isLoading: locationsLoading, error: locationsError } = useQuery({
+    queryKey: ['locations_for_filter'],
+    queryFn: () => locationApi.list(1, 100), // Get up to 100 locations
   });
   
   // Delete mutation
@@ -171,18 +185,31 @@ export default function AssetsPage() {
       const assetYear = asset.tanggal_perolehan ? new Date(asset.tanggal_perolehan).getFullYear().toString() : '';
       matchesAcquisitionYearFilter = assetYear === acquisitionYearFilter;
     }
-    
-    // Acquisition source filter
+      // Acquisition source filter
     let matchesAcquisitionSourceFilter = true;
     if (acquisitionSourceFilter) {
       matchesAcquisitionSourceFilter = asset.asal_pengadaan === acquisitionSourceFilter;
+    }
+    
+    // Category filter
+    let matchesCategoryFilter = true;
+    if (categoryFilter) {
+      matchesCategoryFilter = asset.category_id === categoryFilter;
+    }
+    
+    // Location filter
+    let matchesLocationFilter = true;
+    if (locationFilter) {
+      matchesLocationFilter = asset.lokasi_id?.toString() === locationFilter;
     }
     
     return matchesSearch && 
            matchesFilter && 
            matchesDepreciationFilter && 
            matchesAcquisitionYearFilter && 
-           matchesAcquisitionSourceFilter;
+           matchesAcquisitionSourceFilter &&
+           matchesCategoryFilter &&
+           matchesLocationFilter;
   });
 
   // Handle Enter key press for delete confirmation
@@ -196,19 +223,20 @@ export default function AssetsPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [deleteModalOpen, deleteMutation.isPending]);  
-
   // Initialize temporary filter states with current filter values when panel opens
   useEffect(() => {
     if (filterPanelOpen) {
       console.log('Filter panel opened, setting temporary filters:', { 
-        filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter 
+        filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter, categoryFilter, locationFilter
       });
       setTempFilter(filter);
       setTempDepreciationFilter(depreciationFilter);
       setTempAcquisitionYearFilter(acquisitionYearFilter);
       setTempAcquisitionSourceFilter(acquisitionSourceFilter);
+      setTempCategoryFilter(categoryFilter);
+      setTempLocationFilter(locationFilter);
     }
-  }, [filterPanelOpen, filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter]);
+  }, [filterPanelOpen, filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter, categoryFilter, locationFilter]);
   // Watch for changes in the actual filter values for debugging
   useEffect(() => {
     console.log('Filter value changed:', { 
@@ -217,12 +245,13 @@ export default function AssetsPage() {
   }, [filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter]);
 
   // Function to apply filters
-  const applyFilters = () => {
-    console.log('Applying filters:', { 
+  const applyFilters = () => {    console.log('Applying filters:', { 
       tempFilter, 
       tempDepreciationFilter,
       tempAcquisitionYearFilter,
-      tempAcquisitionSourceFilter
+      tempAcquisitionSourceFilter,
+      tempCategoryFilter,
+      tempLocationFilter
     });
     
     // Show loading state
@@ -234,6 +263,8 @@ export default function AssetsPage() {
       setDepreciationFilter(tempDepreciationFilter);
       setAcquisitionYearFilter(tempAcquisitionYearFilter);
       setAcquisitionSourceFilter(tempAcquisitionSourceFilter);
+      setCategoryFilter(tempCategoryFilter);
+      setLocationFilter(tempLocationFilter);
       
       // Reset to page 1 when applying filters
       setPage(1);
@@ -245,13 +276,14 @@ export default function AssetsPage() {
       setFilterPanelOpen(false);
     }, 300); // Short delay for visual feedback
   };
-
   // Initialize temporary filter state helper function
   const resetTempFiltersToDefaults = () => {
     setTempFilter(null);
     setTempDepreciationFilter('all');
     setTempAcquisitionYearFilter(null);
     setTempAcquisitionSourceFilter(null);
+    setTempCategoryFilter(null);
+    setTempLocationFilter(null);
     console.log('Temporary filters reset to defaults');
   };
 
@@ -262,6 +294,8 @@ export default function AssetsPage() {
     setDepreciationFilter('all');
     setAcquisitionYearFilter(null);
     setAcquisitionSourceFilter(null);
+    setCategoryFilter(null);
+    setLocationFilter(null);
     resetTempFiltersToDefaults();
     setPage(1);
     console.log('All filters have been cleared');
@@ -382,23 +416,22 @@ export default function AssetsPage() {
             <ExportButton assets={filteredAssets || []} filename="daftar_aset_sttpu" />
             <div className="hidden sm:block h-6 w-px bg-gray-300"></div>            <button
               type="button"
-              onClick={() => setFilterPanelOpen(true)}
-              className={`
+              onClick={() => setFilterPanelOpen(true)}              className={`
                 flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm
-                ${filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter 
+                ${filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter
                   ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
                   : 'bg-white/80 border-gray-200 text-gray-600 hover:bg-gray-50'}
                 transition-all duration-300
               `}
             >
-              <AdjustmentsHorizontalIcon className="h-4 w-4" />
-              <span>{filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter ? 'Filter Aktif' : 'Filter'}</span>
-              {(filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter) && (
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
+              <AdjustmentsHorizontalIcon className="h-4 w-4" />              <span>{filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter ? 'Filter Aktif' : 'Filter'}</span>
+              {(filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter) && (                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
                   {(filter ? 1 : 0) + 
                    (depreciationFilter !== 'all' ? 1 : 0) + 
                    (acquisitionYearFilter ? 1 : 0) + 
-                   (acquisitionSourceFilter ? 1 : 0)}
+                   (acquisitionSourceFilter ? 1 : 0) +
+                   (categoryFilter ? 1 : 0) +
+                   (locationFilter ? 1 : 0)}
                 </span>
               )}
             </button>
@@ -650,9 +683,130 @@ export default function AssetsPage() {
                             </label>
                           ))}
                         </div>
-                      </div>
+                      </div>                    </div>
+                      {/* Category Filter */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                        <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                        Kategori
+                      </h3>
+                      {categoriesLoading ? (
+                        <div className="text-center py-2">
+                          <div className="inline-block animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
+                          <span className="text-sm text-gray-600">Memuat kategori...</span>
+                        </div>
+                      ) : categoriesError ? (
+                        <div className="text-center py-2 text-sm text-red-600">
+                          <ExclamationCircleIcon className="h-4 w-4 inline mr-1" />
+                          Gagal memuat data kategori
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <select 
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            value={tempCategoryFilter || ''}
+                            onChange={(e) => {
+                              setTempCategoryFilter(e.target.value || null);
+                            }}
+                          >
+                            <option value="">Semua Kategori</option>
+                            {categoriesData?.data?.map((category: Category) => (
+                              <option key={category.id} value={category.id}>
+                                {category.code ? `${category.code} - ` : ''}{category.name}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                      {/* Filter Actions */}
+                      {/* Location Filter */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                        <span className="inline-block w-3 h-3 bg-pink-500 rounded-full mr-2"></span>
+                        Lokasi
+                      </h3>
+                      {locationsLoading ? (
+                        <div className="text-center py-2">
+                          <div className="inline-block animate-spin h-4 w-4 border-2 border-pink-500 border-t-transparent rounded-full mr-2"></div>
+                          <span className="text-sm text-gray-600">Memuat lokasi...</span>
+                        </div>
+                      ) : locationsError ? (
+                        <div className="text-center py-2 text-sm text-red-600">
+                          <ExclamationCircleIcon className="h-4 w-4 inline mr-1" />
+                          Gagal memuat data lokasi
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <select 
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            value={tempLocationFilter || ''}
+                            onChange={(e) => {
+                              setTempLocationFilter(e.target.value || null);
+                            }}
+                          >
+                            <option value="">Semua Lokasi</option>
+                            {locationsData?.data?.map((location: Location) => (
+                              <option key={location.id} value={location.id.toString()}>
+                                {location.building} - {location.room} ({location.name})
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Active Filters - Show badge for active filters */}
+                    {(tempFilter || tempDepreciationFilter !== 'all' || tempAcquisitionYearFilter || tempAcquisitionSourceFilter || tempCategoryFilter || tempLocationFilter) && (
+                      <div className="mt-4 mb-2 flex flex-wrap gap-2">
+                        <h3 className="w-full text-xs font-medium text-gray-500 mb-1">Filter Aktif:</h3>
+                        
+                        {tempCategoryFilter && categoriesData?.data && (
+                          <div className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                            <span>Kategori: </span>
+                            <span className="ml-1 font-semibold">
+                              {(categoriesData.data.find((c: Category) => c.id === tempCategoryFilter)?.name) || 'Dipilih'}
+                            </span>
+                            <button
+                              type="button"
+                              className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-green-600 hover:bg-green-200 hover:text-green-800 focus:outline-none"
+                              onClick={() => setTempCategoryFilter(null)}
+                            >
+                              <span className="sr-only">Hapus filter kategori</span>
+                              <XMarkIcon className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                        
+                        {tempLocationFilter && locationsData?.data && (
+                          <div className="inline-flex items-center rounded-full bg-pink-50 border border-pink-200 px-2.5 py-0.5 text-xs font-medium text-pink-800">
+                            <span>Lokasi: </span>
+                            <span className="ml-1 font-semibold">
+                              {(locationsData.data.find((l: Location) => l.id.toString() === tempLocationFilter)?.name) || 'Dipilih'}
+                            </span>
+                            <button
+                              type="button"
+                              className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-pink-600 hover:bg-pink-200 hover:text-pink-800 focus:outline-none"
+                              onClick={() => setTempLocationFilter(null)}
+                            >
+                              <span className="sr-only">Hapus filter lokasi</span>
+                              <XMarkIcon className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Filter Actions */}
                     <div className="mt-6 px-1">
                       <div className="flex flex-col space-y-3">
                         <button
@@ -923,11 +1077,10 @@ export default function AssetsPage() {
                 }}
                 options={[10, 25, 50, 100]}
               />
-            </div>
-            <div className="flex-1 flex justify-between sm:justify-end space-x-3">              <button
+            </div>            <div className="flex-1 flex justify-between sm:justify-end space-x-3">              <button
                 onClick={() => setPage(page - 1)}
                 disabled={page === 1}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors
                   ${page === 1 
                     ? 'text-gray-300 cursor-not-allowed bg-white/50' 
                     : 'text-gray-700 bg-white/70 shadow-sm'}`}
@@ -938,7 +1091,7 @@ export default function AssetsPage() {
               <button
                 onClick={() => setPage(page + 1)}
                 disabled={page === data.pagination.total_pages}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors
                   ${page === data.pagination.total_pages 
                     ? 'text-gray-300 cursor-not-allowed bg-white/50' 
                     : 'text-gray-700 bg-white/70 shadow-sm'}`}
