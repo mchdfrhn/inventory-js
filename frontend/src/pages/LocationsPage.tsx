@@ -46,10 +46,11 @@ export default function LocationsPage() {
   // Save pageSize to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('locationPageSize', pageSize.toString());
-  }, [pageSize]);
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['locationsWithCounts', page, pageSize],
-    queryFn: () => locationApi.listWithAssetCounts(page, pageSize),
+  }, [pageSize]);  const { data, isLoading, error } = useQuery({
+    queryKey: ['locationsWithCounts', page, pageSize, searchTerm],
+    queryFn: () => searchTerm ? 
+      locationApi.search(searchTerm, page, pageSize) : 
+      locationApi.listWithAssetCounts(page, pageSize),
   });
     // Delete mutation
   const deleteMutation = useMutation({
@@ -80,19 +81,9 @@ export default function LocationsPage() {
     if (locationToDelete) {
       deleteMutation.mutate(locationToDelete.id);
     }
-  };  // Filter locations based on search term - we'll handle this client-side for now
-  // but could be moved to the server API with a search parameter
-  const filteredLocations = data?.data.filter((location: Location) => {
-    if (!searchTerm) return true;
-    
-    return (
-      location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      location.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      location.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      location.building?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      location.room?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+  };  // Use the data directly from the API, as searching is now done server-side
+  // filteredLocations is kept for backward compatibility
+  const filteredLocations = data?.data;
 
   if (isLoading) {
     return (
@@ -161,8 +152,10 @@ export default function LocationsPage() {
               id="search-locations"
               className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"
               placeholder="Cari lokasi..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchTerm}              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1); // Reset to page 1 on search
+              }}
             />
           </div>
         </div>
@@ -266,18 +259,17 @@ export default function LocationsPage() {
                 )}
               </tbody>
             </table>          </div>
-          
-          {/* Pagination controls */}
-          {filteredLocations && filteredLocations.length > 0 && (
+            {/* Pagination controls */}
+          {data?.pagination && filteredLocations && (
             <div className="bg-white/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 sm:px-6">
               <div className="flex items-center space-x-4">
                 <div className="hidden sm:block">
                   <p className="text-sm text-gray-700">
-                    Menampilkan <span className="font-medium">{(page - 1) * pageSize + 1}</span> sampai{' '}
+                    Menampilkan <span className="font-medium">{data.pagination.total_items > 0 ? (page - 1) * pageSize + 1 : 0}</span> sampai{' '}
                     <span className="font-medium">
-                      {Math.min(page * pageSize, filteredLocations.length)}
+                      {Math.min(page * pageSize, data.pagination.total_items)}
                     </span>{' '}
-                    dari <span className="font-medium">{filteredLocations.length}</span> lokasi
+                    dari <span className="font-medium">{data.pagination.total_items}</span> lokasi
                   </p>
                 </div>
                 <PageSizeSelector 
@@ -289,33 +281,30 @@ export default function LocationsPage() {
                   options={[10, 25, 50, 100]}
                 />
               </div>
-              
-              {Math.ceil(filteredLocations.length / pageSize) > 1 && (
-                <div className="flex-1 flex justify-between sm:justify-end space-x-3">
-                  <button
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
-                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
-                      ${page === 1 
-                        ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                        : 'text-gray-700 hover:-translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
-                  >
-                    <ChevronLeftIcon className="h-5 w-5 mr-1" />
-                    Sebelumnya
-                  </button>
-                  <button
-                    onClick={() => setPage(page + 1)}
-                    disabled={page === Math.ceil(filteredLocations.length / pageSize)}
-                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
-                      ${page === Math.ceil(filteredLocations.length / pageSize) 
-                        ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                        : 'text-gray-700 hover:translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
-                  >
-                    Berikutnya
-                    <ChevronRightIcon className="h-5 w-5 ml-1" />
-                  </button>
-                </div>
-              )}
+              <div className="flex-1 flex justify-between sm:justify-end space-x-3">
+                <button
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                  className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
+                    ${page === 1 
+                      ? 'text-gray-300 cursor-not-allowed bg-white/50' 
+                      : 'text-gray-700 hover:-translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+                >
+                  <ChevronLeftIcon className="h-5 w-5 mr-1" />
+                  Sebelumnya
+                </button>
+                <button
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === data.pagination.total_pages}
+                  className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
+                    ${page === data.pagination.total_pages 
+                      ? 'text-gray-300 cursor-not-allowed bg-white/50' 
+                      : 'text-gray-700 hover:translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+                >
+                  Berikutnya
+                  <ChevronRightIcon className="h-5 w-5 ml-1" />
+                </button>
+              </div>
             </div>
           )}
         </div>

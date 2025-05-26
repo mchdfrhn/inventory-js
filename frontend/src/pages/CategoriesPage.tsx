@@ -25,7 +25,11 @@ export default function CategoriesPage() {
   const [mounted, setMounted] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(() => {
+    // Try to get pageSize from localStorage, default to 10 if not found
+    const savedPageSize = localStorage.getItem('categoryPageSize');
+    return savedPageSize ? parseInt(savedPageSize, 10) : 10;
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const { addNotification } = useNotification();
   
@@ -40,10 +44,12 @@ export default function CategoriesPage() {
   useEffect(() => {
     localStorage.setItem('categoryPageSize', pageSize.toString());
   }, [pageSize]);
-    // Updated to use new API function that includes asset counts with server pagination
+  // Updated to use new API function that includes asset counts with server pagination
   const { data, isLoading, error } = useQuery({
-    queryKey: ['categoriesWithCounts', currentPage, pageSize],
-    queryFn: () => categoryApi.listWithAssetCounts(currentPage, pageSize),
+    queryKey: ['categoriesWithCounts', currentPage, pageSize, searchTerm],
+    queryFn: () => searchTerm ? 
+      categoryApi.search(searchTerm, currentPage, pageSize) :
+      categoryApi.listWithAssetCounts(currentPage, pageSize),
   });
   // Delete mutation
   const [deleteError, setDeleteError] = useState<string | null>(null);  
@@ -64,14 +70,9 @@ export default function CategoriesPage() {
       addNotification('error', errorMessage);
       console.error('Delete error:', err);
     }
-  });  // Filter categories based on search term
-  // In the future, we should move search to the server side
-  const filteredCategories = data?.data.filter((category: Category) => {
-    return searchTerm === '' || 
-      category.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.description.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  });  // Use the data directly from the API, as searching is now done server-side
+  // filteredCategories is kept for backward compatibility
+  const filteredCategories = data?.data;
 
     // Open delete confirmation modal
   const openDeleteModal = (category: Category) => {
@@ -146,7 +147,10 @@ export default function CategoriesPage() {
               id="search-categories"
               className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"              placeholder="Cari kategori..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset to page 1 on search
+              }}
             />
           </div>
         </div>
@@ -234,55 +238,51 @@ export default function CategoriesPage() {
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Pagination controls */}
-        {filteredCategories && filteredCategories.length > 0 && (
-          <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200/50">            <div className="flex-1 flex items-center">
-              <span className="text-sm text-gray-500">
-                Menampilkan{' '}
-                <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span>
-                {' - '}
-                <span className="font-medium">{Math.min(currentPage * pageSize, filteredCategories.length)}</span>
-                {' dari '}
-                <span className="font-medium">{filteredCategories.length}</span>
-                {' kategori'}
-              </span>
-            </div>
+        </div>        {/* Pagination controls */}
+        {data?.pagination && filteredCategories && (
+          <div className="bg-white/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 sm:px-6">
             <div className="flex items-center space-x-4">
+              <div className="hidden sm:block">
+                <p className="text-sm text-gray-700">
+                  Menampilkan <span className="font-medium">{data.pagination.total_items > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> sampai{' '}
+                  <span className="font-medium">
+                    {Math.min(currentPage * pageSize, data.pagination.total_items)}
+                  </span>{' '}
+                  dari <span className="font-medium">{data.pagination.total_items}</span> kategori
+                </p>
+              </div>
               <PageSizeSelector 
-                pageSize={pageSize}
+                pageSize={pageSize} 
                 onPageSizeChange={(newSize) => {
                   setPageSize(newSize);
-                  setCurrentPage(1);
+                  setCurrentPage(1); // Reset to first page when changing page size
                 }}
                 options={[10, 25, 50, 100]}
               />
-              
-              {Math.ceil(filteredCategories.length / pageSize) > 1 && (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setCurrentPage(curr => Math.max(1, curr - 1))}
-                    disabled={currentPage === 1}
-                    className={`relative inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200
-                      ${currentPage === 1 
-                        ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                        : 'text-gray-700 hover:-translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
-                  >
-                    <ChevronLeftIcon className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(curr => Math.min(Math.ceil(filteredCategories.length / pageSize), curr + 1))}
-                    disabled={currentPage >= Math.ceil(filteredCategories.length / pageSize)}
-                    className={`relative inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200
-                      ${currentPage >= Math.ceil(filteredCategories.length / pageSize)
-                        ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                        : 'text-gray-700 hover:translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
-                  >
-                    <ChevronRightIcon className="h-5 w-5" />
-                  </button>
-                </div>
-              )}
+            </div>
+            <div className="flex-1 flex justify-between sm:justify-end space-x-3">
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
+                  ${currentPage === 1 
+                    ? 'text-gray-300 cursor-not-allowed bg-white/50' 
+                    : 'text-gray-700 hover:-translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+              >
+                <ChevronLeftIcon className="h-5 w-5 mr-1" />
+                Sebelumnya
+              </button>
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === data.pagination.total_pages}
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
+                  ${currentPage === data.pagination.total_pages 
+                    ? 'text-gray-300 cursor-not-allowed bg-white/50' 
+                    : 'text-gray-700 hover:translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+              >
+                Berikutnya
+                <ChevronRightIcon className="h-5 w-5 ml-1" />
+              </button>
             </div>
           </div>
         )}

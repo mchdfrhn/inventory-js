@@ -48,7 +48,7 @@ const formatStatus = (status: string): string => {
 
 
 
-export default function AssetsPage() {
+export default function AssetsPage() {  
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => {
     // Try to get pageSize from localStorage, default to 10 if not found
@@ -73,11 +73,13 @@ export default function AssetsPage() {
   const [viewType, setViewType] = useState<'table' | 'grid'>(
     localStorage.getItem('assetViewType') as 'table' | 'grid' || 'table'
   );
-  const [deleteError, setDeleteError] = useState<string | null>(null);  const [mounted, setMounted] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   
   // Add notification hook
   const { addNotification } = useNotification();
+
   // Save view type preference  
   useEffect(() => {
     localStorage.setItem('assetViewType', viewType);
@@ -87,7 +89,8 @@ export default function AssetsPage() {
   useEffect(() => {
     localStorage.setItem('assetPageSize', pageSize.toString());
   }, [pageSize]);
-    const queryClient = useQueryClient();  
+  
+  const queryClient = useQueryClient();  
   
   // Effect for page load animation
   useEffect(() => {
@@ -127,8 +130,10 @@ export default function AssetsPage() {
     if (assetToDelete) {
       deleteMutation.mutate(assetToDelete.id);
     }
-  };  // Filter and search functionality
-  const filteredAssets = data?.data.filter((asset: Asset) => {
+  };  
+
+  // Filter and search functionality
+  const filteredAssets = data?.data?.filter((asset: Asset) => {
     // Text search
     const matchesSearch = searchTerm === '' || 
       asset.nama.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -178,19 +183,21 @@ export default function AssetsPage() {
            matchesDepreciationFilter && 
            matchesAcquisitionYearFilter && 
            matchesAcquisitionSourceFilter;
-  });  // Handle Enter key press for delete confirmation
+  });
+
+  // Handle Enter key press for delete confirmation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (deleteModalOpen && event.key === 'Enter' && !deleteMutation.isPending) {
-        if (assetToDelete) {
-          deleteMutation.mutate(assetToDelete.id);
-        }
+        confirmDelete();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [deleteModalOpen, deleteMutation.isPending, assetToDelete, confirmDelete, deleteMutation]);  // Initialize temporary filter states with current filter values when panel opens
+  }, [deleteModalOpen, deleteMutation.isPending]);  
+
+  // Initialize temporary filter states with current filter values when panel opens
   useEffect(() => {
     if (filterPanelOpen) {
       console.log('Filter panel opened, setting temporary filters:', { 
@@ -208,7 +215,7 @@ export default function AssetsPage() {
       filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter 
     });
   }, [filter, depreciationFilter, acquisitionYearFilter, acquisitionSourceFilter]);
-  
+
   // Function to apply filters
   const applyFilters = () => {
     console.log('Applying filters:', { 
@@ -237,7 +244,9 @@ export default function AssetsPage() {
       // Close the filter panel after applying
       setFilterPanelOpen(false);
     }, 300); // Short delay for visual feedback
-  };  // Initialize temporary filter state helper function
+  };
+
+  // Initialize temporary filter state helper function
   const resetTempFiltersToDefaults = () => {
     setTempFilter(null);
     setTempDepreciationFilter('all');
@@ -304,6 +313,7 @@ export default function AssetsPage() {
       </div>
     );
   }
+
   if (error) {
     return (
       <GlassCard className="p-6 border-l-4 border-red-500">
@@ -893,12 +903,12 @@ export default function AssetsPage() {
             </table>
           </div>
         )}          {/* Pagination */}
-        {data?.pagination && (
+        {data?.pagination && filteredAssets && (
           <div className="bg-white/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 sm:px-6">
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block">
                 <p className="text-sm text-gray-700">
-                  Menampilkan <span className="font-medium">{(page - 1) * pageSize + 1}</span> sampai{' '}
+                  Menampilkan <span className="font-medium">{data.pagination.total_items > 0 ? (page - 1) * pageSize + 1 : 0}</span> sampai{' '}
                   <span className="font-medium">
                     {Math.min(page * pageSize, data.pagination.total_items)}
                   </span>{' '}

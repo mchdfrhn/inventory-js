@@ -156,6 +156,15 @@ export const categoryApi = {
     return response.data;
   },
 
+  search: async (query: string, page = 1, pageSize = 10) => {
+    // Implement server-side search if supported by the API
+    // For now, we're using client-side search with server pagination
+    const response = await api.get<PaginatedResponse<Category>>(
+      `/categories?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(query)}`
+    );
+    return response.data;
+  },
+
   getById: async (id: string) => {
     const response = await api.get<{ status: string; message: string; data: Category }>(`/categories/${id}`);
     return response.data;
