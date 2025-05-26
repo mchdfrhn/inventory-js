@@ -155,10 +155,8 @@ export const categoryApi = {
     const response = await api.get<PaginatedResponse<Category>>(`/categories?page=${page}&page_size=${pageSize}`);
     return response.data;
   },
-
   search: async (query: string, page = 1, pageSize = 10) => {
-    // Implement server-side search if supported by the API
-    // For now, we're using client-side search with server pagination
+    // Server-side search with pagination
     const response = await api.get<PaginatedResponse<Category>>(
       `/categories?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(query)}`
     );
@@ -249,10 +247,10 @@ export const locationApi = {
     const response = await api.delete<{ status: string; message: string }>(`/locations/${id}`);
     return response.data;
   },
-
   search: async (query: string, page = 1, pageSize = 10) => {
+    // Server-side search with pagination
     const response = await api.get<PaginatedResponse<Location>>(
-      `/locations/search?q=${encodeURIComponent(query)}&page=${page}&page_size=${pageSize}`
+      `/locations?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(query)}`
     );
     return response.data;
   },

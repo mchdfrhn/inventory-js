@@ -260,14 +260,13 @@ export default function CategoriesPage() {
                 options={[10, 25, 50, 100]}
               />
             </div>
-            <div className="flex-1 flex justify-between sm:justify-end space-x-3">
-              <button
+            <div className="flex-1 flex justify-between sm:justify-end space-x-3">              <button
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
                   ${currentPage === 1 
                     ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                    : 'text-gray-700 hover:-translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+                    : 'text-gray-700 bg-white/70 shadow-sm'}`}
               >
                 <ChevronLeftIcon className="h-5 w-5 mr-1" />
                 Sebelumnya
@@ -275,10 +274,10 @@ export default function CategoriesPage() {
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === data.pagination.total_pages}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
                   ${currentPage === data.pagination.total_pages 
                     ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                    : 'text-gray-700 hover:translate-x-1 bg-white/70 hover:bg-blue-50 hover:text-blue-700 shadow-sm hover:shadow'}`}
+                    : 'text-gray-700 bg-white/70 shadow-sm'}`}
               >
                 Berikutnya
                 <ChevronRightIcon className="h-5 w-5 ml-1" />
