@@ -1,11 +1,17 @@
 package http
 
 import (
+	"encoding/csv"
+	"errors"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"strconv"
+	"strings"
+
+	"en-inventory/internal/domain"
 
 	"github.com/gin-gonic/gin"
-	"en-inventory/internal/domain"
 )
 
 type LocationHandler struct {
@@ -21,6 +27,7 @@ func NewLocationHandler(r *gin.Engine, locationUseCase domain.LocationUseCase) {
 		locations := api.Group("/locations")
 		{
 			locations.POST("", handler.Create)
+			locations.POST("/import", handler.Import)
 			locations.GET("", handler.List)
 			locations.GET("/search", handler.Search) // Must come before /:id route
 			locations.GET("/:id", handler.GetByID)
@@ -239,4 +246,134 @@ func (h *LocationHandler) Search(c *gin.Context) {
 			"has_next":     hasNext,
 		},
 	})
+}
+
+// Import handles POST request to import locations from CSV/Excel file
+func (h *LocationHandler) Import(c *gin.Context) {
+	// Get the uploaded file
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "No file uploaded: " + err.Error(),
+		})
+		return
+	}
+	defer file.Close()
+
+	// Check file type
+	filename := header.Filename
+	if !strings.HasSuffix(strings.ToLower(filename), ".csv") &&
+		!strings.HasSuffix(strings.ToLower(filename), ".xlsx") &&
+		!strings.HasSuffix(strings.ToLower(filename), ".xls") {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Unsupported file format. Please use CSV, XLS, or XLSX files.",
+		})
+		return
+	}
+
+	// For now, we'll handle CSV files. Excel files would need additional processing
+	var locations []domain.Location
+	var importCount int
+
+	if strings.HasSuffix(strings.ToLower(filename), ".csv") {
+		locations, importCount, err = h.processCSVFile(file)
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Excel file support not implemented yet. Please use CSV format.",
+		})
+		return
+	}
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Failed to process file: " + err.Error(),
+		})
+		return
+	}
+
+	// Import locations to database
+	successCount := 0
+	var errors []string
+
+	for _, location := range locations {
+		if err := h.LocationUseCase.Create(&location); err != nil {
+			errors = append(errors, "Failed to import location '"+location.Name+"': "+err.Error())
+		} else {
+			successCount++
+		}
+	}
+
+	// Prepare response
+	response := gin.H{
+		"status":         "success",
+		"message":        "Import completed",
+		"imported_count": successCount,
+		"total_rows":     importCount,
+	}
+
+	if len(errors) > 0 {
+		response["errors"] = errors
+		response["status"] = "partial_success"
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// processCSVFile processes CSV file and returns locations
+func (h *LocationHandler) processCSVFile(file multipart.File) ([]domain.Location, int, error) {
+	reader := csv.NewReader(file)
+
+	// Read header line
+	headers, err := reader.Read()
+	if err != nil {
+		return nil, 0, err
+	}
+	// Validate headers
+	expectedHeaders := []string{"code", "name", "building", "floor", "room", "description"}
+	if len(headers) < len(expectedHeaders) {
+		return nil, 0, errors.New("invalid CSV format. Expected headers: " + strings.Join(expectedHeaders, ", "))
+	}
+
+	var locations []domain.Location
+	rowCount := 0
+
+	// Read data rows
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, 0, err
+		}
+
+		rowCount++
+
+		// Skip empty rows
+		if len(record) == 0 || (len(record) == 1 && strings.TrimSpace(record[0]) == "") {
+			continue
+		}
+		// Parse location data
+		if len(record) >= 6 {
+			location := domain.Location{
+				Code:        strings.TrimSpace(record[0]),
+				Name:        strings.TrimSpace(record[1]),
+				Building:    strings.TrimSpace(record[2]),
+				Floor:       strings.TrimSpace(record[3]),
+				Room:        strings.TrimSpace(record[4]),
+				Description: strings.TrimSpace(record[5]),
+			}
+
+			// Validate required fields
+			if location.Code != "" && location.Name != "" {
+				locations = append(locations, location)
+			}
+		}
+	}
+
+	return locations, rowCount, nil
 }

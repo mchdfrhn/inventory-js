@@ -11,7 +11,9 @@ import {
   ExclamationCircleIcon,
   TagIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  DocumentArrowUpIcon,
+  DocumentArrowDownIcon
 } from '@heroicons/react/24/outline';
 import type { Category } from '../services/api';
 import GlassCard from '../components/GlassCard';
@@ -29,9 +31,15 @@ export default function CategoriesPage() {
     // Try to get pageSize from localStorage, default to 10 if not found
     const savedPageSize = localStorage.getItem('categoryPageSize');
     return savedPageSize ? parseInt(savedPageSize, 10) : 10;
-  });
-  const [currentPage, setCurrentPage] = useState(1);
+  });  const [currentPage, setCurrentPage] = useState(1);
   const { addNotification } = useNotification();
+  
+  // Import states
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
   
   const queryClient = useQueryClient();
   
@@ -80,6 +88,103 @@ export default function CategoriesPage() {
     setDeleteModalOpen(true);
     setDeleteError(null);
   };
+
+  // Handle file selection for import
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+        'application/vnd.ms-excel', // .xls
+        'text/csv' // .csv
+      ];
+      
+      if (allowedTypes.includes(file.type)) {
+        setImportFile(file);
+        setImportError(null);
+      } else {
+        setImportError('Format file tidak didukung. Gunakan file Excel (.xlsx, .xls) atau CSV (.csv)');
+        setImportFile(null);
+      }
+    }
+  };
+
+  // Handle import submission
+  const handleImportSubmit = async () => {
+    if (!importFile) {
+      setImportError('Pilih file untuk diimport');
+      return;
+    }
+
+    setImportLoading(true);
+    setImportError(null);
+    setImportSuccess(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', importFile);
+
+      const response = await fetch('/api/v1/categories/import', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Gagal mengimport data');
+      }
+
+      const result = await response.json();
+      setImportSuccess(`Berhasil mengimport ${result.imported_count || 0} kategori`);
+      
+      // Refresh the categories list
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['categoriesWithCounts'] });
+      
+      // Reset form after success
+      setTimeout(() => {
+        setImportModalOpen(false);
+        setImportFile(null);
+        setImportSuccess(null);
+        addNotification('success', `Berhasil mengimport ${result.imported_count || 0} kategori`);
+      }, 2000);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan saat mengimport data';
+      setImportError(errorMessage);
+      addNotification('error', errorMessage);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  // Download template Excel file
+  const downloadTemplate = () => {
+    // Create template data
+    const templateData = [
+      ['code', 'name', 'description'],
+      ['KAT001', 'Peralatan Komputer', 'Kategori untuk semua peralatan komputer dan aksesorisnya'],
+      ['KAT002', 'Furniture Kantor', 'Kategori untuk meja, kursi, lemari dan furniture kantor lainnya'],
+      ['KAT003', 'Kendaraan', 'Kategori untuk mobil, motor dan kendaraan operasional']
+    ];
+
+    // Create CSV content
+    const csvContent = templateData.map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create download link
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'template_import_kategori.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -119,20 +224,25 @@ export default function CategoriesPage() {
 
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <GlassCard className="overflow-hidden">
-        {/* Header section */}
+      <GlassCard className="overflow-hidden">        {/* Header section */}
         <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">          <div>
             <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Kategori</h2>
             <p className="mt-1 text-sm text-gray-500">
               Kelola kategori aset untuk organisasi yang lebih baik
             </p>
           </div>
-          <Link to="/categories/new">
-            <GradientButton variant="primary" className="flex items-center">
-              <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
-              Tambah Kategori
+          <div className="flex space-x-3">
+            <GradientButton variant="secondary" onClick={() => setImportModalOpen(true)}>
+              <DocumentArrowUpIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
+              Import
             </GradientButton>
-          </Link>
+            <Link to="/categories/new">
+              <GradientButton variant="primary" className="flex items-center">
+                <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+                Tambah Kategori
+              </GradientButton>
+            </Link>
+          </div>
         </div>
 
         {/* Search bar */}
@@ -358,6 +468,126 @@ export default function CategoriesPage() {
                     type="button"
                     className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm transition-all duration-200 hover:-translate-y-0.5"
                     onClick={() => setDeleteModalOpen(false)}
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>      </Transition.Root>
+
+      {/* Import Categories Modal */}
+      <Transition.Root show={importModalOpen} as={Fragment}>
+        <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" onClose={setImportModalOpen}>
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm transition-opacity" />
+            </Transition.Child>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+              &#8203;
+            </span>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >              <div className="glass-card inline-block align-bottom rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <DocumentArrowUpIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                    <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
+                      Import Kategori
+                    </Dialog.Title>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500 mb-4">
+                        Upload file Excel atau CSV untuk mengimport data kategori secara bulk.
+                      </p>
+                      
+                      {/* Download Template Button */}
+                      <div className="mb-4">
+                        <button
+                          type="button"
+                          onClick={downloadTemplate}
+                          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
+                          Download Template
+                        </button>
+                      </div>
+
+                      {/* File Upload */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Pilih File
+                        </label>
+                        <input
+                          type="file"
+                          accept=".xlsx,.xls,.csv"
+                          onChange={handleFileSelect}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        />
+                        {importFile && (
+                          <p className="mt-2 text-sm text-green-600">
+                            File terpilih: {importFile.name}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Error Message */}
+                      {importError && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                          <p className="text-sm text-red-600">{importError}</p>
+                        </div>
+                      )}
+
+                      {/* Success Message */}
+                      {importSuccess && (
+                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                          <p className="text-sm text-green-600">{importSuccess}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                  <GradientButton
+                    variant="primary"
+                    className="w-full sm:ml-3 sm:w-auto"
+                    onClick={handleImportSubmit}
+                    disabled={importLoading || !importFile}
+                  >
+                    {importLoading && (
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
+                    {importLoading ? 'Mengimport...' : 'Import'}
+                  </GradientButton>
+                  <button
+                    type="button"
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm transition-all duration-200 hover:-translate-y-0.5"
+                    onClick={() => {
+                      setImportModalOpen(false);
+                      setImportFile(null);
+                      setImportError(null);
+                      setImportSuccess(null);
+                    }}
                   >
                     Batal
                   </button>
