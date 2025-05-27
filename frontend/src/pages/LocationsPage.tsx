@@ -210,9 +210,13 @@ export default function LocationsPage() {
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{location.room || ''}</td>                      <td className="px-3 py-4 text-sm text-gray-500 max-w-xs truncate">
                         {location.description || ''}
                       </td>                      <td className="whitespace-nowrap px-3 py-4 text-sm">
-                        <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 border border-blue-200 shadow-sm transition-all duration-300 hover:scale-105">
+                        <Link
+                          to={`/assets?location=${location.id}`}
+                          className="inline-flex items-center rounded-full bg-gradient-to-r from-green-50 to-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 border border-green-200 shadow-sm transition-all duration-300 hover:scale-105 hover:from-green-100 hover:to-green-200 hover:border-green-300 cursor-pointer"
+                          title={`Lihat ${location.asset_count || 0} aset dalam lokasi ${location.name}`}
+                        >
                           {location.asset_count || 0} aset
-                        </span>
+                        </Link>
                       </td><td className="whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
                         <div className="flex justify-end space-x-5">
                           <Link

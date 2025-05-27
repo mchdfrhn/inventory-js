@@ -192,9 +192,15 @@ export default function CategoriesPage() {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 max-w-xs truncate">
                         {category.description}
-                      </td><td className="whitespace-nowrap px-3 py-4 text-sm">                        <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 border border-blue-200 shadow-sm transition-all duration-300 hover:scale-105">                          {category.asset_count || 0} aset
-                        </span>
-                      </td>                      <td className="whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
+                      </td>                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <Link
+                          to={`/assets?category=${category.id}`}
+                          className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 border border-blue-200 shadow-sm transition-all duration-300 hover:scale-105 hover:from-blue-100 hover:to-blue-200 hover:border-blue-300 cursor-pointer"
+                          title={`Lihat ${category.asset_count || 0} aset dalam kategori ${category.name}`}
+                        >
+                          {category.asset_count || 0} aset
+                        </Link>
+                      </td><td className="whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
                         <div className="flex justify-end space-x-5">
                           <Link
                             to={`/categories/edit/${category.id}`}

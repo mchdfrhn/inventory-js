@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { assetApi, categoryApi, locationApi } from '../services/api';
 import type { Asset, Category, Location } from '../services/api';
 import { 
@@ -13,7 +13,9 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   XMarkIcon,
-  AdjustmentsHorizontalIcon
+  AdjustmentsHorizontalIcon,
+  TagIcon,
+  MapPinIcon
 } from '@heroicons/react/24/outline';
 import { Dialog, Transition } from '@headlessui/react';
 import GlassCard from '../components/GlassCard';
@@ -49,6 +51,8 @@ const formatStatus = (status: string): string => {
 
 
 export default function AssetsPage() {  
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => {
     // Try to get pageSize from localStorage, default to 10 if not found
@@ -93,12 +97,27 @@ export default function AssetsPage() {
   useEffect(() => {
     localStorage.setItem('assetPageSize', pageSize.toString());
   }, [pageSize]);
+    const queryClient = useQueryClient();  
   
-  const queryClient = useQueryClient();  
-    // Effect for page load animation
+  // Effect for page load animation
   useEffect(() => {
     setMounted(true);
   }, []);
+  // Handle URL parameters on page load
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    const locationParam = searchParams.get('location');
+    
+    if (categoryParam) {
+      setCategoryFilter(categoryParam);
+      setTempCategoryFilter(categoryParam);
+    }
+    
+    if (locationParam) {
+      setLocationFilter(locationParam);
+      setTempLocationFilter(locationParam);
+    }
+  }, [searchParams]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['assets', page, pageSize],
@@ -375,15 +394,15 @@ export default function AssetsPage() {
     );
   }  return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <GlassCard className="overflow-hidden">
-        {/* Header section */}
+      <GlassCard className="overflow-hidden">        {/* Header section */}
         <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Aset</h2>
             <p className="mt-1 text-sm text-gray-500">
               Kelola semua aset inventaris STTPU dengan mudah dan efisien
             </p>
-          </div>          <div>
+          </div>
+          <div>
             <Link to="/assets/new">
               <GradientButton variant="primary" className="flex items-center">
                 <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
@@ -392,6 +411,64 @@ export default function AssetsPage() {
             </Link>
           </div>
         </div>
+
+        {/* Category Filter Notification */}
+        {categoryFilter && categoriesData?.data && (
+          <div className="px-6 py-3 bg-blue-50 border-b border-blue-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <TagIcon className="h-5 w-5 text-blue-600 mr-2" />
+                <span className="text-sm text-blue-800">
+                  Menampilkan aset dalam kategori: 
+                  <span className="font-semibold ml-1">
+                    {categoriesData.data.find((c: Category) => c.id === categoryFilter)?.name || 'Kategori Dipilih'}
+                  </span>
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setCategoryFilter(null);
+                  setTempCategoryFilter(null);
+                  setSearchParams(params => {
+                    params.delete('category');
+                    return params;
+                  });
+                }}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+              >                Hapus Filter              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Location Filter Notification */}
+        {locationFilter && locationsData?.data && (
+          <div className="px-6 py-3 bg-green-50 border-b border-green-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <MapPinIcon className="h-5 w-5 text-green-600 mr-2" />
+                <span className="text-sm text-green-800">
+                  Menampilkan aset dalam lokasi: 
+                  <span className="font-semibold ml-1">
+                    {locationsData.data.find((l: Location) => l.id.toString() === locationFilter)?.name || 'Lokasi Dipilih'}
+                  </span>
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setLocationFilter(null);
+                  setTempLocationFilter(null);
+                  setSearchParams(params => {
+                    params.delete('location');
+                    return params;
+                  });
+                }}
+                className="text-green-600 hover:text-green-800 text-sm font-medium hover:underline"
+              >
+                Hapus Filter
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Search and filters */}
         <div className="px-6 py-4 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-4">
