@@ -179,6 +179,13 @@ export default function AssetForm() {
     queryFn: () => locationApi.list(1, 100),
   });
 
+  // Fetch all assets for code generation
+  const { data: allAssetsData, isLoading: isLoadingAssets } = useQuery({
+    queryKey: ['assets-all'],
+    queryFn: () => assetApi.list(1, 100), // Get assets for code generation
+    enabled: !isEditMode, // Only fetch when creating new asset
+  });
+
   // Create/Update mutation with proper type casting
   const mutation = useMutation({
     mutationFn: (data: AssetFormData) => {
@@ -279,7 +286,100 @@ export default function AssetForm() {
       addNotification('error', errorMessage);
       setIsCreatingLocation(false);
     }
-  });
+  });  // Generate asset code based on location, category, procurement source, year, and simple sequence
+  const generateAssetCode = (
+    locationCode: string,
+    categoryCode: string,
+    procurementSource: string,
+    procurementYear: number,
+    existingAssets: Asset[]
+  ): string => {
+    // A = Location code (3 digits)
+    const A = locationCode.padStart(3, '0');
+    
+    // B = Category code (2 digits)
+    const B = categoryCode.padStart(2, '0');
+    
+    // C = Procurement source code (1 digit)
+    const procurementMap: { [key: string]: string } = {
+      'Pembelian': '1',
+      'Bantuan': '2', 
+      'STTST': '3',
+      'Hibah': '4'
+    };
+    const C = procurementMap[procurementSource] || '1';
+    
+    // D = Procurement year (2 digits)
+    const D = procurementYear.toString().slice(-2);
+    
+    // E = Sequence number (3 digits) - based on highest existing sequence number
+    // Find the highest sequence number across all assets
+    let maxSequence = 0;
+    existingAssets.forEach(asset => {
+      if (asset.kode) {
+        const parts = asset.kode.split('.');
+        if (parts.length === 5) {
+          const sequence = parseInt(parts[4]);
+          if (!isNaN(sequence) && sequence > maxSequence) {
+            maxSequence = sequence;
+          }
+        }
+      }
+    });
+    
+    const E = (maxSequence + 1).toString().padStart(3, '0');
+    
+    return `${A}.${B}.${C}.${D}.${E}`;
+  };
+
+  // Auto-generate asset code when dependencies change
+  useEffect(() => {
+    if (!isEditMode && 
+        allAssetsData?.data &&
+        formData.lokasi_id && 
+        formData.category_id && 
+        formData.asal_pengadaan && 
+        formData.tanggal_perolehan &&
+        !isLoadingAssets) {
+      
+      // Get location code
+      const selectedLocation = locationsData?.data.find(loc => loc.id === Number(formData.lokasi_id));
+      const locationCode = selectedLocation?.code || '001';
+      
+      // Get category code
+      const selectedCategory = categoriesData?.data.find(cat => cat.id === formData.category_id);
+      const categoryCode = selectedCategory?.code || '10';
+      
+      // Get procurement year from date
+      const procurementDate = new Date(formData.tanggal_perolehan);
+      const procurementYear = procurementDate.getFullYear();
+      
+      // Generate new code
+      const newCode = generateAssetCode(
+        locationCode,
+        categoryCode,
+        formData.asal_pengadaan,
+        procurementYear,
+        allAssetsData.data
+      );
+      
+      // Update form data with generated code
+      setFormData(prev => ({
+        ...prev,
+        kode: newCode
+      }));
+    }
+  }, [
+    isEditMode,
+    allAssetsData,
+    formData.lokasi_id,
+    formData.category_id,
+    formData.asal_pengadaan,
+    formData.tanggal_perolehan,
+    isLoadingAssets,
+    locationsData,
+    categoriesData
+  ]);
 
   // Validate a single field - only check numeric values since HTML5 validation handles required fields
   const validateField = (name: string, value: any): string => {
@@ -490,8 +590,7 @@ export default function AssetForm() {
           {/* Basic Information Section */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">              <div>
                 <label htmlFor="kode" className="block text-sm font-medium text-gray-700 mb-1">
                   Kode Aset <span className="text-red-500">*</span>
                 </label>
@@ -500,13 +599,23 @@ export default function AssetForm() {
                   name="kode"
                   id="kode"
                   required
-                  className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                  disabled={!isEditMode}
+                  className={`block w-full rounded-md shadow-sm sm:text-sm ${
+                    !isEditMode 
+                      ? 'bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  } ${
                     touched.kode && fieldErrors.kode ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' : ''
                   }`}
                   value={formData.kode}
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, kode: true }))}
-                />
+                  placeholder={!isEditMode ? "Kode akan dibuat otomatis..." : ""}
+                />                {!isEditMode && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Format: AAA.BB.C.DD.EEE (Lokasi.Kategori.AsalPengadaan.Tahun.UrutTertinggi+1)
+                  </p>
+                )}
                 {touched.kode && fieldErrors.kode && (
                   <p className="mt-2 text-sm text-red-600">{fieldErrors.kode}</p>
                 )}
