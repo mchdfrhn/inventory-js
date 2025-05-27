@@ -211,32 +211,25 @@ export default function LocationForm() {
             <div>
               <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
                 Kode Lokasi <span className="text-red-500">*</span>
-                {!isEditMode && (
-                  <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
-                )}
+                <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
               </label>              <input
                 type="text"
                 name="code"
                 id="code"
-                placeholder={isEditMode ? "001" : isLoadingLocations ? "Membuat kode..." : "001"}
+                placeholder={!isEditMode ? (isLoadingLocations ? "Membuat kode..." : "001") : "Kode tidak dapat diubah"}
                 required
                 value={formData.code}
-                onChange={handleChange}
-                readOnly={!isEditMode}
-                className={`block w-full rounded-md ${
-                  !isEditMode 
-                    ? 'bg-gray-50 cursor-not-allowed text-gray-600' 
-                    : touched.code && fieldErrors.code
-                      ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-                }`}              />
-              {!isEditMode && (
+                readOnly={true}
+                disabled={true}
+                className="block w-full rounded-md bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300 shadow-sm sm:text-sm"              />
+              {!isEditMode ? (
                 <p className="mt-1 text-xs text-gray-500">
                   Kode lokasi akan dibuat secara otomatis berdasarkan urutan terbaru
                 </p>
-              )}
-              {touched.code && fieldErrors.code && (
-                <p className="mt-2 text-sm text-red-600">{fieldErrors.code}</p>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">
+                  Kode lokasi tidak dapat diubah untuk menghindari duplikasi
+                </p>
               )}
             </div>
             

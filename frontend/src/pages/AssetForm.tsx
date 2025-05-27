@@ -481,7 +481,7 @@ export default function AssetForm() {
     setIsSubmitting(true);
     
     // Mark all fields as touched for styling purposes
-    const allFields = ['kode', 'nama', 'category_id', 'lokasi_id', 'quantity', 'harga_perolehan', 'umur_ekonomis_tahun', 'asal_pengadaan'];
+    const allFields = ['nama', 'category_id', 'lokasi_id', 'quantity', 'harga_perolehan', 'umur_ekonomis_tahun', 'asal_pengadaan'];
     const touchedFields = allFields.reduce((acc, field) => ({...acc, [field]: true}), {});
     setTouched(touchedFields);
     
@@ -593,32 +593,25 @@ export default function AssetForm() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">              <div>
                 <label htmlFor="kode" className="block text-sm font-medium text-gray-700 mb-1">
                   Kode Aset <span className="text-red-500">*</span>
-                </label>
-                <input
+                </label>                <input
                   type="text"
                   name="kode"
                   id="kode"
                   required
-                  disabled={!isEditMode}
-                  className={`block w-full rounded-md shadow-sm sm:text-sm ${
-                    !isEditMode 
-                      ? 'bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300' 
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-                  } ${
-                    touched.kode && fieldErrors.kode ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' : ''
-                  }`}
+                  disabled={true}
+                  className="block w-full rounded-md shadow-sm sm:text-sm bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300"
                   value={formData.kode}
-                  onChange={handleChange}
-                  onBlur={() => setTouched(prev => ({ ...prev, kode: true }))}
-                  placeholder={!isEditMode ? "Kode akan dibuat otomatis..." : ""}
-                />                {!isEditMode && (
+                  placeholder={!isEditMode ? "Kode akan dibuat otomatis..." : "Kode tidak dapat diubah"}
+                  readOnly
+                />                {!isEditMode ? (
                   <p className="mt-1 text-xs text-gray-500">
                     Format: AAA.BB.C.DD.EEE (Lokasi.Kategori.AsalPengadaan.Tahun.UrutTertinggi+1)
                   </p>
-                )}
-                {touched.kode && fieldErrors.kode && (
-                  <p className="mt-2 text-sm text-red-600">{fieldErrors.kode}</p>
-                )}
+                ) : (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Kode aset tidak dapat diubah untuk menghindari duplikasi
+                  </p>
+                )}                {/* Error display removed since code field is now read-only */}
               </div>
 
               <div>

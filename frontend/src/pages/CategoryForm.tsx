@@ -209,31 +209,27 @@ export default function CategoryForm() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">            <div>
               <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
                 Kode Kategori <span className="text-red-500">*</span>
-                {!isEditMode && (
-                  <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
-                )}
+                <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
               </label>
               <input
                 type="text"
                 name="code"
                 id="code"
                 required
-                placeholder={isEditMode ? "10" : "Auto-generating..."}
-                readOnly={!isEditMode}
-                className={`block w-full rounded-md shadow-sm sm:text-sm ${
-                  !isEditMode 
-                    ? 'bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300' 
-                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-                }`}
+                placeholder={!isEditMode ? "Auto-generating..." : "Kode tidak dapat diubah"}
+                readOnly={true}
+                disabled={true}
+                className="block w-full rounded-md shadow-sm sm:text-sm bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300"
                 value={formData.code}
-                onChange={handleChange}
               />
               {!isEditMode ? (
                 <p className="mt-1 text-xs text-gray-500">
                   Kode kategori akan dibuat secara otomatis dengan kelipatan 10 (10, 20, 30, dst)
                 </p>
               ) : (
-                <p className="mt-1 text-xs text-gray-500">Kode kategori harus unik</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Kode kategori tidak dapat diubah untuk menghindari duplikasi
+                </p>
               )}
             </div>
             <div>
