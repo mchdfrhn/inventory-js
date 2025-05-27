@@ -16,50 +16,98 @@ type CategoryFormData = {
 export default function CategoryForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const isEditMode = Boolean(id);
+  const queryClient = useQueryClient();  const isEditMode = Boolean(id);
   const { addNotification } = useNotification();
-  // Form state with correct typing
+    // Form state with correct typing
   const [formData, setFormData] = useState<CategoryFormData>({
     code: '',
     name: '',
     description: '',
   });
-
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // Auto-generate code for new categories
+  useEffect(() => {
+    if (!isEditMode) {
+      categoryApi.list(1, 100)
+        .then(result => {
+          if (result.data && result.data.length > 0) {
+            const nextCode = generateNextCode(result.data);
+            setFormData(prev => ({
+              ...prev,
+              code: nextCode
+            }));
+          } else {
+            // No categories exist, use default "10"
+            setFormData(prev => ({
+              ...prev,
+              code: '10'
+            }));
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch categories:', err);
+          // Fallback to default
+          setFormData(prev => ({
+            ...prev,
+            code: '10'
+          }));
+        });
+    }
+  }, [isEditMode]);
   // Fetch category data if in edit mode
   const { data: categoryData, isLoading } = useQuery({
     queryKey: ['category', id],
     queryFn: () => categoryApi.getById(id as string),
     enabled: isEditMode,
   });
-  // Update form data when category data is loaded
+  // Generate next category code with increments of 10
+  const generateNextCode = (existingCategories: Category[]): string => {
+    if (!existingCategories || existingCategories.length === 0) {
+      return '10';
+    }
+
+    // Extract numeric codes and find the highest
+    const numericCodes = existingCategories
+      .map(category => {
+        const match = category.code.match(/^(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter(code => !isNaN(code) && code > 0);
+
+    const maxCode = numericCodes.length > 0 ? Math.max(...numericCodes) : 0;
+    const nextCode = maxCode + 10;
+
+    return nextCode.toString();
+  };  // Update form data when category data is loaded (edit mode)
   useEffect(() => {
-    if (categoryData?.data) {
+    if (isEditMode && categoryData?.data) {
       const { code, name, description } = categoryData.data;
       setFormData({
         code,
         name,
         description,
-      });
-    }
-  }, [categoryData]);
+      });    }
+  }, [categoryData, isEditMode]);
+
   // Handle errors from fetching category
   useEffect(() => {
     if (isEditMode && !isLoading && !categoryData) {
       setError('Gagal memuat data kategori');
     }
-  }, [isEditMode, isLoading, categoryData]);
-
-  // Create/Update mutation with proper type casting
+  }, [isEditMode, isLoading, categoryData]);  // Create/Update mutation with proper type casting
   const mutation = useMutation({
-    mutationFn: (data: CategoryFormData) => {
+    mutationFn: (data: CategoryFormData) => {      // Transform data to match backend expected format (lowercase field names)
+      const transformedData = {
+        code: data.code,
+        name: data.name,
+        description: data.description,
+      };
+
       if (isEditMode) {
-        return categoryApi.update(id as string, data as Omit<Category, 'id' | 'created_at' | 'updated_at'>);
+        return categoryApi.update(id as string, transformedData as unknown as Omit<Category, 'id' | 'created_at' | 'updated_at'>);
       } else {
-        return categoryApi.create(data as Omit<Category, 'id' | 'created_at' | 'updated_at'>);
+        return categoryApi.create(transformedData as unknown as Omit<Category, 'id' | 'created_at' | 'updated_at'>);
       }
     },
     onSuccess: () => {
@@ -77,11 +125,25 @@ export default function CategoryForm() {
       console.error(err);
       setIsSubmitting(false);
     },
-  });
-
-  // Handle form submission
+  });  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    setIsSubmitting(true);
+    
+    // Manual validation for code field
+    if (!formData.code || formData.code.trim() === '') {
+      setError('Kode kategori wajib diisi');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Manual validation for name field
+    if (!formData.name || formData.name.trim() === '') {
+      setError('Nama kategori wajib diisi');
+      setIsSubmitting(false);
+      return;
+    }
     
     // Let browser handle required field validation
     // The form won't submit if required fields are empty
@@ -144,22 +206,35 @@ export default function CategoryForm() {
             <span className="text-sm">{error}</span>
           </div>
         )}        <div>          <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Kategori</h3>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">            <div>
               <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
                 Kode Kategori <span className="text-red-500">*</span>
+                {!isEditMode && (
+                  <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
+                )}
               </label>
               <input
                 type="text"
                 name="code"
                 id="code"
                 required
-                placeholder="10"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder={isEditMode ? "10" : "Auto-generating..."}
+                readOnly={!isEditMode}
+                className={`block w-full rounded-md shadow-sm sm:text-sm ${
+                  !isEditMode 
+                    ? 'bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300' 
+                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                }`}
                 value={formData.code}
                 onChange={handleChange}
               />
-              <p className="mt-1 text-xs text-gray-500">Kode kategori harus unik</p>
+              {!isEditMode ? (
+                <p className="mt-1 text-xs text-gray-500">
+                  Kode kategori akan dibuat secara otomatis dengan kelipatan 10 (10, 20, 30, dst)
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">Kode kategori harus unik</p>
+              )}
             </div>
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">

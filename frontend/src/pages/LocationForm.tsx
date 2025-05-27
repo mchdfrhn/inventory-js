@@ -26,7 +26,12 @@ export default function LocationForm() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});  // Fetch all locations to generate next code
+  const { data: allLocationsData, isLoading: isLoadingLocations } = useQuery({
+    queryKey: ['locations-all'],
+    queryFn: () => locationApi.list(1, 1000), // Get large number to ensure we get all
+    enabled: !isEditMode, // Only fetch when creating new location
+  });
 
   // Fetch location data if in edit mode
   const { data: locationData, isLoading: isLoadingLocation } = useQuery({
@@ -35,7 +40,27 @@ export default function LocationForm() {
     enabled: isEditMode,
   });
 
-  // Update form data when location data is loaded
+  // Generate next location code
+  const generateNextCode = (existingLocations: Location[]): string => {
+    if (!existingLocations || existingLocations.length === 0) {
+      return '001';
+    }
+
+    // Extract numeric codes and find the highest
+    const numericCodes = existingLocations
+      .map(location => {
+        const match = location.code.match(/^(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter(code => !isNaN(code));
+
+    const maxCode = numericCodes.length > 0 ? Math.max(...numericCodes) : 0;
+    const nextCode = maxCode + 1;
+
+    // Format with leading zeros (3 digits)
+    return nextCode.toString().padStart(3, '0');
+  };
+  // Update form data when location data is loaded (edit mode)
   useEffect(() => {
     if (locationData?.data) {
       const { name, code, description, building, floor, room } = locationData.data;
@@ -50,20 +75,39 @@ export default function LocationForm() {
     }
   }, [locationData]);
 
+  // Auto-generate code for new location
+  useEffect(() => {
+    if (!isEditMode && allLocationsData?.data) {
+      const nextCode = generateNextCode(allLocationsData.data);
+      setFormData(prev => ({
+        ...prev,
+        code: nextCode
+      }));
+    }
+  }, [allLocationsData, isEditMode]);
+
   // Handle errors from fetching location
   useEffect(() => {
     if (isEditMode && !isLoadingLocation && !locationData) {
       setError('Gagal memuat data lokasi');
     }
-  }, [isEditMode, isLoadingLocation, locationData]);
-
-  // Create/Update mutation
+  }, [isEditMode, isLoadingLocation, locationData]);  // Create/Update mutation
   const mutation = useMutation({
     mutationFn: (data: Omit<Location, 'id' | 'created_at' | 'updated_at'>) => {
+      // Transform data to match backend expected format (lowercase field names)
+      const transformedData = {
+        name: data.name,
+        code: data.code,
+        description: data.description,
+        building: data.building,
+        floor: data.floor,
+        room: data.room,
+      };
+
       if (isEditMode && id) {
-        return locationApi.update(Number(id), data);
+        return locationApi.update(Number(id), transformedData as unknown as Omit<Location, 'id' | 'created_at' | 'updated_at'>);
       } else {
-        return locationApi.create(data);
+        return locationApi.create(transformedData as unknown as Omit<Location, 'id' | 'created_at' | 'updated_at'>);
       }
     },
     onSuccess: () => {
@@ -163,25 +207,34 @@ export default function LocationForm() {
         )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Code field */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">            {/* Code field */}
             <div>
               <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
                 Kode Lokasi <span className="text-red-500">*</span>
+                {!isEditMode && (
+                  <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
+                )}
               </label>              <input
                 type="text"
                 name="code"
                 id="code"
-                placeholder="001"
+                placeholder={isEditMode ? "001" : isLoadingLocations ? "Membuat kode..." : "001"}
                 required
                 value={formData.code}
                 onChange={handleChange}
+                readOnly={!isEditMode}
                 className={`block w-full rounded-md ${
-                  touched.code && fieldErrors.code
-                    ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-                }`}
-              />
+                  !isEditMode 
+                    ? 'bg-gray-50 cursor-not-allowed text-gray-600' 
+                    : touched.code && fieldErrors.code
+                      ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                }`}              />
+              {!isEditMode && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Kode lokasi akan dibuat secara otomatis berdasarkan urutan terbaru
+                </p>
+              )}
               {touched.code && fieldErrors.code && (
                 <p className="mt-2 text-sm text-red-600">{fieldErrors.code}</p>
               )}
