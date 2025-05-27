@@ -22,11 +22,11 @@ type AssetFormData = {
   kode: string;
   nama: string;
   spesifikasi: string;
-  quantity: number;
+  quantity: number | string; // Allow string for empty state
   satuan: string;
   tanggal_perolehan: string;
-  harga_perolehan: number;
-  umur_ekonomis_tahun: number;
+  harga_perolehan: number | string; // Allow string for empty state
+  umur_ekonomis_tahun: number | string; // Allow string for empty state
   keterangan: string;
   lokasi: string; 
   lokasi_id: number | string | undefined; // Can be string for empty value or form handling
@@ -61,14 +61,13 @@ export default function AssetForm() {
   const [showCurrencyWords, setShowCurrencyWords] = useState(false);
     // Form state with correct typing
   const [formData, setFormData] = useState<AssetFormData>({
-    kode: '',
-    nama: '',
+    kode: '',    nama: '',
     spesifikasi: '',
-    quantity: 1,
+    quantity: 1, // Default value 1
     satuan: 'unit',
     tanggal_perolehan: new Date().toISOString().split('T')[0],
-    harga_perolehan: 0,
-    umur_ekonomis_tahun: 1,
+    harga_perolehan: '', // Start with empty string for better UX
+    umur_ekonomis_tahun: 5, // Default value 5
     keterangan: '',
     lokasi: '',
     lokasi_id: '',
@@ -126,8 +125,7 @@ export default function AssetForm() {
           parsedLokasiId = undefined;
         }
       }
-      
-      // Set form data with values from API
+        // Set form data with values from API
       const updatedFormData = {
         kode: kode || '',
         nama: nama || '',
@@ -136,7 +134,7 @@ export default function AssetForm() {
         satuan: satuan || 'unit',
         tanggal_perolehan: tanggal_perolehan ? new Date(tanggal_perolehan).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         harga_perolehan: harga_perolehan || 0,
-        umur_ekonomis_tahun: umur_ekonomis_tahun || 1,
+        umur_ekonomis_tahun: umur_ekonomis_tahun || 5, // Default to 5 years if not set
         keterangan: keterangan || '',
         lokasi: lokasi || '',
         lokasi_id: parsedLokasiId,
@@ -152,11 +150,11 @@ export default function AssetForm() {
       }
     }
   }, [assetData]);
-
   // Initialize currency display value when form data changes
   useEffect(() => {
-    if (formData.harga_perolehan > 0) {
-      setCurrencyDisplayValue(formatPlainNumber(formData.harga_perolehan));
+    const hargaNumber = typeof formData.harga_perolehan === 'number' ? formData.harga_perolehan : Number(formData.harga_perolehan);
+    if (hargaNumber > 0) {
+      setCurrencyDisplayValue(formatPlainNumber(hargaNumber));
     }
   }, [formData.harga_perolehan]);
 
@@ -392,8 +390,9 @@ export default function AssetForm() {
         return value >= 1 ? '' : 'Umur ekonomis wajib minimal 1 tahun';
       default:
         return '';
-    }
-  };// Handle form input changes
+    }  };
+
+  // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
@@ -403,10 +402,16 @@ export default function AssetForm() {
     // Update form data
     let newValue: string | number | undefined = value;
     
-    // Convert numeric values
+    // Convert numeric values - only convert to number if value is not empty
     if (['quantity', 'harga_perolehan', 'umur_ekonomis_tahun'].includes(name)) {
-      newValue = value === '' ? 0 : Number(value);
-    }    // Handle select fields consistently
+      if (value === '') {
+        newValue = ''; // Keep as empty string when field is cleared
+      } else {
+        newValue = Number(value);
+      }
+    }
+
+    // Handle select fields consistently
     if (name === 'lokasi_id') {
       if (value === '') {
         newValue = '';  // Keep as empty string for validation
@@ -484,50 +489,50 @@ export default function AssetForm() {
     const allFields = ['nama', 'category_id', 'lokasi_id', 'quantity', 'harga_perolehan', 'umur_ekonomis_tahun', 'asal_pengadaan'];
     const touchedFields = allFields.reduce((acc, field) => ({...acc, [field]: true}), {});
     setTouched(touchedFields);
-    
-    // Only validate number fields since HTML5 validation handles empty/required fields
+      // Only validate number fields since HTML5 validation handles empty/required fields
     // We only need to validate that numbers are positive
-    if (formData.quantity <= 0) {
+    if (Number(formData.quantity) <= 0) {
       setFieldErrors(prev => ({ ...prev, quantity: 'Jumlah wajib lebih dari 0' }));
       setIsSubmitting(false);
       return;
     }
     
-    if (formData.harga_perolehan <= 0) {
+    if (Number(formData.harga_perolehan) <= 0) {
       setFieldErrors(prev => ({ ...prev, harga_perolehan: 'Harga perolehan wajib lebih dari 0' }));
       setIsSubmitting(false);
       return;
     }
     
-    if (formData.umur_ekonomis_tahun < 1) {
+    if (Number(formData.umur_ekonomis_tahun) < 1) {
       setFieldErrors(prev => ({ ...prev, umur_ekonomis_tahun: 'Umur ekonomis wajib minimal 1 tahun' }));
       setIsSubmitting(false);
       return;
-    }
-    
-    // Ensure numeric fields have valid values before submitting
+    }    // Ensure numeric fields have valid values before submitting
     const dataToSubmit = { ...formData };
     
-    // Clean and validate all numeric fields
-    if (typeof dataToSubmit.quantity !== 'number' || isNaN(dataToSubmit.quantity)) {
-      dataToSubmit.quantity = 1; 
-    } else if (dataToSubmit.quantity < 1) {
-      dataToSubmit.quantity = 1;
+    // Clean and validate all numeric fields - convert string to number
+    const quantityNum = typeof dataToSubmit.quantity === 'string' ? Number(dataToSubmit.quantity) : dataToSubmit.quantity;
+    if (isNaN(quantityNum) || quantityNum < 1) {
+      dataToSubmit.quantity = 1; // Default to 1
+    } else {
+      dataToSubmit.quantity = quantityNum;
     }
     
-    if (typeof dataToSubmit.umur_ekonomis_tahun !== 'number' || isNaN(dataToSubmit.umur_ekonomis_tahun)) {
-      dataToSubmit.umur_ekonomis_tahun = 1;
-    } else if (dataToSubmit.umur_ekonomis_tahun < 1) {
-      dataToSubmit.umur_ekonomis_tahun = 1;
-    } else if (dataToSubmit.umur_ekonomis_tahun > 50) {
+    const umurNum = typeof dataToSubmit.umur_ekonomis_tahun === 'string' ? Number(dataToSubmit.umur_ekonomis_tahun) : dataToSubmit.umur_ekonomis_tahun;
+    if (isNaN(umurNum) || umurNum < 1) {
+      dataToSubmit.umur_ekonomis_tahun = 5; // Default to 5
+    } else if (umurNum > 50) {
       dataToSubmit.umur_ekonomis_tahun = 50;
+    } else {
+      dataToSubmit.umur_ekonomis_tahun = umurNum;
     }
     
-    if (typeof dataToSubmit.harga_perolehan !== 'number' || isNaN(dataToSubmit.harga_perolehan)) {
+    const hargaNum = typeof dataToSubmit.harga_perolehan === 'string' ? Number(dataToSubmit.harga_perolehan) : dataToSubmit.harga_perolehan;
+    if (isNaN(hargaNum) || hargaNum < 0) {
       dataToSubmit.harga_perolehan = 0;
-    } else if (dataToSubmit.harga_perolehan < 0) {
-      dataToSubmit.harga_perolehan = 0;
-    }    // Convert lokasi_id to number for API submission
+    } else {
+      dataToSubmit.harga_perolehan = hargaNum;
+    }// Convert lokasi_id to number for API submission
     if (dataToSubmit.lokasi_id) {
       const numVal = Number(dataToSubmit.lokasi_id);
       if (!isNaN(numVal)) {
@@ -712,13 +717,13 @@ export default function AssetForm() {
               <div>
                 <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
                   Jumlah <span className="text-red-500">*</span>
-                </label>
-                <input
+                </label>                <input
                   type="number"
                   name="quantity"
                   id="quantity"
                   min="1"
                   required
+                  placeholder="Default: 1"
                   className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
                     touched.quantity && fieldErrors.quantity ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' : ''
                   }`}
@@ -766,7 +771,7 @@ export default function AssetForm() {
                     className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm pl-12 ${
                       touched.harga_perolehan && fieldErrors.harga_perolehan ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' : ''
                     }`}                    placeholder="0"
-                    value={currencyDisplayValue || (formData.harga_perolehan > 0 ? formatPlainNumber(formData.harga_perolehan) : '')}
+                    value={currencyDisplayValue || (Number(formData.harga_perolehan) > 0 ? formatPlainNumber(Number(formData.harga_perolehan)) : '')}
                     onChange={(e) => {
                       const { name, value } = e.target;
                       // Keep only digits
@@ -789,9 +794,8 @@ export default function AssetForm() {
                     }}
                     onKeyDown={(e) => {
                       // Add keyboard support for up/down to increment/decrement by 1000
-                      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        const currentValue = formData.harga_perolehan || 0;
+                      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {                        e.preventDefault();
+                        const currentValue = Number(formData.harga_perolehan) || 0;
                         // Increment or decrement by 1000 (a reasonable step for currency)
                         const adjustment = e.key === 'ArrowUp' ? 1000 : -1000;
                         const newValue = Math.max(0, currentValue + adjustment);
@@ -825,22 +829,21 @@ export default function AssetForm() {
                         inputElement.selectionStart = length;
                         inputElement.selectionEnd = length;
                       }, 0);
-                    }}
-                    onBlur={() => {
+                    }}                    onBlur={() => {
                       // Keep words visible after blur then hide
-                      if (formData.harga_perolehan > 0) {
+                      if (Number(formData.harga_perolehan) > 0) {
                         setTimeout(() => setShowCurrencyWords(false), 3000);
                       } else {
                         setShowCurrencyWords(false);
                       }
                       // Ensure formatted value for 0
-                      if (!currencyDisplayValue && formData.harga_perolehan === 0) {
+                      if (!currencyDisplayValue && Number(formData.harga_perolehan) === 0) {
                         setCurrencyDisplayValue('0');
                       }
                       // Mark field as touched for validation
                       setTouched(prev => ({ ...prev, harga_perolehan: true }));
                     }}
-                  />                  {formData.harga_perolehan > 0 && (
+                  />                  {Number(formData.harga_perolehan) > 0 && (
                     <button
                       type="button"
                       className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-md"
@@ -879,17 +882,16 @@ export default function AssetForm() {
                     >                      <XMarkIcon className="h-4 w-4" aria-hidden="true" />
                     </button>
                   )}
-                </div>
-                <div 
+                </div>                <div 
                   className={`mt-1 text-xs text-gray-600 italic bg-gray-50 p-2 rounded-md border border-gray-100 shadow-sm transition-all duration-300 ease-in-out ${
-                    showCurrencyWords && formData.harga_perolehan > 0 ? 'max-h-20 opacity-100 animate-slide-in' : 'max-h-0 opacity-0 overflow-hidden'
+                    showCurrencyWords && Number(formData.harga_perolehan) > 0 ? 'max-h-20 opacity-100 animate-slide-in' : 'max-h-0 opacity-0 overflow-hidden'
                   }`}
                   role="status"
                   aria-live="polite"
                 >
                   <span className="font-medium">Terbilang:</span> 
-                  <span className={formData.harga_perolehan > 1000000 ? 'animate-pulse font-medium text-blue-600' : ''}>
-                    {formData.harga_perolehan > 0 ? numberToIndonesianWords(formData.harga_perolehan) : ''}
+                  <span className={Number(formData.harga_perolehan) > 1000000 ? 'animate-pulse font-medium text-blue-600' : ''}>
+                    {Number(formData.harga_perolehan) > 0 ? numberToIndonesianWords(Number(formData.harga_perolehan)) : ''}
                   </span>
                 </div>
                 {touched.harga_perolehan && fieldErrors.harga_perolehan && (
@@ -900,14 +902,14 @@ export default function AssetForm() {
               <div>
                 <label htmlFor="umur_ekonomis_tahun" className="block text-sm font-medium text-gray-700 mb-1">
                   Umur Ekonomis (tahun) <span className="text-red-500">*</span>
-                </label>
-                <input
+                </label>                <input
                   type="number"
                   name="umur_ekonomis_tahun"
                   id="umur_ekonomis_tahun"
                   min="1"
                   max="50"
                   required
+                  placeholder="Default: 5"
                   className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
                     touched.umur_ekonomis_tahun && fieldErrors.umur_ekonomis_tahun ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' : ''
                   }`}
