@@ -400,7 +400,24 @@ func (h *AssetHandler) Import(c *gin.Context) {
 
 // processAssetCSVFile processes uploaded CSV file and returns assets
 func (h *AssetHandler) processAssetCSVFile(file io.Reader) ([]domain.Asset, int, error) {
-	reader := csv.NewReader(file)
+	// Read the entire file content first to detect separator
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to read file content: %v", err)
+	}
+
+	// Auto-detect CSV separator from first line
+	firstLine := strings.Split(string(content), "\n")[0]
+
+	reader := csv.NewReader(strings.NewReader(string(content)))
+
+	// Detect separator: prioritize semicolon if found, otherwise use comma
+	if strings.Contains(firstLine, ";") {
+		reader.Comma = ';'
+	} else {
+		reader.Comma = ','
+	}
+
 	records, err := reader.ReadAll()
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to read CSV file: %v", err)

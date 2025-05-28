@@ -326,6 +326,21 @@ func (h *LocationHandler) Import(c *gin.Context) {
 // processCSVFile processes CSV file and returns locations
 func (h *LocationHandler) processCSVFile(file multipart.File) ([]domain.Location, int, error) {
 	reader := csv.NewReader(file)
+	// Auto-detect CSV separator by reading the first line
+	firstLineBytes := make([]byte, 1024)
+	n, _ := file.Read(firstLineBytes)
+	firstLine := string(firstLineBytes[:n])
+
+	// Reset file position to beginning
+	file.Seek(0, 0)
+
+	// Detect separator: prioritize semicolon if found, otherwise use comma
+	if strings.Contains(firstLine, ";") {
+		reader.Comma = ';'
+	} else {
+		reader.Comma = ','
+	}
+
 	// Read header line
 	headers, err := reader.Read()
 	if err != nil {
@@ -334,7 +349,7 @@ func (h *LocationHandler) processCSVFile(file multipart.File) ([]domain.Location
 
 	// Validate headers - support both English and Indonesian headers
 	expectedEnglishHeaders := []string{"code", "name", "building", "floor", "room", "description"}
-	expectedIndonesianHeaders := []string{"Kode", "Nama", "Gedung", "Lantai", "Ruangan", "Deskripsi"}
+	expectedIndonesianHeaders := []string{"Kode*", "Nama*", "Gedung", "Lantai", "Ruangan", "Deskripsi"}
 
 	// Check if it matches English headers
 	isEnglishFormat := len(headers) >= len(expectedEnglishHeaders)
@@ -350,14 +365,13 @@ func (h *LocationHandler) processCSVFile(file multipart.File) ([]domain.Location
 			}
 		}
 	}
-
 	// Check if it matches Indonesian headers
 	isIndonesianFormat := len(headers) >= len(expectedIndonesianHeaders)
 	if isIndonesianFormat {
 		for i, header := range expectedIndonesianHeaders {
 			if i < len(headers) {
 				cleanHeader := strings.TrimSpace(headers[i])
-				expectedHeader := header
+				expectedHeader := strings.TrimSpace(header)
 				if cleanHeader != expectedHeader {
 					isIndonesianFormat = false
 					break

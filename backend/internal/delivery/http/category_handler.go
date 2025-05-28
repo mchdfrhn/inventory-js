@@ -291,13 +291,28 @@ func (h *CategoryHandler) Import(c *gin.Context) {
 func (h *CategoryHandler) processCSVFile(file multipart.File) ([]domain.AssetCategory, int, error) {
 	reader := csv.NewReader(file)
 
+	// Auto-detect CSV separator by reading the first line
+	firstLineBytes := make([]byte, 1024)
+	n, _ := file.Read(firstLineBytes)
+	firstLine := string(firstLineBytes[:n])
+
+	// Reset file position to beginning
+	file.Seek(0, 0)
+
+	// Detect separator: prioritize semicolon if found, otherwise use comma
+	if strings.Contains(firstLine, ";") {
+		reader.Comma = ';'
+	} else {
+		reader.Comma = ','
+	}
+
 	// Read header line
 	headers, err := reader.Read()
 	if err != nil {
 		return nil, 0, err
 	} // Validate headers - support both English and Indonesian headers
 	expectedEnglishHeaders := []string{"code", "name", "description"}
-	expectedIndonesianHeaders := []string{"Kode", "Nama", "Deskripsi"}
+	expectedIndonesianHeaders := []string{"Kode*", "Nama*", "Deskripsi"}
 
 	// Check if it matches English headers
 	isEnglishFormat := len(headers) >= len(expectedEnglishHeaders)
