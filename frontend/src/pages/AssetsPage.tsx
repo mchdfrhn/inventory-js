@@ -78,11 +78,15 @@ export default function AssetsPage() {
   // Loading state for filter button
   const [isApplyingFilter, setIsApplyingFilter] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
-  // View type state (table or grid)
+  const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);  // View type state (table or grid)
   const [viewType, setViewType] = useState<'table' | 'grid'>(
     localStorage.getItem('assetViewType') as 'table' | 'grid' || 'table'
   );
+  
+  // Sorting state
+  const [sortField, setSortField] = useState<string>('nama');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
@@ -348,8 +352,7 @@ export default function AssetsPage() {
     if (locationFilter) {
       matchesLocationFilter = asset.lokasi_id?.toString() === locationFilter;
     }
-    
-    return matchesSearch && 
+      return matchesSearch && 
            matchesFilter && 
            matchesDepreciationFilter && 
            matchesAcquisitionYearFilter && 
@@ -357,6 +360,99 @@ export default function AssetsPage() {
            matchesCategoryFilter &&
            matchesLocationFilter;
   });
+
+  // Sorting functionality
+  const filteredAndSortedAssets = filteredAssets?.sort((a: Asset, b: Asset) => {
+    let aValue: any, bValue: any;
+    
+    switch (sortField) {
+      case 'kode':
+        aValue = a.kode;
+        bValue = b.kode;
+        break;
+      case 'nama':
+        aValue = a.nama;
+        bValue = b.nama;
+        break;
+      case 'kategori':
+        aValue = a.category?.name || '';
+        bValue = b.category?.name || '';
+        break;
+      case 'quantity':
+        aValue = a.quantity;
+        bValue = b.quantity;
+        break;
+      case 'harga_perolehan':
+        aValue = a.harga_perolehan;
+        bValue = b.harga_perolehan;
+        break;
+      case 'nilai_sisa':
+        aValue = a.nilai_sisa;
+        bValue = b.nilai_sisa;
+        break;
+      case 'penyusutan':
+        aValue = a.harga_perolehan > 0 ? (a.akumulasi_penyusutan / a.harga_perolehan) * 100 : 0;
+        bValue = b.harga_perolehan > 0 ? (b.akumulasi_penyusutan / b.harga_perolehan) * 100 : 0;
+        break;
+      case 'lokasi':
+        aValue = a.location_info?.name || '';
+        bValue = b.location_info?.name || '';
+        break;
+      case 'status':
+        aValue = formatStatus(a.status);
+        bValue = formatStatus(b.status);
+        break;
+      default:
+        aValue = a.nama;
+        bValue = b.nama;
+    }
+    
+    // Handle string comparison
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+      return sortDirection === 'asc' ? comparison : -comparison;
+    }
+    
+    // Handle numeric comparison
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    // Fallback to string comparison
+    const aStr = String(aValue).toLowerCase();
+    const bStr = String(bValue).toLowerCase();
+    const comparison = aStr.localeCompare(bStr);
+    return sortDirection === 'asc' ? comparison : -comparison;
+  }) || [];
+
+  // Handle table header clicks for sorting
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // If clicking the same field, toggle direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking a different field, set new field and default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Render sort icon for table headers
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return null;
+    }
+    
+    return sortDirection === 'asc' ? (
+      <svg className="w-4 h-4 ml-1 inline" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+      </svg>
+    ) : (
+      <svg className="w-4 h-4 ml-1 inline" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    );
+  };
 
   // Handle Enter key press for delete confirmation
   useEffect(() => {
@@ -624,7 +720,7 @@ export default function AssetsPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <ViewToggle currentView={viewType} onToggle={setViewType} />
             <div className="hidden sm:block h-6 w-px bg-gray-300"></div>
-            <ExportButton assets={filteredAssets || []} filename="daftar_aset_sttpu" />
+            <ExportButton assets={filteredAndSortedAssets || []} filename="daftar_aset_sttpu" />
             <div className="hidden sm:block h-6 w-px bg-gray-300"></div>            <button
               type="button"
               onClick={() => setFilterPanelOpen(true)}              className={`
@@ -1080,9 +1176,8 @@ export default function AssetsPage() {
               </div>
             </div>
           ) : viewType === 'grid' ? (
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredAssets?.length ? (
-              filteredAssets.map((asset: Asset) => (
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">            {filteredAndSortedAssets?.length ? (
+              filteredAndSortedAssets.map((asset: Asset) => (
                 <AssetCard 
                   key={asset.id}
                   asset={asset}
@@ -1121,21 +1216,93 @@ export default function AssetsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200/50">
-              <thead className="bg-gray-50/70">                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Aset</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Perolehan</th>                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nilai Sisa</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penyusutan</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <table className="min-w-full divide-y divide-gray-200/50">              <thead className="bg-gray-50/70">                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <button 
+                      onClick={() => handleSort('kode')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Kode
+                      {renderSortIcon('kode')}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <button 
+                      onClick={() => handleSort('nama')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Nama Aset
+                      {renderSortIcon('nama')}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <button 
+                      onClick={() => handleSort('kategori')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Kategori
+                      {renderSortIcon('kategori')}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <button 
+                      onClick={() => handleSort('quantity')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Jumlah
+                      {renderSortIcon('quantity')}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <button 
+                      onClick={() => handleSort('harga_perolehan')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Harga Perolehan
+                      {renderSortIcon('harga_perolehan')}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <button 
+                      onClick={() => handleSort('nilai_sisa')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Nilai Sisa
+                      {renderSortIcon('nilai_sisa')}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <button 
+                      onClick={() => handleSort('penyusutan')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Penyusutan
+                      {renderSortIcon('penyusutan')}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <button 
+                      onClick={() => handleSort('lokasi')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Lokasi
+                      {renderSortIcon('lokasi')}
+                    </button>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <button 
+                      onClick={() => handleSort('status')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Status
+                      {renderSortIcon('status')}
+                    </button>
+                  </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>              <tbody className="divide-y divide-gray-300/50">
-                {filteredAssets?.length ? (
-                  filteredAssets.map((asset: Asset) => (                    <tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">                      <td className="whitespace-nowrap py-4 pl-6 pr-3">
+                {filteredAndSortedAssets?.length ? (
+                  filteredAndSortedAssets.map((asset: Asset) => (<tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">                      <td className="whitespace-nowrap py-4 pl-6 pr-3">
                         <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{asset.kode}</span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4">
@@ -1268,7 +1435,7 @@ export default function AssetsPage() {
             </table>
           </div>
         )}          {/* Pagination */}
-        {data?.pagination && filteredAssets && (
+        {data?.pagination && filteredAndSortedAssets && (
           <div className="bg-white/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 sm:px-6">
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block">
