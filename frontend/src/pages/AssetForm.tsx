@@ -184,6 +184,20 @@ export default function AssetForm() {
     enabled: !isEditMode, // Only fetch when creating new asset
   });
 
+  // Fetch all categories for code generation in popup
+  const { data: allCategoriesData } = useQuery({
+    queryKey: ['categories-all'],
+    queryFn: () => categoryApi.list(1, 100),
+    enabled: showNewCategoryModal, // Only fetch when modal is open
+  });
+
+  // Fetch all locations for code generation in popup
+  const { data: allLocationsDataForPopup } = useQuery({
+    queryKey: ['locations-all-popup'],
+    queryFn: () => locationApi.list(1, 1000),
+    enabled: showNewLocationModal, // Only fetch when modal is open
+  });
+
   // Create/Update mutation with proper type casting
   const mutation = useMutation({
     mutationFn: (data: AssetFormData) => {
@@ -284,7 +298,50 @@ export default function AssetForm() {
       addNotification('error', errorMessage);
       setIsCreatingLocation(false);
     }
-  });  // Generate asset code based on location, category, procurement source, year, and simple sequence
+  });
+
+  // Generate next category code with increments of 10
+  const generateNextCategoryCode = (existingCategories: any[]): string => {
+    if (!existingCategories || existingCategories.length === 0) {
+      return '10';
+    }
+
+    // Extract numeric codes and find the highest
+    const numericCodes = existingCategories
+      .map(category => {
+        const match = category.code.match(/^(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter(code => !isNaN(code) && code > 0);
+
+    const maxCode = numericCodes.length > 0 ? Math.max(...numericCodes) : 0;
+    const nextCode = maxCode + 10;
+
+    return nextCode.toString();
+  };
+
+  // Generate next location code with sequential numbering
+  const generateNextLocationCode = (existingLocations: any[]): string => {
+    if (!existingLocations || existingLocations.length === 0) {
+      return '001';
+    }
+
+    // Extract numeric codes and find the highest
+    const numericCodes = existingLocations
+      .map(location => {
+        const match = location.code.match(/^(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter(code => !isNaN(code));
+
+    const maxCode = numericCodes.length > 0 ? Math.max(...numericCodes) : 0;
+    const nextCode = maxCode + 1;
+
+    // Format with leading zeros (3 digits)
+    return nextCode.toString().padStart(3, '0');
+  };
+
+  // Generate asset code based on location, category, procurement source, year, and simple sequence
   const generateAssetCode = (
     locationCode: string,
     categoryCode: string,
@@ -376,8 +433,29 @@ export default function AssetForm() {
     formData.tanggal_perolehan,
     isLoadingAssets,
     locationsData,
-    categoriesData
-  ]);
+    categoriesData  ]);
+
+  // Auto-generate category code when modal opens
+  useEffect(() => {
+    if (showNewCategoryModal && allCategoriesData?.data) {
+      const nextCode = generateNextCategoryCode(allCategoriesData.data);
+      setNewCategory(prev => ({
+        ...prev,
+        code: nextCode
+      }));
+    }
+  }, [showNewCategoryModal, allCategoriesData]);
+
+  // Auto-generate location code when modal opens
+  useEffect(() => {
+    if (showNewLocationModal && allLocationsDataForPopup?.data) {
+      const nextCode = generateNextLocationCode(allLocationsDataForPopup.data);
+      setNewLocation(prev => ({
+        ...prev,
+        code: nextCode
+      }));
+    }
+  }, [showNewLocationModal, allLocationsDataForPopup]);
 
   // Validate a single field - only check numeric values since HTML5 validation handles required fields
   const validateField = (name: string, value: any): string => {
@@ -546,6 +624,28 @@ export default function AssetForm() {
     // Submit form with validated data
     mutation.mutate(dataToSubmit);
   };
+
+  // Auto-generate category code when modal opens
+  useEffect(() => {
+    if (showNewCategoryModal && allCategoriesData?.data) {
+      const nextCode = generateNextCategoryCode(allCategoriesData.data);
+      setNewCategory(prev => ({
+        ...prev,
+        code: nextCode
+      }));
+    }
+  }, [showNewCategoryModal, allCategoriesData]);
+
+  // Auto-generate location code when modal opens
+  useEffect(() => {
+    if (showNewLocationModal && allLocationsDataForPopup?.data) {
+      const nextCode = generateNextLocationCode(allLocationsDataForPopup.data);
+      setNewLocation(prev => ({
+        ...prev,
+        code: nextCode
+      }));
+    }
+  }, [showNewLocationModal, allLocationsDataForPopup]);
 
   if (isLoadingAsset || isLoadingCategories || isLoadingLocations) {
     return (
@@ -868,8 +968,7 @@ export default function AssetForm() {
                           setCurrencyDisplayValue('');
                           setFieldErrors(prev => ({ ...prev, harga_perolehan: '' }));
                           setShowCurrencyWords(false);
-                          
-                          const inputElement = document.getElementById('harga_perolehan') as HTMLInputElement;
+                            const inputElement = document.getElementById('harga_perolehan') as HTMLInputElement;
                           if (inputElement) {
                             inputElement.focus();
                             inputElement.value = '';
@@ -1090,8 +1189,7 @@ export default function AssetForm() {
                 )}
                 
                 <div className="mt-5 sm:mt-6">
-                  <form onSubmit={handleNewCategorySubmit}>
-                    <div>
+                  <form onSubmit={handleNewCategorySubmit}>                    <div>
                       <label htmlFor="new-category-code" className="block text-sm font-medium text-gray-700">
                         Kode Kategori <span className="text-red-500">*</span>
                       </label>
@@ -1099,11 +1197,14 @@ export default function AssetForm() {
                         type="text"
                         name="code"
                         id="new-category-code"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         value={newCategory.code}
-                        onChange={handleNewCategoryChange}
+                        readOnly
                         required
                       />
+                      <p className="mt-1 text-sm text-gray-500">
+                        Kode akan dibuat otomatis dengan kelipatan 10
+                      </p>
                     </div>
                     <div className="mt-4">
                       <label htmlFor="new-category-name" className="block text-sm font-medium text-gray-700">
@@ -1233,8 +1334,7 @@ export default function AssetForm() {
                         onChange={handleNewLocationChange}
                         required
                       />
-                    </div>
-                    <div className="mt-4">
+                    </div>                    <div className="mt-4">
                       <label htmlFor="new-location-code" className="block text-sm font-medium text-gray-700">
                         Kode Lokasi <span className="text-red-500">*</span>
                       </label>
@@ -1242,11 +1342,14 @@ export default function AssetForm() {
                         type="text"
                         name="code"
                         id="new-location-code"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         value={newLocation.code}
-                        onChange={handleNewLocationChange}
+                        readOnly
                         required
                       />
+                      <p className="mt-1 text-sm text-gray-500">
+                        Kode akan dibuat otomatis dengan nomor urut 3 digit (001, 002, dst.)
+                      </p>
                     </div>
                     <div className="mt-4">
                       <label htmlFor="new-location-description" className="block text-sm font-medium text-gray-700">
