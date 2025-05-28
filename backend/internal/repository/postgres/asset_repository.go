@@ -205,7 +205,8 @@ func (r *assetRepository) List(filter map[string]interface{}) ([]domain.Asset, e
 	query := r.db
 
 	if categoryID, ok := filter["category_id"]; ok {
-		query = query.Where("category_id = ?", categoryID)	}
+		query = query.Where("category_id = ?", categoryID)
+	}
 	if status, ok := filter["status"]; ok {
 		query = query.Where("status = ?", status)
 	}
@@ -229,7 +230,7 @@ func (r *assetRepository) ListPaginated(filter map[string]interface{}, page, pag
 	// Get total count with filters
 	if err := query.Model(&domain.Asset{}).Count(&total).Error; err != nil {
 		return nil, 0, err
-	}	// Get paginated records with filters ordered by sequence number (last 3 digits) DESC
+	} // Get paginated records with filters ordered by sequence number (last 3 digits) DESC
 	offset := (page - 1) * pageSize
 	err := query.Preload("Category").
 		Order("CAST(RIGHT(kode, 3) AS INTEGER) DESC").
