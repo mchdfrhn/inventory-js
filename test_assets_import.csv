@@ -1,3 +1,0 @@
-Nama,Spesifikasi,Quantity,Satuan,Tanggal Perolehan,Harga Perolehan,Umur Ekonomis Tahun,Lokasi ID,Kategori ID,Asal Pengadaan,Status,Keterangan
-"Laptop Test Import","Core i7 16GB RAM 512GB SSD",1,unit,2025-05-28,15000000,5,31,ab6a2c7a-33b8-42d9-b241-b53138caaccc,Pembelian,baik,"Laptop untuk testing import"
-"Meja Test Import","Meja kayu ukuran besar",2,unit,2025-05-27,2000000,10,31,ab6a2c7a-33b8-42d9-b241-b53138caaccc,Bantuan,baik,"Meja untuk ruang meeting"
