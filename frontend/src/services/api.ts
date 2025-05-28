@@ -27,7 +27,8 @@ api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {    // Handle common error scenarios
+  (error) => {
+    // Handle common error scenarios
     const errorResponse = {
       message: 'Terjadi kesalahan yang tidak terduga',
       status: 'error',
@@ -38,11 +39,12 @@ api.interceptors.response.use(
       errorResponse.message = error.response.data.message || error.response.statusText;
       errorResponse.code = error.response.status;
     } else if (error.request) {
-      errorResponse.message = 'Server tidak merespons',
+      errorResponse.message = 'Server tidak merespons';
       errorResponse.code = 0;
     }
-      // Log error for debugging (remove in production)
-    console.error('Kesalahan API:', errorResponse);
+    
+    // Log error for debugging (remove in production)
+    console.error('API Error:', errorResponse);
     
     return Promise.reject(errorResponse);
   }

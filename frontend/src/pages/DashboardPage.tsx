@@ -138,7 +138,8 @@ function StatCard({
   change, 
   color = 'blue',
   trend = 'neutral',
-  suffix = ''
+  suffix = '',
+  formatter
 }: { 
   title: string;
   value: number;
@@ -147,6 +148,7 @@ function StatCard({
   color?: 'blue' | 'green' | 'yellow' | 'red';
   trend?: 'up' | 'down' | 'neutral';
   suffix?: string;
+  formatter?: (value: number) => string;
 }) {
   const [displayValue, setDisplayValue] = useState(0);
   
@@ -193,7 +195,7 @@ function StatCard({
         <div>
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="mt-1 text-2xl font-semibold text-gray-900">
-            {displayValue.toLocaleString()}{suffix && <span className="text-base ml-1">{suffix}</span>}
+            {formatter ? formatter(displayValue) : `${displayValue.toLocaleString()}${suffix ? ` ${suffix}` : ''}`}
           </p>
           {change && (              <div className={`mt-1 flex items-center text-xs font-medium ${trendColors[trend]}`}>
               {TrendIcon && <TrendIcon className="mr-1 h-3 w-3" />}
@@ -345,23 +347,41 @@ export default function DashboardPage() {
   // Effect for page load animation
   useEffect(() => {
     setMounted(true);
-  }, []);
-  
-  // Fetch assets and categories without pagination limit to get all data
+  }, []);    // Fetch assets and categories without pagination limit to get all data
   const { data: assetData, isLoading: assetsLoading, error: assetsError } = useQuery({
-    queryKey: ['all_assets'],
-    queryFn: () => assetApi.list(1, 100), // Assuming 100 is enough to get all assets
+    queryKey: ['all_assets'],    queryFn: async () => {
+      try {
+        const result = await assetApi.list(1, 100);
+        return result;
+      } catch (error) {
+        console.error('Error fetching assets:', error);
+        throw error;
+      }
+    },
   });
-
   const { data: categoryData, isLoading: categoriesLoading, error: categoriesError } = useQuery({
-    queryKey: ['all_categories'],
-    queryFn: () => categoryApi.list(),
+    queryKey: ['all_categories'],    queryFn: async () => {
+      try {
+        const result = await categoryApi.list(1, 100); // Add pagination parameters
+        return result;
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        throw error;
+      }
+    },
   });
   // Query locations data
   const { data: locationData, isLoading: locationsLoading, error: locationsError } = useQuery({
-    queryKey: ['all_locations'],
-    queryFn: () => locationApi.list(1, 100), // Get up to 100 locations
-  });  // Calculate summary statistics
+    queryKey: ['all_locations'],    queryFn: async () => {
+      try {
+        const result = await locationApi.list(1, 100);
+        return result;
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+        throw error;
+      }
+    },
+  });// Calculate summary statistics
   const stats = useMemo(() => {
     if (!assetData || !categoryData || !locationData) return null;
 
@@ -388,11 +408,15 @@ export default function DashboardPage() {
       between2And3Years: 0,
       moreThan3Years: 0
     };
-    
-    // Calculate current values based on acquisition date and economic life
+      // Calculate current values based on acquisition date and economic life
     let estimatedCurrentValue = 0;
+    let assetsWithCalculation = 0;
+    let assetsWithoutDate = 0;
     
     assets.forEach(asset => {
+      // Ensure price is a valid number
+      const price = Number(asset.harga_perolehan) || 0;
+      
       // Count by status
       if (statusCounts[asset.status] !== undefined) {
         statusCounts[asset.status]++;
@@ -408,13 +432,14 @@ export default function DashboardPage() {
         asalPengadaanValues[asalPengadaan] = 0;
       }
       asalPengadaanCounts[asalPengadaan]++;
-      asalPengadaanValues[asalPengadaan] += asset.harga_perolehan;
+      asalPengadaanValues[asalPengadaan] += price;
       
-      // Calculate age distribution
-      if (asset.tanggal_perolehan) {
+      // Calculate age distribution and current value
+      if (asset.tanggal_perolehan && price > 0) {
         const acquisitionDate = new Date(asset.tanggal_perolehan);
-        const ageInMonths = (today.getFullYear() - acquisitionDate.getFullYear()) * 12 + 
-                           (today.getMonth() - acquisitionDate.getMonth());
+        
+        // Calculate age more accurately using exact date difference
+        const ageInMonths = Math.max(0, (today.getTime() - acquisitionDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
         
         if (ageInMonths < 12) {
           assetAgeDistribution.lessThan1Year++;
@@ -426,18 +451,22 @@ export default function DashboardPage() {
           assetAgeDistribution.moreThan3Years++;
         }
         
-        // Calculate estimated current value based on economic life
-        // For simplicity using straight-line depreciation
-        const economicLifeMonths = (asset.umur_ekonomis_tahun || 1) * 12;
-        const depreciation = economicLifeMonths > 0 ? 
-          Math.min(1, ageInMonths / economicLifeMonths) : 1;
+        // Calculate estimated current value using straight-line depreciation
+        const economicLifeMonths = Math.max(12, (asset.umur_ekonomis_tahun || 5) * 12);
+        const depreciationRate = Math.min(1, ageInMonths / economicLifeMonths);
         
-        // Minimum residual value is 20% of original
-        const residualValue = 0.2 * asset.harga_perolehan;
-        const depreciatableValue = asset.harga_perolehan - residualValue;
-        const currentValue = asset.harga_perolehan - (depreciatableValue * depreciation);
+        // Minimum residual value is 10% of original (more realistic)
+        const residualValue = Math.max(price * 0.1, 0);
+        const depreciableValue = price - residualValue;
+        const currentValue = Math.max(residualValue, price - (depreciableValue * depreciationRate));
         
         estimatedCurrentValue += currentValue;
+        assetsWithCalculation++;
+      } else if (price > 0) {
+        // For assets without acquisition date but with price, use conservative estimate
+        assetsWithoutDate++;
+        const conservativeValue = price * 0.75; // 75% of original value
+        estimatedCurrentValue += conservativeValue;
       }
     });
     
@@ -535,11 +564,9 @@ export default function DashboardPage() {
     // Top value by category
     const topCategoriesByValue = [...assetsByCategory]
       .sort((a, b) => b.value - a.value)
-      .slice(0, 3);
-    
-    // Calculate depreciation percentage
-    const depreciationPercentage = estimatedCurrentValue > 0 ? 
-      Math.round((estimatedCurrentValue / totalValue) * 100) : 80; // Default 80% if no calc
+      .slice(0, 3);    // Calculate depreciation percentage
+    const depreciationPercentage = totalValue > 0 ? 
+      Math.round((estimatedCurrentValue / totalValue) * 100) : 0;
       // Create an array of asset sources data for visualization
     const asalPengadaanData = Object.entries(asalPengadaanCounts).map(([source, count]) => {
       return {
@@ -549,12 +576,12 @@ export default function DashboardPage() {
         percentage: Math.round((count / totalAssets) * 100)
       };
     }).sort((a, b) => b.count - a.count);
-    
-    return {
+      return {
       totalAssets,
       totalValue,
       estimatedCurrentValue,
       depreciationPercentage,
+      depreciationAmount: totalValue - estimatedCurrentValue,
       categoryCount: categoryData.data.length,
       locationCount: locationData.data.length,
       statusCounts,
@@ -565,7 +592,9 @@ export default function DashboardPage() {
       rusakAssetsPercent: Math.round((statusCounts.rusak / totalAssets) * 100) || 0,
       monthlyGrowth,
       assetAgeDistribution,
-      asalPengadaanData
+      asalPengadaanData,
+      assetsWithCalculation,
+      assetsWithoutDate
     };
   }, [assetData, categoryData, locationData]);  if (assetsLoading || categoriesLoading || locationsLoading) {
     return (
@@ -575,8 +604,7 @@ export default function DashboardPage() {
         </GlassCard>
       </div>
     );
-  }
-  if (assetsError || categoriesError || locationsError || !stats) {
+  }  if (assetsError || categoriesError || locationsError || !stats) {
     return (
       <GlassCard className="p-6 border-l-4 border-red-500">
         <div className="flex">
@@ -619,22 +647,20 @@ export default function DashboardPage() {
           value={stats?.totalAssets || 0}
           icon={CircleStackIcon}
           color="blue"
-        />
-        <StatCard
-          title="Total Perolehan Aset (Rp)"
-          value={Math.round((stats?.totalValue || 0) / 1000000)}
+        />        <StatCard
+          title="Total Perolehan Aset"
+          value={stats?.totalValue || 0}
           icon={ArrowTrendingUpIcon}
           color="blue"
-          suffix="juta"
-        />
-        <StatCard
-          title="Estimasi Nilai Aset (Rp)"
-          value={Math.round((stats?.estimatedCurrentValue || 0) / 1000000)}
+          formatter={(value) => `Rp ${formatToMillion(value)}`}
+        />        <StatCard
+          title="Estimasi Nilai Saat Ini"
+          value={stats?.estimatedCurrentValue || 0}
           icon={ArrowTrendingUpIcon}
           color="green"
-          change={-1 * (100 - (stats?.depreciationPercentage || 0))}
+          change={Math.round(-1 * Math.max(0, 100 - (stats?.depreciationPercentage || 0)))}
           trend="down"
-          suffix="juta"
+          formatter={(value) => `Rp ${formatToMillion(value)}`}
         />
         <StatCard
           title="Aset Kondisi Baik"
@@ -658,10 +684,9 @@ export default function DashboardPage() {
           </div>
           <div className="bg-white/80 rounded-lg p-3">
             <div className="flex flex-col space-y-3">
-              <div>
-                <div className="flex justify-between items-center mb-1">
+              <div>                <div className="flex justify-between items-center mb-1">
                   <div className="text-sm font-medium text-gray-700">Total Perolehan</div>
-                  <div className="font-bold text-gray-800">Rp {((stats?.totalValue || 0)/1000000).toLocaleString()} jt</div>
+                  <div className="font-bold text-gray-800">Rp {formatToMillion(stats?.totalValue || 0)}</div>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2 shadow-inner overflow-hidden">
                   <div 
@@ -674,11 +699,10 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div>
-                <div className="flex justify-between items-center mb-1">
+              <div>                <div className="flex justify-between items-center mb-1">
                   <div className="text-sm font-medium text-gray-700">Estimasi Saat Ini</div>
                   <div className="font-bold text-gray-800">
-                    Rp {Math.round((stats?.estimatedCurrentValue || 0)/1000000).toLocaleString()} jt
+                    Rp {formatToMillion(stats?.estimatedCurrentValue || 0)}
                   </div>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2 shadow-inner overflow-hidden">
@@ -690,18 +714,16 @@ export default function DashboardPage() {
                       animationDelay: '0.3s',
                     }}
                   ></div>
-                </div>
-                <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                  <span className="text-red-600">Penyusutan {100 - (stats?.depreciationPercentage || 0)}%</span>
-                  <span className="text-blue-600">Nilai tersisa {stats?.depreciationPercentage || 0}%</span>
+                </div>                <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+                  <span className="text-red-600">Penyusutan {Math.max(0, 100 - (stats?.depreciationPercentage || 0))}%</span>
+                  <span className="text-blue-600">Nilai tersisa {Math.max(0, stats?.depreciationPercentage || 0)}%</span>
                 </div>
               </div>
 
-              <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
-                <div className="flex justify-between items-center">
+              <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">                <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-700">Selisih nilai:</span>
                   <span className="text-red-600 font-semibold">
-                    - Rp {(((stats?.totalValue || 0) - (stats?.estimatedCurrentValue || 0))/1000000).toLocaleString()} jt
+                    - Rp {formatToMillion((stats?.totalValue || 0) - (stats?.estimatedCurrentValue || 0))}
                   </span>
                 </div>
               </div>
@@ -837,7 +859,7 @@ export default function DashboardPage() {
                     <div className="flex flex-col">                      {/* Bar chart visualization - more compact */}
                       <div className="bg-blue-50/50 rounded-lg p-2 mb-3 text-center">
                         <p className="text-sm text-blue-700 font-medium">Total Perolehan: {chartData.length} sumber</p>
-                        <p className="text-xs text-blue-600">Nilai total: Rp {(chartData.reduce((sum, item) => sum + item.value, 0) / 1000000).toFixed(1)} juta</p>
+                        <p className="text-xs text-blue-600">Nilai total: Rp {formatToMillion(chartData.reduce((sum, item) => sum + item.value, 0))}</p>
                       </div>
                       <div className="flex h-22 mb-2">
                         {chartData.map((item, index) => {
@@ -903,7 +925,7 @@ export default function DashboardPage() {
                             ></div>
                             <div className="ml-2 flex-1 min-w-0">
                               <div className="text-xs font-medium text-gray-900 truncate">{item.source}</div>
-                              <div className="text-[10px] font-semibold text-gray-600 truncate">Rp {(item.value / 1000000).toFixed(1)} jt</div>
+                              <div className="text-[10px] font-semibold text-gray-600 truncate">Rp {formatToMillion(item.value)}</div>
                             </div>
                           </div>
                         ))}
@@ -968,7 +990,7 @@ export default function DashboardPage() {
                     <div className="text-sm font-semibold text-gray-900">{category.count}</div>
                   </td>
                   <td className="px-6 py-2.5 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-gray-900">Rp {(category.value / 1000000).toFixed(1)} jt</div>
+                    <div className="text-sm font-semibold text-gray-900">Rp {formatRupiah(category.value)}</div>
                   </td>                  <td className="px-6 py-2.5 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-24 md:w-32 lg:w-40 h-2.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
@@ -1004,3 +1026,21 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+// Helper functions for number formatting
+const formatRupiah = (amount: number): string => {
+  return new Intl.NumberFormat('id-ID').format(Math.round(amount));
+};
+
+const formatToMillion = (amount: number): string => {
+  const millions = amount / 1000000;
+  if (millions >= 1000) {
+    return `${(millions / 1000).toFixed(1)} milyar`;
+  } else if (millions >= 1) {
+    return `${millions.toFixed(1)} juta`;
+  } else if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(0)} ribu`;
+  } else {
+    return formatRupiah(amount);
+  }
+};

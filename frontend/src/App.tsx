@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import AssetsPage from './pages/AssetsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import DashboardPage from './pages/DashboardPage'
+import DebugPage from './pages/DebugPage'
 import AssetForm from './pages/AssetForm'
 import AssetDetailsPage from './pages/AssetDetailsPage'
 import CategoryForm from './pages/CategoryForm'
@@ -28,8 +29,7 @@ function App() {
       <NotificationProvider>
         <Router>
           <ToastContainer />
-          <Routes>
-            <Route path="/" element={<Layout />}>
+          <Routes>            <Route path="/" element={<Layout />}>
               <Route index element={<DashboardPage />} />
               
               {/* Asset routes */}
@@ -42,11 +42,13 @@ function App() {
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="categories/new" element={<CategoryForm />} />
               <Route path="categories/edit/:id" element={<CategoryForm />} />
-              
-              {/* Location routes */}
+                {/* Location routes */}
               <Route path="locations" element={<LocationsPage />} />
               <Route path="locations/new" element={<LocationForm />} />
               <Route path="locations/edit/:id" element={<LocationForm />} />
+
+              {/* Debug route */}
+              <Route path="debug" element={<DebugPage />} />
 
             </Route>
           </Routes>
