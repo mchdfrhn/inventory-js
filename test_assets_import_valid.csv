@@ -1,0 +1,4 @@
+Nama,Spesifikasi,Quantity,Satuan,Tanggal Perolehan,Harga Perolehan,Umur Ekonomis Tahun,Lokasi ID,Kategori ID,Asal Pengadaan,Status,Keterangan
+Laptop Dell Inspiron,Intel i5 8GB RAM,1,Unit,2024-01-15,15000000,5,50,ab6a2c7a-33b8-42d9-b241-b53138caaccc,Pembelian,Baik,Laptop untuk karyawan IT
+Printer HP LaserJet,Printer monokrom A4,2,Unit,2024-01-20,3500000,3,31,ab6a2c7a-33b8-42d9-b241-b53138caaccc,Hibah,Baik,Printer untuk kantor
+Meja Kerja Kayu,Meja kayu ukuran 120x60,3,Unit,2024-01-25,2500000,10,50,ab6a2c7a-33b8-42d9-b241-b53138caaccc,Pembelian,Baik,Meja untuk ruang kerja

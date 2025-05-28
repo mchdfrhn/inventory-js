@@ -3,8 +3,15 @@ package http
 import (
 	"en-inventory/internal/delivery/http/dto"
 	"en-inventory/internal/domain"
+	"encoding/csv"
 	"errors"
+	"fmt"
+	"io"
+	"math/rand"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -22,12 +29,12 @@ func NewAssetHandler(r *gin.Engine, au domain.AssetUsecase) {
 	handler := &AssetHandler{
 		assetUsecase: au,
 	}
-
 	api := r.Group("/api/v1")
 	{
 		assets := api.Group("/assets")
 		{
 			assets.POST("", handler.CreateAsset)
+			assets.POST("/import", handler.Import)
 			assets.PUT("/:id", handler.UpdateAsset)
 			assets.DELETE("/:id", handler.DeleteAsset)
 			assets.GET("/:id", handler.GetAsset)
@@ -330,4 +337,168 @@ func (h *AssetHandler) ListAssets(c *gin.Context) {
 	response.Pagination.HasNext = pagination.Page < totalPages
 
 	c.JSON(http.StatusOK, response)
+}
+
+// Import handles POST request to import assets from CSV file
+func (h *AssetHandler) Import(c *gin.Context) {
+	// Get the uploaded file
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "No file uploaded: " + err.Error(),
+		})
+		return
+	}
+	defer file.Close()
+
+	// Check file type
+	filename := header.Filename
+	if !strings.HasSuffix(strings.ToLower(filename), ".csv") {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Unsupported file format. Please use CSV files.",
+		})
+		return
+	}
+
+	// Process CSV file
+	assets, importCount, err := h.processAssetCSVFile(file)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Failed to process file: " + err.Error(),
+		})
+		return
+	}
+
+	// Import assets to database
+	successCount := 0
+	var errors []string
+	for _, asset := range assets {
+		if err := h.assetUsecase.CreateAsset(&asset); err != nil {
+			errors = append(errors, fmt.Sprintf("Failed to import asset '%s': %s", asset.Nama, err.Error()))
+		} else {
+			successCount++
+		}
+	}
+
+	// Prepare response
+	response := gin.H{
+		"status":         "success",
+		"message":        "Import completed",
+		"imported_count": successCount,
+		"total_rows":     importCount,
+	}
+
+	if len(errors) > 0 {
+		response["errors"] = errors
+		response["status"] = "partial_success"
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// processAssetCSVFile processes uploaded CSV file and returns assets
+func (h *AssetHandler) processAssetCSVFile(file io.Reader) ([]domain.Asset, int, error) {
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to read CSV file: %v", err)
+	}
+
+	if len(records) == 0 {
+		return nil, 0, fmt.Errorf("CSV file is empty")
+	}
+
+	// Validate headers (Indonesian format without kode column)
+	expectedHeaders := []string{"Nama", "Spesifikasi", "Quantity", "Satuan", "Tanggal Perolehan", "Harga Perolehan", "Umur Ekonomis Tahun", "Lokasi ID", "Kategori ID", "Asal Pengadaan", "Status", "Keterangan"}
+	headers := records[0]
+
+	if len(headers) != len(expectedHeaders) {
+		return nil, 0, fmt.Errorf("invalid CSV format. Expected %d columns, got %d", len(expectedHeaders), len(headers))
+	}
+
+	var assets []domain.Asset
+	importCount := len(records) - 1 // Exclude header row
+
+	for i, row := range records[1:] { // Skip header row
+		if len(row) != len(expectedHeaders) {
+			return nil, 0, fmt.Errorf("row %d: invalid number of columns", i+2)
+		}
+
+		asset := domain.Asset{
+			ID:          uuid.New(),
+			Nama:        strings.TrimSpace(row[0]),
+			Spesifikasi: strings.TrimSpace(row[1]),
+		}
+
+		// Parse quantity
+		if quantity, err := strconv.Atoi(strings.TrimSpace(row[2])); err == nil {
+			asset.Quantity = quantity
+		} else {
+			return nil, 0, fmt.Errorf("row %d: invalid quantity value: %s", i+2, row[2])
+		}
+
+		asset.Satuan = strings.TrimSpace(row[3])
+
+		// Parse tanggal perolehan
+		if tanggal, err := time.Parse("2006-01-02", strings.TrimSpace(row[4])); err == nil {
+			asset.TanggalPerolehan = tanggal
+		} else {
+			return nil, 0, fmt.Errorf("row %d: invalid date format (expected YYYY-MM-DD): %s", i+2, row[4])
+		}
+
+		// Parse harga perolehan
+		if harga, err := strconv.ParseFloat(strings.TrimSpace(row[5]), 64); err == nil {
+			asset.HargaPerolehan = harga
+		} else {
+			return nil, 0, fmt.Errorf("row %d: invalid price value: %s", i+2, row[5])
+		}
+
+		// Parse umur ekonomis tahun
+		if umur, err := strconv.Atoi(strings.TrimSpace(row[6])); err == nil {
+			asset.UmurEkonomisTahun = umur
+		} else {
+			return nil, 0, fmt.Errorf("row %d: invalid economic life value: %s", i+2, row[6])
+		}
+
+		// Parse lokasi ID
+		if lokasiStr := strings.TrimSpace(row[7]); lokasiStr != "" {
+			if lokasiID, err := strconv.ParseUint(lokasiStr, 10, 32); err == nil {
+				lokasiIDUint := uint(lokasiID)
+				asset.LokasiID = &lokasiIDUint
+			} else {
+				return nil, 0, fmt.Errorf("row %d: invalid location ID: %s", i+2, row[7])
+			}
+		}
+
+		// Parse kategori ID
+		if kategoriStr := strings.TrimSpace(row[8]); kategoriStr != "" {
+			if kategoriID, err := uuid.Parse(kategoriStr); err == nil {
+				asset.CategoryID = kategoriID
+			} else {
+				return nil, 0, fmt.Errorf("row %d: invalid category ID: %s", i+2, row[8])
+			}
+		}
+		asset.AsalPengadaan = strings.TrimSpace(row[9])
+		asset.Status = strings.TrimSpace(row[10])
+		asset.Keterangan = strings.TrimSpace(row[11])
+
+		// Generate asset code automatically with small delay for uniqueness
+		asset.Kode = h.generateAssetCode()
+		time.Sleep(1 * time.Microsecond) // Ensure unique timestamps
+
+		assets = append(assets, asset)
+	}
+
+	return assets, importCount, nil
+}
+
+// generateAssetCode generates a new asset code automatically
+func (h *AssetHandler) generateAssetCode() string {
+	// Generate a unique code with timestamp and random component
+	timestamp := time.Now().UnixNano()
+	randomPart := rand.Intn(9999)                                  // Add random number 0-9999
+	return fmt.Sprintf("AST%d%04d", timestamp/1000000, randomPart) // Use milliseconds + random
 }
