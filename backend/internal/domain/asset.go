@@ -59,6 +59,7 @@ type AssetCategoryRepository interface {
 	Update(category *AssetCategory) error
 	Delete(id uuid.UUID) error
 	GetByID(id uuid.UUID) (*AssetCategory, error)
+	GetByCode(code string) (*AssetCategory, error)
 	List() ([]AssetCategory, error)
 	ListPaginated(page, pageSize int) ([]AssetCategory, int, error)
 }
@@ -70,6 +71,11 @@ type AssetUsecase interface {
 	GetAsset(id uuid.UUID) (*Asset, error)
 	ListAssets(filter map[string]interface{}) ([]Asset, error)
 	ListAssetsPaginated(filter map[string]interface{}, page, pageSize int) ([]Asset, int, error)
+	GetAllAssets() ([]Asset, error)
+	GetLocationByID(id uint) (*Location, error)
+	GetCategoryByID(id uuid.UUID) (*AssetCategory, error)
+	GetLocationByCode(code string) (*Location, error)
+	GetCategoryByCode(code string) (*AssetCategory, error)
 }
 
 type AssetCategoryUsecase interface {

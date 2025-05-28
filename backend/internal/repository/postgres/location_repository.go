@@ -47,6 +47,16 @@ func (r *LocationRepository) GetByID(id uint) (*domain.Location, error) {
 	return &location, nil
 }
 
+// GetByCode retrieves a location by its code
+func (r *LocationRepository) GetByCode(code string) (*domain.Location, error) {
+	var location domain.Location
+	err := r.db.Where("code = ?", code).First(&location).Error
+	if err != nil {
+		return nil, err
+	}
+	return &location, nil
+}
+
 // List retrieves all locations with pagination
 func (r *LocationRepository) List(page, pageSize int) ([]domain.Location, int, error) {
 	var locations []domain.Location

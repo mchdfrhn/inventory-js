@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -410,9 +409,8 @@ func (h *AssetHandler) processAssetCSVFile(file io.Reader) ([]domain.Asset, int,
 	if len(records) == 0 {
 		return nil, 0, fmt.Errorf("CSV file is empty")
 	}
-
-	// Validate headers (Indonesian format without kode column)
-	expectedHeaders := []string{"Nama", "Spesifikasi", "Quantity", "Satuan", "Tanggal Perolehan", "Harga Perolehan", "Umur Ekonomis Tahun", "Lokasi ID", "Kategori ID", "Asal Pengadaan", "Status", "Keterangan"}
+	// Validate headers (format baru dengan kode kategori dan lokasi)
+	expectedHeaders := []string{"Nama Aset*", "Kode Kategori*", "Spesifikasi", "Tanggal Perolehan*", "Jumlah*", "Satuan", "Harga Perolehan*", "Umur Ekonomis", "Kode Lokasi*", "ID Asal Pengadaan*", "Status"}
 	headers := records[0]
 
 	if len(headers) != len(expectedHeaders) {
@@ -426,68 +424,69 @@ func (h *AssetHandler) processAssetCSVFile(file io.Reader) ([]domain.Asset, int,
 		if len(row) != len(expectedHeaders) {
 			return nil, 0, fmt.Errorf("row %d: invalid number of columns", i+2)
 		}
-
 		asset := domain.Asset{
 			ID:          uuid.New(),
-			Nama:        strings.TrimSpace(row[0]),
-			Spesifikasi: strings.TrimSpace(row[1]),
+			Nama:        strings.TrimSpace(row[0]), // Nama Aset*
+			Spesifikasi: strings.TrimSpace(row[2]), // Spesifikasi
 		}
 
-		// Parse quantity
-		if quantity, err := strconv.Atoi(strings.TrimSpace(row[2])); err == nil {
-			asset.Quantity = quantity
-		} else {
-			return nil, 0, fmt.Errorf("row %d: invalid quantity value: %s", i+2, row[2])
-		}
-
-		asset.Satuan = strings.TrimSpace(row[3])
-
-		// Parse tanggal perolehan
-		if tanggal, err := time.Parse("2006-01-02", strings.TrimSpace(row[4])); err == nil {
+		// Parse tanggal perolehan (row[3])
+		if tanggal, err := time.Parse("2006-01-02", strings.TrimSpace(row[3])); err == nil {
 			asset.TanggalPerolehan = tanggal
 		} else {
-			return nil, 0, fmt.Errorf("row %d: invalid date format (expected YYYY-MM-DD): %s", i+2, row[4])
+			return nil, 0, fmt.Errorf("row %d: invalid date format (expected YYYY-MM-DD): %s", i+2, row[3])
 		}
 
-		// Parse harga perolehan
-		if harga, err := strconv.ParseFloat(strings.TrimSpace(row[5]), 64); err == nil {
+		// Parse quantity (row[4])
+		if quantity, err := strconv.Atoi(strings.TrimSpace(row[4])); err == nil {
+			asset.Quantity = quantity
+		} else {
+			return nil, 0, fmt.Errorf("row %d: invalid quantity value: %s", i+2, row[4])
+		}
+
+		asset.Satuan = strings.TrimSpace(row[5]) // Satuan
+
+		// Parse harga perolehan (row[6])
+		if harga, err := strconv.ParseFloat(strings.TrimSpace(row[6]), 64); err == nil {
 			asset.HargaPerolehan = harga
 		} else {
-			return nil, 0, fmt.Errorf("row %d: invalid price value: %s", i+2, row[5])
+			return nil, 0, fmt.Errorf("row %d: invalid price value: %s", i+2, row[6])
 		}
 
-		// Parse umur ekonomis tahun
-		if umur, err := strconv.Atoi(strings.TrimSpace(row[6])); err == nil {
+		// Parse umur ekonomis tahun (row[7])
+		if umur, err := strconv.Atoi(strings.TrimSpace(row[7])); err == nil {
 			asset.UmurEkonomisTahun = umur
 		} else {
-			return nil, 0, fmt.Errorf("row %d: invalid economic life value: %s", i+2, row[6])
+			return nil, 0, fmt.Errorf("row %d: invalid economic life value: %s", i+2, row[7])
 		}
-
-		// Parse lokasi ID
-		if lokasiStr := strings.TrimSpace(row[7]); lokasiStr != "" {
-			if lokasiID, err := strconv.ParseUint(lokasiStr, 10, 32); err == nil {
-				lokasiIDUint := uint(lokasiID)
-				asset.LokasiID = &lokasiIDUint
-			} else {
-				return nil, 0, fmt.Errorf("row %d: invalid location ID: %s", i+2, row[7])
+		// Parse kode lokasi (row[8]) - cari lokasi berdasarkan kode
+		if kodeLokasiStr := strings.TrimSpace(row[8]); kodeLokasiStr != "" {
+			// Cari lokasi berdasarkan kode
+			location, err := h.assetUsecase.GetLocationByCode(kodeLokasiStr)
+			if err != nil || location == nil {
+				return nil, 0, fmt.Errorf("row %d: location with code '%s' not found", i+2, kodeLokasiStr)
 			}
+			asset.LokasiID = &location.ID
 		}
 
-		// Parse kategori ID
-		if kategoriStr := strings.TrimSpace(row[8]); kategoriStr != "" {
-			if kategoriID, err := uuid.Parse(kategoriStr); err == nil {
-				asset.CategoryID = kategoriID
-			} else {
-				return nil, 0, fmt.Errorf("row %d: invalid category ID: %s", i+2, row[8])
+		// Parse kode kategori (row[1]) - cari kategori berdasarkan kode
+		if kodeKategoriStr := strings.TrimSpace(row[1]); kodeKategoriStr != "" {
+			// Cari kategori berdasarkan kode
+			category, err := h.assetUsecase.GetCategoryByCode(kodeKategoriStr)
+			if err != nil || category == nil {
+				return nil, 0, fmt.Errorf("row %d: category with code '%s' not found", i+2, kodeKategoriStr)
 			}
+			asset.CategoryID = category.ID
 		}
-		asset.AsalPengadaan = strings.TrimSpace(row[9])
-		asset.Status = strings.TrimSpace(row[10])
-		asset.Keterangan = strings.TrimSpace(row[11])
 
-		// Generate asset code automatically with small delay for uniqueness
-		asset.Kode = h.generateAssetCode()
-		time.Sleep(1 * time.Microsecond) // Ensure unique timestamps
+		asset.AsalPengadaan = strings.TrimSpace(row[9]) // ID Asal Pengadaan*
+		asset.Status = strings.TrimSpace(row[10])       // Status
+		// Generate asset code automatically using the same logic as frontend
+		assetCode, err := h.generateAssetCodeWithDetails(asset)
+		if err != nil {
+			return nil, 0, fmt.Errorf("row %d: failed to generate asset code: %v", i+2, err)
+		}
+		asset.Kode = assetCode
 
 		assets = append(assets, asset)
 	}
@@ -495,10 +494,67 @@ func (h *AssetHandler) processAssetCSVFile(file io.Reader) ([]domain.Asset, int,
 	return assets, importCount, nil
 }
 
-// generateAssetCode generates a new asset code automatically
-func (h *AssetHandler) generateAssetCode() string {
-	// Generate a unique code with timestamp and random component
-	timestamp := time.Now().UnixNano()
-	randomPart := rand.Intn(9999)                                  // Add random number 0-9999
-	return fmt.Sprintf("AST%d%04d", timestamp/1000000, randomPart) // Use milliseconds + random
+// generateAssetCodeWithDetails generates asset code using the same logic as frontend
+func (h *AssetHandler) generateAssetCodeWithDetails(asset domain.Asset) (string, error) {
+	// Get all existing assets to determine next sequence number
+	allAssets, err := h.assetUsecase.GetAllAssets()
+	if err != nil {
+		return "", fmt.Errorf("failed to get existing assets: %v", err)
+	}
+
+	// Get location code (default to "001" if not found)
+	locationCode := "001"
+	if asset.LokasiID != nil {
+		location, err := h.assetUsecase.GetLocationByID(*asset.LokasiID)
+		if err == nil && location != nil && location.Code != "" {
+			locationCode = location.Code
+		}
+	}
+
+	// Get category code (default to "10" if not found)
+	categoryCode := "10"
+	category, err := h.assetUsecase.GetCategoryByID(asset.CategoryID)
+	if err == nil && category != nil && category.Code != "" {
+		categoryCode = category.Code
+	}
+
+	// Map procurement source to code
+	procurementMap := map[string]string{
+		"1": "1", // Pembelian
+		"2": "2", // Bantuan
+		"3": "3", // STTST -> should be 4 per frontend, but using 3 as provided
+		"4": "4", // Hibah
+		// Support both string and numeric formats
+		"Pembelian": "1",
+		"Bantuan":   "2",
+		"STTST":     "3",
+		"Hibah":     "4",
+	}
+	procurementCode := "1" // default
+	if code, exists := procurementMap[asset.AsalPengadaan]; exists {
+		procurementCode = code
+	}
+
+	// Format components
+	A := fmt.Sprintf("%03s", locationCode)                      // 3 digits
+	B := fmt.Sprintf("%02s", categoryCode)                      // 2 digits
+	C := procurementCode                                        // 1 digit
+	D := fmt.Sprintf("%02d", asset.TanggalPerolehan.Year()%100) // 2 digits (year)
+
+	// Find highest existing sequence number
+	maxSequence := 0
+	for _, existingAsset := range allAssets {
+		if existingAsset.Kode != "" {
+			parts := strings.Split(existingAsset.Kode, ".")
+			if len(parts) == 5 {
+				if seq, err := strconv.Atoi(parts[4]); err == nil && seq > maxSequence {
+					maxSequence = seq
+				}
+			}
+		}
+	}
+
+	E := fmt.Sprintf("%03d", maxSequence+1) // 3 digits sequence
+
+	return fmt.Sprintf("%s.%s.%s.%s.%s", A, B, C, D, E), nil
 }

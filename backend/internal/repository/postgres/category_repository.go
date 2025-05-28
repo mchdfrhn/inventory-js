@@ -39,6 +39,15 @@ func (r *assetCategoryRepository) GetByID(id uuid.UUID) (*domain.AssetCategory, 
 	return &category, nil
 }
 
+func (r *assetCategoryRepository) GetByCode(code string) (*domain.AssetCategory, error) {
+	var category domain.AssetCategory
+	err := r.db.Where("code = ?", code).First(&category).Error
+	if err != nil {
+		return nil, err
+	}
+	return &category, nil
+}
+
 func (r *assetCategoryRepository) List() ([]domain.AssetCategory, error) {
 	var categories []domain.AssetCategory
 	err := r.db.Order("code DESC").Find(&categories).Error

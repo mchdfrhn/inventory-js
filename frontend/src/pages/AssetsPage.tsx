@@ -262,15 +262,14 @@ export default function AssetsPage() {
       setImportLoading(false);
     }
   };  // Download template CSV file for assets
-  const downloadTemplate = () => {
-    // Template data dengan format baru sesuai spesifikasi
+  const downloadTemplate = () => {    // Template data dengan format baru sesuai spesifikasi
     // Tanda * menunjukkan kolom yang wajib diisi (required)
     const templateData = [
-      ['Nama Aset*', 'ID Kategori*', 'Spesifikasi', 'Tanggal Perolehan*', 'Jumlah*', 'Satuan', 'Harga Perolehan*', 'Umur Ekonomis', 'ID Lokasi*', 'ID Asal Pengadaan*', 'Status'],
-      ['Laptop Dell Inspiron 15', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', 'Core i5 8GB RAM 256GB SSD', '2025-01-15', '1', 'Unit', '8000000', '5', '31', '1', 'Baik'],
-      ['Meja Kerja Kayu', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', 'Meja kayu solid ukuran 120x60cm', '2024-12-10', '2', 'Unit', '1500000', '10', '31', '2', 'Baik'],
-      ['Printer Canon Pixma', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', 'Printer inkjet multifungsi A4', '2024-11-20', '1', 'Unit', '2500000', '3', '31', '1', 'Baik'],
-      ['Proyektor', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', '', '2024-10-15', '1', 'Unit', '5000000', '5', '31', '3', 'Baik']
+      ['Nama Aset*', 'Kode Kategori*', 'Spesifikasi', 'Tanggal Perolehan*', 'Jumlah*', 'Satuan', 'Harga Perolehan*', 'Umur Ekonomis', 'Kode Lokasi*', 'ID Asal Pengadaan*', 'Status'],
+      ['Laptop Dell Inspiron 15', '10', 'Core i5 8GB RAM 256GB SSD', '2025-01-15', '1', 'Unit', '8000000', '5', '001', '1', 'Baik'],
+      ['Meja Kerja Kayu', '10', 'Meja kayu solid ukuran 120x60cm', '2024-12-10', '2', 'Unit', '1500000', '10', '002', '2', 'Baik'],
+      ['Printer Canon Pixma', '10', 'Printer inkjet multifungsi A4', '2024-11-20', '1', 'Unit', '2500000', '3', '001', '1', 'Baik'],
+      ['Proyektor', '10', '', '2024-10-15', '1', 'Unit', '5000000', '5', '002', '3', 'Baik']
     ];
 
     // Create CSV content with proper escaping
@@ -1432,9 +1431,8 @@ export default function AssetsPage() {
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
                     <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
                       Import Aset
-                    </Dialog.Title>                    <div className="mt-2">
-                      <p className="text-sm text-gray-500 mb-4">
-                        Upload file Excel atau CSV untuk mengimport data aset secara bulk. Kolom dengan tanda (*) wajib diisi.
+                    </Dialog.Title>                    <div className="mt-2">                      <p className="text-sm text-gray-500 mb-4">
+                        Upload file Excel atau CSV untuk mengimport data aset secara bulk. Kolom dengan tanda (*) wajib diisi. Gunakan Kode Kategori dan Kode Lokasi, bukan ID.
                       </p>
                       
                       {/* Download Template Button */}

@@ -60,7 +60,7 @@ func main() {
 			"time":   time.Now().Format(time.RFC3339),
 		})
 	})
-	
+
 	// Initialize API handlers with router
 	httpdelivery.NewAssetHandler(router, usecases.Asset)
 	httpdelivery.NewCategoryHandler(router, usecases.Category)
@@ -192,7 +192,7 @@ type usecases struct {
 // proper dependency injection and separation of concerns.
 func initUsecases(repos *repositories) *usecases {
 	return &usecases{
-		Asset:    usecase.NewAssetUsecase(repos.asset, repos.category),
+		Asset:    usecase.NewAssetUsecase(repos.asset, repos.category, repos.location),
 		Category: usecase.NewAssetCategoryUsecase(repos.category),
 		Location: usecase.NewLocationUseCase(repos.location),
 	}

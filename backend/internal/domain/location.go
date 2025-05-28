@@ -29,6 +29,7 @@ type LocationRepository interface {
 	Update(id uint, location *Location) error
 	Delete(id uint) error
 	GetByID(id uint) (*Location, error)
+	GetByCode(code string) (*Location, error)
 	List(page, pageSize int) ([]Location, int, error)
 	Search(query string, page, pageSize int) (*[]Location, int64, error)
 }

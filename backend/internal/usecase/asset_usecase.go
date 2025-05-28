@@ -9,12 +9,14 @@ import (
 type assetUsecase struct {
 	assetRepo    domain.AssetRepository
 	categoryRepo domain.AssetCategoryRepository
+	locationRepo domain.LocationRepository
 }
 
-func NewAssetUsecase(assetRepo domain.AssetRepository, categoryRepo domain.AssetCategoryRepository) domain.AssetUsecase {
+func NewAssetUsecase(assetRepo domain.AssetRepository, categoryRepo domain.AssetCategoryRepository, locationRepo domain.LocationRepository) domain.AssetUsecase {
 	return &assetUsecase{
 		assetRepo:    assetRepo,
 		categoryRepo: categoryRepo,
+		locationRepo: locationRepo,
 	}
 }
 
@@ -69,4 +71,24 @@ func (u *assetUsecase) ListAssetsPaginated(filter map[string]interface{}, page, 
 	}
 
 	return u.assetRepo.ListPaginated(filter, page, pageSize)
+}
+
+func (u *assetUsecase) GetAllAssets() ([]domain.Asset, error) {
+	return u.assetRepo.List(map[string]interface{}{})
+}
+
+func (u *assetUsecase) GetLocationByID(id uint) (*domain.Location, error) {
+	return u.locationRepo.GetByID(id)
+}
+
+func (u *assetUsecase) GetCategoryByID(id uuid.UUID) (*domain.AssetCategory, error) {
+	return u.categoryRepo.GetByID(id)
+}
+
+func (u *assetUsecase) GetLocationByCode(code string) (*domain.Location, error) {
+	return u.locationRepo.GetByCode(code)
+}
+
+func (u *assetUsecase) GetCategoryByCode(code string) (*domain.AssetCategory, error) {
+	return u.categoryRepo.GetByCode(code)
 }
