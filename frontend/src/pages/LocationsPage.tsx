@@ -176,8 +176,9 @@ export default function LocationsPage() {
     }
   };  // Download template Excel file
   const downloadTemplate = () => {    // Create template data with Indonesian headers
+    // Tanda * menunjukkan kolom yang wajib diisi (required)
     const templateData = [
-      ['Kode', 'Nama', 'Gedung', 'Lantai', 'Ruangan', 'Deskripsi'],
+      ['Kode*', 'Nama*', 'Gedung', 'Lantai', 'Ruangan', 'Deskripsi'],
       ['L001', 'Ruang Kelas 1A', 'Gedung Utama', '1', 'A101', 'Ruang kelas untuk mata kuliah umum dan teori'],
       ['L002', 'Laboratorium Komputer', 'Gedung Teknik', '2', 'B201', 'Lab untuk praktikum programming dan sistem informasi'],
       ['L003', 'Perpustakaan', 'Gedung Utama', '1', 'C101', 'Ruang baca dan koleksi buku referensi'],
@@ -566,10 +567,9 @@ export default function LocationsPage() {
                   </div>                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
                     <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
                       Import Lokasi
-                    </Dialog.Title>
-                    <div className="mt-2">
+                    </Dialog.Title>                    <div className="mt-2">
                       <p className="text-sm text-gray-500 mb-4">
-                        Upload file Excel atau CSV untuk mengimport data lokasi secara bulk.
+                        Upload file Excel atau CSV untuk mengimport data lokasi secara bulk. Kolom dengan tanda (*) wajib diisi.
                       </p>
                       
                       {/* Download Template Button */}

@@ -261,16 +261,16 @@ export default function AssetsPage() {
     } finally {
       setImportLoading(false);
     }
-  };
-
-  // Download template CSV file for assets
+  };  // Download template CSV file for assets
   const downloadTemplate = () => {
-    // Template data tanpa kolom kode (akan digenerate otomatis)
+    // Template data dengan format baru sesuai spesifikasi
+    // Tanda * menunjukkan kolom yang wajib diisi (required)
     const templateData = [
-      ['Nama', 'Spesifikasi', 'Quantity', 'Satuan', 'Tanggal Perolehan', 'Harga Perolehan', 'Umur Ekonomis Tahun', 'Lokasi ID', 'Kategori ID', 'Asal Pengadaan', 'Status', 'Keterangan'],
-      ['Laptop Dell Inspiron 15', 'Core i5 8GB RAM 256GB SSD', '1', 'unit', '2025-01-15', '8000000', '5', '31', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', 'Pembelian', 'baik', 'Laptop untuk staf administrasi'],
-      ['Meja Kerja Kayu', 'Meja kayu solid ukuran 120x60cm', '2', 'unit', '2024-12-10', '1500000', '10', '31', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', 'Bantuan', 'baik', 'Meja untuk ruang kerja'],
-      ['Printer Canon Pixma', 'Printer inkjet multifungsi A4', '1', 'unit', '2024-11-20', '2500000', '3', '31', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', 'Pembelian', 'baik', 'Printer untuk dokumentasi']
+      ['Nama Aset*', 'ID Kategori*', 'Spesifikasi', 'Tanggal Perolehan*', 'Jumlah*', 'Satuan', 'Harga Perolehan*', 'Umur Ekonomis', 'ID Lokasi*', 'ID Asal Pengadaan*', 'Status'],
+      ['Laptop Dell Inspiron 15', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', 'Core i5 8GB RAM 256GB SSD', '2025-01-15', '1', 'Unit', '8000000', '5', '31', '1', 'Baik'],
+      ['Meja Kerja Kayu', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', 'Meja kayu solid ukuran 120x60cm', '2024-12-10', '2', 'Unit', '1500000', '10', '31', '2', 'Baik'],
+      ['Printer Canon Pixma', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', 'Printer inkjet multifungsi A4', '2024-11-20', '1', 'Unit', '2500000', '3', '31', '1', 'Baik'],
+      ['Proyektor', 'ab6a2c7a-33b8-42d9-b241-b53138caaccc', '', '2024-10-15', '1', 'Unit', '5000000', '5', '31', '3', 'Baik']
     ];
 
     // Create CSV content with proper escaping
@@ -280,7 +280,8 @@ export default function AssetsPage() {
           return `"${field.replace(/"/g, '""')}"`;
         }
         return field;
-      }).join(',')    ).join('\n');
+      }).join(',')
+    ).join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -1431,10 +1432,9 @@ export default function AssetsPage() {
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
                     <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
                       Import Aset
-                    </Dialog.Title>
-                    <div className="mt-2">
+                    </Dialog.Title>                    <div className="mt-2">
                       <p className="text-sm text-gray-500 mb-4">
-                        Upload file Excel atau CSV untuk mengimport data aset secara bulk.
+                        Upload file Excel atau CSV untuk mengimport data aset secara bulk. Kolom dengan tanda (*) wajib diisi.
                       </p>
                       
                       {/* Download Template Button */}

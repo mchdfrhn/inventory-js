@@ -173,11 +173,11 @@ export default function CategoriesPage() {
     } finally {
       setImportLoading(false);
     }
-  };
-  // Download template Excel file
+  };  // Download template Excel file
   const downloadTemplate = () => {    // Create template data with Indonesian headers
+    // Tanda * menunjukkan kolom yang wajib diisi (required)
     const templateData = [
-      ['Kode', 'Nama', 'Deskripsi'],
+      ['Kode*', 'Nama*', 'Deskripsi'],
       ['KAT001', 'Peralatan Komputer', 'Kategori untuk komputer desktop laptop printer scanner dan aksesoris IT'],
       ['KAT002', 'Furniture Kantor', 'Kategori untuk meja kursi lemari filing cabinet dan furniture kantor lainnya'],
       ['KAT003', 'Kendaraan', 'Kategori untuk mobil dinas motor operasional dan kendaraan transportasi'],
@@ -537,10 +537,9 @@ export default function CategoriesPage() {
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
                     <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
                       Import Kategori
-                    </Dialog.Title>
-                    <div className="mt-2">
+                    </Dialog.Title>                    <div className="mt-2">
                       <p className="text-sm text-gray-500 mb-4">
-                        Upload file Excel atau CSV untuk mengimport data kategori secara bulk.
+                        Upload file Excel atau CSV untuk mengimport data kategori secara bulk. Kolom dengan tanda (*) wajib diisi.
                       </p>
                       
                       {/* Download Template Button */}
