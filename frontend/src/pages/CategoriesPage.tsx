@@ -119,23 +119,39 @@ export default function CategoriesPage() {
 
     setImportLoading(true);
     setImportError(null);
-    setImportSuccess(null);
-
-    try {
+    setImportSuccess(null);    try {
       const formData = new FormData();
       formData.append('file', importFile);
 
+      console.log('Sending import request to /api/v1/categories/import');
       const response = await fetch('/api/v1/categories/import', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          console.error('Failed to parse error response as JSON:', jsonError);
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         throw new Error(errorData.message || 'Gagal mengimport data');
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+        console.log('Import result:', result);
+      } catch (jsonError) {
+        console.error('Failed to parse success response as JSON:', jsonError);
+        throw new Error('Server returned invalid response format');
+      }
+
       setImportSuccess(`Berhasil mengimport ${result.imported_count || 0} kategori`);
       
       // Refresh the categories list
@@ -158,20 +174,29 @@ export default function CategoriesPage() {
       setImportLoading(false);
     }
   };
-
   // Download template Excel file
-  const downloadTemplate = () => {
-    // Create template data
+  const downloadTemplate = () => {    // Create template data with Indonesian headers
     const templateData = [
-      ['code', 'name', 'description'],
-      ['KAT001', 'Peralatan Komputer', 'Kategori untuk semua peralatan komputer dan aksesorisnya'],
-      ['KAT002', 'Furniture Kantor', 'Kategori untuk meja, kursi, lemari dan furniture kantor lainnya'],
-      ['KAT003', 'Kendaraan', 'Kategori untuk mobil, motor dan kendaraan operasional']
+      ['Kode', 'Nama', 'Deskripsi'],
+      ['KAT001', 'Peralatan Komputer', 'Kategori untuk komputer desktop laptop printer scanner dan aksesoris IT'],
+      ['KAT002', 'Furniture Kantor', 'Kategori untuk meja kursi lemari filing cabinet dan furniture kantor lainnya'],
+      ['KAT003', 'Kendaraan', 'Kategori untuk mobil dinas motor operasional dan kendaraan transportasi'],
+      ['KAT004', 'Peralatan Audio Visual', 'Kategori untuk projector sound system microphone dan peralatan presentasi'],
+      ['KAT005', 'Peralatan Laboratorium', 'Kategori untuk alat ukur instrumen penelitian dan peralatan praktikum']
     ];
 
-    // Create CSV content
-    const csvContent = templateData.map(row => row.join(',')).join('\n');
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Create CSV content with proper escaping
+    const csvContent = templateData.map(row => 
+      row.map(field => {
+        // Escape fields that contain commas or quotes
+        if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+          return `"${field.replace(/"/g, '""')}"`;
+        }
+        return field;
+      }).join(',')
+    ).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     
     // Create download link
     const link = document.createElement('a');

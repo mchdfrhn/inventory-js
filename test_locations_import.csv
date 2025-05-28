@@ -1,0 +1,4 @@
+Kode,Nama,Gedung,Lantai,Ruangan,Deskripsi
+LOC001,"Ruang Administrasi","Gedung A","1","101","Ruang administrasi gedung utama"
+LOC002,"Ruang Dosen","Gedung A","2","201","Ruang dosen dan staf akademik"
+LOC003,"Lab Komputer","Gedung B","1","B101","Laboratorium komputer dan IT"

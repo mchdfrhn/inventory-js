@@ -120,23 +120,39 @@ export default function LocationsPage() {
 
     setImportLoading(true);
     setImportError(null);
-    setImportSuccess(null);
-
-    try {
+    setImportSuccess(null);    try {
       const formData = new FormData();
       formData.append('file', importFile);
 
+      console.log('Sending import request to /api/v1/locations/import');
       const response = await fetch('/api/v1/locations/import', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          console.error('Failed to parse error response as JSON:', jsonError);
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         throw new Error(errorData.message || 'Gagal mengimport data');
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+        console.log('Import result:', result);
+      } catch (jsonError) {
+        console.error('Failed to parse success response as JSON:', jsonError);
+        throw new Error('Server returned invalid response format');
+      }
+
       setImportSuccess(`Berhasil mengimport ${result.imported_count || 0} lokasi`);
       
       // Refresh the locations list
@@ -158,20 +174,29 @@ export default function LocationsPage() {
     } finally {
       setImportLoading(false);
     }
-  };
-  // Download template Excel file
-  const downloadTemplate = () => {
-    // Create template data
+  };  // Download template Excel file
+  const downloadTemplate = () => {    // Create template data with Indonesian headers
     const templateData = [
-      ['code', 'name', 'building', 'floor', 'room', 'description'],
-      ['L001', 'Ruang Kelas 1A', 'Gedung A', '1', 'A101', 'Ruang kelas untuk mata kuliah umum'],
-      ['L002', 'Laboratorium Komputer', 'Gedung B', '2', 'B201', 'Lab untuk praktikum programming'],
-      ['L003', 'Perpustakaan', 'Gedung C', '1', 'C101', 'Ruang baca dan koleksi buku']
+      ['Kode', 'Nama', 'Gedung', 'Lantai', 'Ruangan', 'Deskripsi'],
+      ['L001', 'Ruang Kelas 1A', 'Gedung Utama', '1', 'A101', 'Ruang kelas untuk mata kuliah umum dan teori'],
+      ['L002', 'Laboratorium Komputer', 'Gedung Teknik', '2', 'B201', 'Lab untuk praktikum programming dan sistem informasi'],
+      ['L003', 'Perpustakaan', 'Gedung Utama', '1', 'C101', 'Ruang baca dan koleksi buku referensi'],
+      ['L004', 'Ruang Rapat Besar', 'Gedung Utama', '3', 'D301', 'Ruang rapat untuk acara besar dan seminar'],
+      ['L005', 'Kantor Dekan', 'Gedung Administrasi', '2', 'E201', 'Kantor pimpinan fakultas dan staf administrasi']
     ];
 
-    // Create CSV content
-    const csvContent = templateData.map(row => row.join(',')).join('\n');
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Create CSV content with proper escaping
+    const csvContent = templateData.map(row => 
+      row.map(field => {
+        // Escape fields that contain commas or quotes
+        if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+          return `"${field.replace(/"/g, '""')}"`;
+        }
+        return field;
+      }).join(',')
+    ).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     
     // Create download link
     const link = document.createElement('a');

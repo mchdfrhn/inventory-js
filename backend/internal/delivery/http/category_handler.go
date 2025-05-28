@@ -295,12 +295,41 @@ func (h *CategoryHandler) processCSVFile(file multipart.File) ([]domain.AssetCat
 	headers, err := reader.Read()
 	if err != nil {
 		return nil, 0, err
+	} // Validate headers - support both English and Indonesian headers
+	expectedEnglishHeaders := []string{"code", "name", "description"}
+	expectedIndonesianHeaders := []string{"Kode", "Nama", "Deskripsi"}
+
+	// Check if it matches English headers
+	isEnglishFormat := len(headers) >= len(expectedEnglishHeaders)
+	if isEnglishFormat {
+		for i, header := range expectedEnglishHeaders {
+			if i < len(headers) {
+				cleanHeader := strings.ToLower(strings.TrimSpace(headers[i]))
+				expectedHeader := strings.ToLower(header)
+				if cleanHeader != expectedHeader {
+					isEnglishFormat = false
+					break
+				}
+			}
+		}
 	}
 
-	// Validate headers
-	expectedHeaders := []string{"code", "name", "description"}
-	if len(headers) < len(expectedHeaders) {
-		return nil, 0, errors.New("invalid CSV format. Expected headers: " + strings.Join(expectedHeaders, ", "))
+	// Check if it matches Indonesian headers
+	isIndonesianFormat := len(headers) >= len(expectedIndonesianHeaders)
+	if isIndonesianFormat {
+		for i, header := range expectedIndonesianHeaders {
+			if i < len(headers) {
+				cleanHeader := strings.TrimSpace(headers[i])
+				expectedHeader := header
+				if cleanHeader != expectedHeader {
+					isIndonesianFormat = false
+					break
+				}
+			}
+		}
+	} // If neither format matches, return error
+	if !isEnglishFormat && !isIndonesianFormat {
+		return nil, 0, errors.New("invalid CSV format. Expected headers (Indonesian): " + strings.Join(expectedIndonesianHeaders, ", ") + " or (English): " + strings.Join(expectedEnglishHeaders, ", "))
 	}
 
 	var categories []domain.AssetCategory

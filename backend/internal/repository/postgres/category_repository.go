@@ -41,7 +41,7 @@ func (r *assetCategoryRepository) GetByID(id uuid.UUID) (*domain.AssetCategory, 
 
 func (r *assetCategoryRepository) List() ([]domain.AssetCategory, error) {
 	var categories []domain.AssetCategory
-	err := r.db.Find(&categories).Error
+	err := r.db.Order("code DESC").Find(&categories).Error
 	return categories, err
 }
 
@@ -54,9 +54,9 @@ func (r *assetCategoryRepository) ListPaginated(page, pageSize int) ([]domain.As
 		return nil, 0, err
 	}
 
-	// Get paginated records
+	// Get paginated records ordered by code DESC
 	offset := (page - 1) * pageSize
-	err := r.db.Offset(offset).Limit(pageSize).Find(&categories).Error
+	err := r.db.Order("code DESC").Offset(offset).Limit(pageSize).Find(&categories).Error
 	if err != nil {
 		return nil, 0, err
 	}
