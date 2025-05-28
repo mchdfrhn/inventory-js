@@ -210,10 +210,8 @@ export default function AssetsPage() {
 
     try {
       const formData = new FormData();
-      formData.append('file', importFile);
-
-      console.log('Sending import request to /api/v1/assets/import');
-      const response = await fetch('/api/v1/assets/import', {
+      formData.append('file', importFile);      console.log('Sending import request to http://localhost:8080/api/v1/assets/import');
+      const response = await fetch('http://localhost:8080/api/v1/assets/import', {
         method: 'POST',
         body: formData,
       });
@@ -1433,6 +1431,8 @@ export default function AssetsPage() {
                       Import Aset
                     </Dialog.Title>                    <div className="mt-2">                      <p className="text-sm text-gray-500 mb-4">
                         Upload file Excel atau CSV untuk mengimport data aset secara bulk. Kolom dengan tanda (*) wajib diisi. Gunakan Kode Kategori dan Kode Lokasi, bukan ID.
+                        <br />
+                        <strong>Format tanggal yang didukung:</strong> YYYY-MM-DD, DD/MM/YYYY, atau DD-MM-YYYY
                       </p>
                       
                       {/* Download Template Button */}

@@ -394,8 +394,29 @@ func (h *AssetHandler) Import(c *gin.Context) {
 		response["errors"] = errors
 		response["status"] = "partial_success"
 	}
-
 	c.JSON(http.StatusOK, response)
+}
+
+// parseFlexibleDate attempts to parse date in multiple formats
+func parseFlexibleDate(dateStr string) (time.Time, error) {
+	dateStr = strings.TrimSpace(dateStr)
+
+	// Try YYYY-MM-DD format first
+	if date, err := time.Parse("2006-01-02", dateStr); err == nil {
+		return date, nil
+	}
+
+	// Try DD/MM/YYYY format
+	if date, err := time.Parse("02/01/2006", dateStr); err == nil {
+		return date, nil
+	}
+
+	// Try DD-MM-YYYY format (dash separator)
+	if date, err := time.Parse("02-01-2006", dateStr); err == nil {
+		return date, nil
+	}
+
+	return time.Time{}, fmt.Errorf("unsupported date format: %s (supported: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY)", dateStr)
 }
 
 // processAssetCSVFile processes uploaded CSV file and returns assets
@@ -446,13 +467,13 @@ func (h *AssetHandler) processAssetCSVFile(file io.Reader) ([]domain.Asset, int,
 			Nama:        strings.TrimSpace(row[0]), // Nama Aset*
 			Spesifikasi: strings.TrimSpace(row[2]), // Spesifikasi
 		}
-
-		// Parse tanggal perolehan (row[3])
-		if tanggal, err := time.Parse("2006-01-02", strings.TrimSpace(row[3])); err == nil {
-			asset.TanggalPerolehan = tanggal
-		} else {
-			return nil, 0, fmt.Errorf("row %d: invalid date format (expected YYYY-MM-DD): %s", i+2, row[3])
+		// Parse tanggal perolehan (row[3]) - support both YYYY-MM-DD and DD/MM/YYYY formats
+		tanggalStr := strings.TrimSpace(row[3])
+		tanggal, err := parseFlexibleDate(tanggalStr)
+		if err != nil {
+			return nil, 0, fmt.Errorf("row %d: invalid date format (expected YYYY-MM-DD or DD/MM/YYYY): %s", i+2, row[3])
 		}
+		asset.TanggalPerolehan = tanggal
 
 		// Parse quantity (row[4])
 		if quantity, err := strconv.Atoi(strings.TrimSpace(row[4])); err == nil {

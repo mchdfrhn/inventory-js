@@ -122,10 +122,8 @@ export default function LocationsPage() {
     setImportError(null);
     setImportSuccess(null);    try {
       const formData = new FormData();
-      formData.append('file', importFile);
-
-      console.log('Sending import request to /api/v1/locations/import');
-      const response = await fetch('/api/v1/locations/import', {
+      formData.append('file', importFile);      console.log('Sending import request to http://localhost:8080/api/v1/locations/import');
+      const response = await fetch('http://localhost:8080/api/v1/locations/import', {
         method: 'POST',
         body: formData,
       });
