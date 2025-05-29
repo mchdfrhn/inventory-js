@@ -4,7 +4,8 @@ interface AssetDetailViewProps {
   asset: Asset;
 }
 
-export default function AssetDetailView({ asset }: AssetDetailViewProps) {const formatDate = (dateStr: string) => {
+export default function AssetDetailView({ asset }: AssetDetailViewProps) {
+  const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('id-ID', {
       day: 'numeric',
@@ -47,16 +48,21 @@ export default function AssetDetailView({ asset }: AssetDetailViewProps) {const 
   };
 
   const normalizedStatus = normalizeStatus(asset.status);
-
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="px-6 py-5 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-          <span className="mr-2">{asset.nama}</span>
-          <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-            {asset.kode}
-          </span>
-        </h2>
+    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* Enhanced Header */}
+      <div className="px-6 py-5 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">{asset.nama}</h2>
+            <p className="text-blue-100 mt-1">{asset.spesifikasi}</p>
+          </div>
+          <div className="text-right">
+            <span className="bg-white bg-opacity-20 text-white text-sm font-medium px-3 py-1 rounded-full">
+              {asset.kode}
+            </span>
+          </div>
+        </div>
       </div>
       
       <div className="p-6">
@@ -103,93 +109,122 @@ export default function AssetDetailView({ asset }: AssetDetailViewProps) {const 
                 <dd className="text-sm text-gray-900 col-span-2">{asset.keterangan || ''}</dd>
               </div>
             </dl>
-          </div>
-          
-          {/* Financial Info - Updated for new dashboard logic */}
-          <div className="bg-blue-50 p-5 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-3 border-b pb-2">Informasi Keuangan</h3>
-            <dl className="grid grid-cols-1 gap-y-3">
-              <div className="grid grid-cols-3">
-                <dt className="text-sm font-medium text-gray-500">Tanggal Perolehan</dt>
-                <dd className="text-sm text-gray-900 col-span-2">{formatDate(asset.tanggal_perolehan)}</dd>
-              </div>
-              <div className="grid grid-cols-3">
-                <dt className="text-sm font-medium text-gray-500">Asal Perolehan</dt>
-                <dd className="text-sm text-gray-900 col-span-2">{asset.asal_pengadaan || 'Tidak Diketahui'}</dd>
-              </div>
-              <div className="grid grid-cols-3">
-                <dt className="text-sm font-medium text-gray-500">Nominal Perolehan</dt>
-                <dd className="text-sm text-gray-900 col-span-2 font-semibold">{formatCurrency(asset.harga_perolehan)}</dd>
-              </div>
-              <div className="grid grid-cols-3">
-                <dt className="text-sm font-medium text-gray-500">Umur Ekonomis</dt>
-                <dd className="text-sm text-gray-900 col-span-2">{asset.umur_ekonomis_tahun} tahun ({asset.umur_ekonomis_bulan} bulan)</dd>
-              </div>
-              {/* Estimasi Nilai Saat Ini (dashboard logic) */}
-              {(() => {
-                // Dashboard logic: straight-line depreciation, min 20% residual value
-                const acquisitionDate = new Date(asset.tanggal_perolehan);
-                const currentDate = new Date();
-                const ageInMonths = (currentDate.getFullYear() - acquisitionDate.getFullYear()) * 12 + (currentDate.getMonth() - acquisitionDate.getMonth());
-                const economicLifeMonths = (asset.umur_ekonomis_tahun || 1) * 12;
-                const depreciation = economicLifeMonths > 0 ? Math.min(1, ageInMonths / economicLifeMonths) : 1;
-                const residualValue = 0.2 * asset.harga_perolehan;
-                const depreciatableValue = asset.harga_perolehan - residualValue;
-                const currentValue = asset.harga_perolehan - (depreciatableValue * depreciation);
-                const penyusutanPersen = Math.round(100 - ((currentValue / asset.harga_perolehan) * 100));
-                return (
-                  <>
-                  <div className="grid grid-cols-3">
-                    <dt className="text-sm font-medium text-gray-500">Estimasi Nilai Saat Ini</dt>
-                    <dd className="text-sm text-gray-900 col-span-2 font-bold">{formatCurrency(Math.round(currentValue))}</dd>
+          </div>          {/* Financial Info - Enhanced */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-100">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+              Informasi Keuangan & Penyusutan
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Acquisition Information */}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <h4 className="font-medium text-gray-800 mb-3 text-sm uppercase tracking-wide">Data Perolehan</h4>
+                <dl className="space-y-3">
+                  <div>
+                    <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tanggal Perolehan</dt>
+                    <dd className="text-sm text-gray-900 font-medium mt-1">{formatDate(asset.tanggal_perolehan)}</dd>
                   </div>
-                  <div className="grid grid-cols-3">
-                    <dt className="text-sm font-medium text-gray-500">Penyusutan</dt>
-                    <dd className="text-sm text-gray-900 col-span-2">{penyusutanPersen}%</dd>
-                  </div>
-                  </>
-                );
-              })()}
-              <div className="grid grid-cols-3">
-                <dt className="text-sm font-medium text-gray-500">Akumulasi Penyusutan</dt>
-                <dd className="text-sm text-gray-900 col-span-2">{formatCurrency(asset.akumulasi_penyusutan)}</dd>
-              </div>
-              <div className="grid grid-cols-3">
-                <dt className="text-sm font-medium text-gray-500">Nilai Buku Saat Ini</dt>
-                <dd className="text-sm text-gray-900 col-span-2 font-bold">{formatCurrency(asset.nilai_sisa)}</dd>
-              </div>
-              {/* Sisa masa manfaat */}
-              {(() => {
-                const acquisitionDate = new Date(asset.tanggal_perolehan);
-                const currentDate = new Date();
-                const monthsPassed = (currentDate.getFullYear() - acquisitionDate.getFullYear()) * 12 + (currentDate.getMonth() - acquisitionDate.getMonth());
-                const remainingMonths = Math.max(0, asset.umur_ekonomis_bulan - monthsPassed);
-                const remainingYears = Math.floor(remainingMonths / 12);
-                const extraMonths = remainingMonths % 12;
-                const percentRemaining = Math.max(0, Math.min(100, Math.round((remainingMonths / asset.umur_ekonomis_bulan) * 100)));
-                let barColor = "bg-red-500";
-                if (percentRemaining > 75) barColor = "bg-green-500";
-                else if (percentRemaining > 50) barColor = "bg-blue-500";
-                else if (percentRemaining > 25) barColor = "bg-yellow-500";
-                const remainingText = remainingMonths <= 0 ? "Habis masa pakai" : `${remainingYears} tahun ${extraMonths} bulan`;
-                return (
-                  <div className="grid grid-cols-3 mt-2">
-                    <dt className="text-sm font-medium text-gray-500">Sisa Masa Manfaat</dt>
-                    <dd className="text-sm text-gray-900 col-span-2">
-                      <div className="flex flex-col">
-                        <div className="flex justify-between mb-1">
-                          <span>{remainingText}</span>
-                          <span className="text-xs">{percentRemaining}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className={`${barColor} h-2 rounded-full`} style={{ width: `${percentRemaining}%` }}></div>
-                        </div>
-                      </div>
+                  <div>
+                    <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Asal Perolehan</dt>
+                    <dd className="text-sm text-gray-900 mt-1">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        {asset.asal_pengadaan || 'Tidak Diketahui'}
+                      </span>
                     </dd>
                   </div>
-                );
-              })()}
-            </dl>
+                  <div>
+                    <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Harga Perolehan</dt>
+                    <dd className="text-lg text-gray-900 font-bold mt-1 text-green-600">{formatCurrency(asset.harga_perolehan)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Umur Ekonomis</dt>
+                    <dd className="text-sm text-gray-900 mt-1">
+                      <span className="bg-gray-100 px-2 py-1 rounded text-xs font-medium">
+                        {asset.umur_ekonomis_tahun} tahun ({asset.umur_ekonomis_bulan} bulan)
+                      </span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              {/* Current Value Information */}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <h4 className="font-medium text-gray-800 mb-3 text-sm uppercase tracking-wide">Nilai Saat Ini</h4>
+                <dl className="space-y-3">
+                  {/* Estimasi Nilai Saat Ini (dashboard logic) */}
+                  {(() => {
+                    // Dashboard logic: straight-line depreciation, min 20% residual value
+                    const acquisitionDate = new Date(asset.tanggal_perolehan);
+                    const currentDate = new Date();
+                    const ageInMonths = (currentDate.getFullYear() - acquisitionDate.getFullYear()) * 12 + (currentDate.getMonth() - acquisitionDate.getMonth());
+                    const economicLifeMonths = (asset.umur_ekonomis_tahun || 1) * 12;
+                    const depreciation = economicLifeMonths > 0 ? Math.min(1, ageInMonths / economicLifeMonths) : 1;
+                    const residualValue = 0.2 * asset.harga_perolehan;
+                    const depreciatableValue = asset.harga_perolehan - residualValue;
+                    const currentValue = asset.harga_perolehan - (depreciatableValue * depreciation);
+                    const penyusutanPersen = Math.round(100 - ((currentValue / asset.harga_perolehan) * 100));
+                    return (
+                      <>
+                        <div>
+                          <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Estimasi Nilai Saat Ini</dt>
+                          <dd className="text-lg text-gray-900 font-bold mt-1 text-blue-600">{formatCurrency(Math.round(currentValue))}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Penyusutan</dt>
+                          <dd className="text-sm text-gray-900 mt-1">
+                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
+                              {penyusutanPersen}%
+                            </span>
+                          </dd>
+                        </div>
+                      </>
+                    );
+                  })()}
+                  <div>
+                    <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Akumulasi Penyusutan</dt>
+                    <dd className="text-sm text-gray-900 font-medium mt-1">{formatCurrency(asset.akumulasi_penyusutan)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Nilai Buku Saat Ini</dt>
+                    <dd className="text-lg text-gray-900 font-bold mt-1 text-orange-600">{formatCurrency(asset.nilai_sisa)}</dd>
+                  </div>
+                  {/* Sisa masa manfaat */}
+                  {(() => {
+                    const acquisitionDate = new Date(asset.tanggal_perolehan);
+                    const currentDate = new Date();
+                    const monthsPassed = (currentDate.getFullYear() - acquisitionDate.getFullYear()) * 12 + (currentDate.getMonth() - acquisitionDate.getMonth());
+                    const remainingMonths = Math.max(0, asset.umur_ekonomis_bulan - monthsPassed);
+                    const remainingYears = Math.floor(remainingMonths / 12);
+                    const extraMonths = remainingMonths % 12;
+                    const percentRemaining = Math.max(0, Math.min(100, Math.round((remainingMonths / asset.umur_ekonomis_bulan) * 100)));
+                    let barColor = "bg-red-500";
+                    if (percentRemaining > 75) barColor = "bg-green-500";
+                    else if (percentRemaining > 50) barColor = "bg-blue-500";
+                    else if (percentRemaining > 25) barColor = "bg-yellow-500";
+                    const remainingText = remainingMonths <= 0 ? "Habis masa pakai" : `${remainingYears} tahun ${extraMonths} bulan`;
+                    return (
+                      <div className="mt-2">
+                        <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Sisa Masa Manfaat</dt>
+                        <dd className="text-sm text-gray-900 mt-1">
+                          <div className="flex flex-col">
+                            <div className="flex justify-between mb-1">
+                              <span className="font-medium">{remainingText}</span>
+                              <span className="text-xs font-medium">{percentRemaining}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div className={`${barColor} h-2 rounded-full transition-all duration-300`} style={{ width: `${percentRemaining}%` }}></div>
+                            </div>
+                          </div>
+                        </dd>
+                      </div>
+                    );
+                  })()}
+                </dl>
+              </div>
+            </div>
           </div>
         </div>
       </div>
