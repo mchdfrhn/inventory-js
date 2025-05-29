@@ -364,11 +364,23 @@ export default function AssetsPage() {
   // Sorting functionality
   const filteredAndSortedAssets = filteredAssets?.sort((a: Asset, b: Asset) => {
     let aValue: any, bValue: any;
-    
-    switch (sortField) {
+      switch (sortField) {
       case 'kode':
-        aValue = a.kode;
-        bValue = b.kode;
+        // Extract the 3-digit sequence number from the end of the code
+        // Assuming format like "XXX-YYY-001" or "ABC123"
+        const extractSequenceNumber = (kode: string): number => {
+          const match = kode.match(/(\d{3})$/);
+          return match ? parseInt(match[1], 10) : 0;
+        };
+        
+        aValue = extractSequenceNumber(a.kode);
+        bValue = extractSequenceNumber(b.kode);
+        
+        // If both have no sequence numbers (both return 0), fallback to string comparison
+        if (aValue === 0 && bValue === 0) {
+          aValue = a.kode;
+          bValue = b.kode;
+        }
         break;
       case 'nama':
         aValue = a.nama;
