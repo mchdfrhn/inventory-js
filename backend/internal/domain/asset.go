@@ -22,6 +22,7 @@ type Asset struct {
 	Keterangan          string        `json:"keterangan" gorm:"type:text"`
 	Lokasi              string        `json:"lokasi" gorm:"size:255"`
 	LokasiID            *uint         `json:"lokasi_id" gorm:"column:lokasi_id"`
+	LocationInfo        *Location     `json:"location_info,omitempty" gorm:"foreignkey:LokasiID"`
 	AsalPengadaan       string        `json:"asal_pengadaan" gorm:"column:asal_pengadaan;size:255"`
 	CategoryID          uuid.UUID     `json:"category_id" gorm:"type:uuid;not null;column:category_id"`
 	Category            AssetCategory `json:"category" gorm:"foreignkey:CategoryID"`

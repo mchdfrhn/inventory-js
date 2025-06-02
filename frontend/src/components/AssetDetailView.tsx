@@ -69,26 +69,103 @@ export default function AssetDetailView({ asset }: AssetDetailViewProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Basic Info */}
           <div className="bg-gray-50 p-5 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-3 border-b pb-2">Informasi Umum</h3>
-            <dl className="grid grid-cols-1 gap-y-3">
+            <h3 className="font-medium text-gray-900 mb-3 border-b pb-2">Informasi Umum</h3>            <dl className="grid grid-cols-1 gap-y-4">
               <div className="grid grid-cols-3">
                 <dt className="text-sm font-medium text-gray-500">Kategori</dt>
                 <dd className="text-sm text-gray-900 col-span-2">{asset.category?.name || 'Tidak Terkategori'}</dd>
               </div>
-                <div className="grid grid-cols-3">
+              
+              <div className="grid grid-cols-3">
                 <dt className="text-sm font-medium text-gray-500">Spesifikasi</dt>
-                <dd className="text-sm text-gray-900 col-span-2">{asset.spesifikasi || ''}</dd>
+                <dd className="text-sm text-gray-900 col-span-2">{asset.spesifikasi || '-'}</dd>
               </div>
               
               <div className="grid grid-cols-3">
                 <dt className="text-sm font-medium text-gray-500">Jumlah</dt>
-                <dd className="text-sm text-gray-900 col-span-2">{asset.quantity} {asset.satuan}</dd>
+                <dd className="text-sm text-gray-900 col-span-2">
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                    {asset.quantity} {asset.satuan}
+                  </span>
+                </dd>
               </div>
                 <div className="grid grid-cols-3">
-                <dt className="text-sm font-medium text-gray-500">Lokasi</dt>                <dd className="text-sm text-gray-900 col-span-2">
-                  {asset.lokasi_id && asset.location_info ? 
-                    `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
-                    : asset.lokasi || ''}
+                <dt className="text-sm font-medium text-gray-500">Lokasi</dt>
+                <dd className="text-sm text-gray-900 col-span-2">
+                  {asset.lokasi_id && asset.location_info ? (
+                    <div className="space-y-2">
+                      <div className="font-medium text-blue-600 flex items-center">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {asset.location_info.name}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          {asset.location_info.code}
+                        </span>
+                        {asset.location_info.building && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            {asset.location_info.building}
+                          </span>
+                        )}
+                        {asset.location_info.floor && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2v0" />
+                            </svg>
+                            Lt. {asset.location_info.floor}
+                          </span>
+                        )}
+                        {asset.location_info.room && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                            </svg>
+                            {asset.location_info.room}
+                          </span>
+                        )}
+                      </div>
+                      {asset.location_info.description && (
+                        <div className="text-xs text-gray-500 mt-2 italic bg-gray-50 p-2 rounded border-l-2 border-blue-300">
+                          <span className="font-medium text-gray-600">Deskripsi: </span>
+                          {asset.location_info.description}
+                        </div>
+                      )}
+                    </div>
+                  ) : asset.lokasi ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center font-medium">
+                        <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {asset.lokasi}
+                      </div>
+                      <div className="text-xs">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          Data Legacy - Belum menggunakan sistem lokasi baru
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-gray-400 italic">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>Lokasi belum ditentukan</span>
+                    </div>
+                  )}
                 </dd>
               </div>
               
@@ -104,9 +181,10 @@ export default function AssetDetailView({ asset }: AssetDetailViewProps) {
                   </span>
                 </dd>
               </div>
-                <div className="grid grid-cols-3">
+              
+              <div className="grid grid-cols-3">
                 <dt className="text-sm font-medium text-gray-500">Keterangan</dt>
-                <dd className="text-sm text-gray-900 col-span-2">{asset.keterangan || ''}</dd>
+                <dd className="text-sm text-gray-900 col-span-2">{asset.keterangan || '-'}</dd>
               </div>
             </dl>
           </div>          {/* Financial Info - Enhanced */}

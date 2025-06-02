@@ -179,7 +179,7 @@ func (r *assetRepository) Update(asset *domain.Asset) error {
 		return gorm.ErrRecordNotFound
 	}
 	// Reload the record with Category only
-	if err := tx.Preload("Category").First(asset, asset.ID).Error; err != nil {
+	if err := tx.Preload("Category").Preload("LocationInfo").First(asset, asset.ID).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -193,7 +193,7 @@ func (r *assetRepository) Delete(id uuid.UUID) error {
 
 func (r *assetRepository) GetByID(id uuid.UUID) (*domain.Asset, error) {
 	var asset domain.Asset
-	err := r.db.Preload("Category").Where("id = ?", id).First(&asset).Error
+	err := r.db.Preload("Category").Preload("LocationInfo").Where("id = ?", id).First(&asset).Error
 	if err != nil {
 		return nil, err
 	}
@@ -209,9 +209,8 @@ func (r *assetRepository) List(filter map[string]interface{}) ([]domain.Asset, e
 	}
 	if status, ok := filter["status"]; ok {
 		query = query.Where("status = ?", status)
-	}
-	// Order by the last 3 digits (sequence number) in descending order
-	err := query.Preload("Category").Order("CAST(RIGHT(kode, 3) AS INTEGER) DESC").Find(&assets).Error
+	} // Order by the last 3 digits (sequence number) in descending order
+	err := query.Preload("Category").Preload("LocationInfo").Order("CAST(RIGHT(kode, 3) AS INTEGER) DESC").Find(&assets).Error
 	return assets, err
 }
 
@@ -232,7 +231,7 @@ func (r *assetRepository) ListPaginated(filter map[string]interface{}, page, pag
 		return nil, 0, err
 	} // Get paginated records with filters ordered by sequence number (last 3 digits) DESC
 	offset := (page - 1) * pageSize
-	err := query.Preload("Category").
+	err := query.Preload("Category").Preload("LocationInfo").
 		Order("CAST(RIGHT(kode, 3) AS INTEGER) DESC").
 		Offset(offset).
 		Limit(pageSize).
