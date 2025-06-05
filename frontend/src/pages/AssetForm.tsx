@@ -1080,9 +1080,7 @@ export default function AssetForm() {
                 {touched.asal_pengadaan && fieldErrors.asal_pengadaan && (
                   <p className="mt-2 text-sm text-red-600">{fieldErrors.asal_pengadaan}</p>
                 )}
-              </div>
-
-              <div>
+              </div>              <div>
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                   Status Aset
                 </label>
@@ -1097,6 +1095,21 @@ export default function AssetForm() {
                   <option value="rusak">Rusak</option>
                   <option value="tidak_memadai">Tidak Memadai</option>
                 </select>
+              </div>
+
+              <div className="col-span-full">
+                <label htmlFor="keterangan" className="block text-sm font-medium text-gray-700 mb-1">
+                  Keterangan
+                </label>
+                <textarea
+                  name="keterangan"
+                  id="keterangan"
+                  rows={3}
+                  className="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  value={formData.keterangan}
+                  onChange={handleChange}
+                  placeholder="Informasi tambahan mengenai aset (opsional)"
+                ></textarea>
               </div>
             </div>
           </div>

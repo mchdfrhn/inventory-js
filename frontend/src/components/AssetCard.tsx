@@ -89,13 +89,20 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete }) => {
           <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
             <div className={`${barColor} h-1.5 rounded-full`} style={{ width: `${depreciationPercentage}%` }}></div>
           </div>
-        </div>          <div className="mt-3">
+        </div>        <div className="mt-3">
           <p className="text-xs text-gray-500">Lokasi</p>
           <p className="text-sm truncate">            {asset.lokasi_id && asset.location_info ? 
               `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
               : asset.lokasi || ''}
           </p>
-        </div>      </div>      <div className="grid grid-cols-3 gap-1 mt-2">
+        </div>
+        
+        {asset.keterangan && (
+          <div className="mt-3">
+            <p className="text-xs text-gray-500">Keterangan</p>
+            <p className="text-sm line-clamp-2">{asset.keterangan}</p>
+          </div>
+        )}</div>      <div className="grid grid-cols-3 gap-1 mt-2">
         <Link 
           to={`/assets/${asset.id}`}
           className="flex items-center justify-center py-2 px-1 text-xs font-medium text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors group"
