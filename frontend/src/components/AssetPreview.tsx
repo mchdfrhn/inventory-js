@@ -45,14 +45,13 @@ const AssetPreview: React.FC<AssetPreviewProps> = ({ asset, className = '' }) =>
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-  
-  // Format status label
+    // Format status label
   const formatStatusLabel = (status?: string): string => {
     if (!status) return '-';
     switch (status) {
       case 'baik': return 'Baik';
       case 'rusak': return 'Rusak';
-      case 'tidak_memadai': return 'Tidak Memadai';
+      case 'tidak_memadai': return 'Kurang Baik'; // Shorter label
       case 'available': return 'Tersedia';
       case 'in_use': return 'Digunakan';
       case 'maintenance': return 'Pemeliharaan';
@@ -78,9 +77,8 @@ const AssetPreview: React.FC<AssetPreviewProps> = ({ asset, className = '' }) =>
           <div className="flex items-center space-x-2 mt-1">
             <span className="text-sm bg-gray-100 px-2 py-0.5 rounded font-mono">
               {asset.kode || 'AS-XXX'}
-            </span>
-            {asset.status && (
-              <span className={`inline-flex text-xs px-2 py-1 rounded-full font-medium ${getStatusBadgeClass(asset.status)}`}>
+            </span>            {asset.status && (
+              <span className={`inline-flex text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap ${getStatusBadgeClass(asset.status)}`}>
                 {formatStatusLabel(asset.status)}
               </span>
             )}

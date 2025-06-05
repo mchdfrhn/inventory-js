@@ -21,7 +21,7 @@ const formatStatusLabel = (status: string): string => {
   switch (status) {
     case 'baik': return 'Baik';
     case 'rusak': return 'Rusak';
-    case 'tidak_memadai': return 'Tidak Memadai';
+    case 'tidak_memadai': return 'Kurang Baik'; // Shorter label
     case 'available': return 'Tersedia';
     case 'in_use': return 'Digunakan';
     case 'maintenance': return 'Pemeliharaan';
@@ -60,12 +60,10 @@ const DataDisplay: React.FC<DataDisplayProps> = ({
         month: 'long', 
         day: 'numeric' 
       });
-    }
-
-    if (type === 'status' && typeof value === 'string') {
+    }    if (type === 'status' && typeof value === 'string') {
       const statusClass = statusColors[value as keyof typeof statusColors] || 'bg-gray-50 text-gray-700 border-gray-200';
       return (
-        <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium border ${statusClass}`}>
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusClass} whitespace-nowrap`}>
           {formatStatusLabel(value)}
         </span>
       );

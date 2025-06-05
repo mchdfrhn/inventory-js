@@ -26,13 +26,12 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete }) => {
   if (depreciationPercentage > 75) barColor = "bg-red-500";
   else if (depreciationPercentage > 50) barColor = "bg-yellow-500";
   else if (depreciationPercentage > 25) barColor = "bg-blue-500";
-
-  // Format status label
+  // Format status label - shorter version for cards
   const formatStatusLabel = (status: string): string => {
     switch (status) {
       case 'baik': return 'Baik';
       case 'rusak': return 'Rusak';
-      case 'tidak_memadai': return 'Tidak Memadai';
+      case 'tidak_memadai': return 'Kurang Baik'; // Shorter label for card view
       default: return 'Baik'; // Default to 'Baik' if invalid status
     }
   };
@@ -55,10 +54,9 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete }) => {
   const normalizedStatus = normalizeStatus(asset.status);
   return (
     <div className="relative bg-white/90 backdrop-blur-sm rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-      <div className="p-5">
-        <div className="flex items-center justify-between mb-3">
+      <div className="p-5">        <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{asset.kode}</span>
-          <span className={`status-badge inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-gradient-to-r ${statusGradients[normalizedStatus] || 'from-gray-50 to-gray-100 border-gray-200'} border shadow-sm`}>
+          <span className={`status-badge inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium bg-gradient-to-r ${statusGradients[normalizedStatus] || 'from-gray-50 to-gray-100 border-gray-200'} border shadow-sm whitespace-nowrap`}>
             {formatStatusLabel(normalizedStatus)}
           </span>
         </div>
