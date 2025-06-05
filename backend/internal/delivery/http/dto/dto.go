@@ -73,7 +73,7 @@ type PaginatedResponse struct {
 
 // Asset Request DTOs
 type CreateAssetRequest struct {
-	Kode              string  `json:"kode" binding:"required"`
+	Kode              string  `json:"kode"` // Tidak required - akan di-generate otomatis
 	Nama              string  `json:"nama" binding:"required"`
 	Spesifikasi       string  `json:"spesifikasi"`
 	Quantity          int     `json:"quantity" binding:"required"`
@@ -106,7 +106,43 @@ type UpdateAssetRequest struct {
 	Status            string  `json:"status"`
 }
 
-// Category Request DTOs
+// BulkAssetRequest represents request to create multiple assets
+type BulkAssetRequest struct {
+	Asset    CreateAssetRequest `json:"asset" binding:"required"`
+	Quantity int                `json:"quantity" binding:"required,min=1"`
+}
+
+// AssetResponse represents the response structure for asset data
+type AssetResponse struct {
+	ID                  uuid.UUID         `json:"id"`
+	Kode                string            `json:"kode"`
+	Nama                string            `json:"nama"`
+	Spesifikasi         string            `json:"spesifikasi"`
+	Quantity            int               `json:"quantity"`
+	Satuan              string            `json:"satuan"`
+	TanggalPerolehan    time.Time         `json:"tanggal_perolehan"`
+	HargaPerolehan      float64           `json:"harga_perolehan"`
+	UmurEkonomisTahun   int               `json:"umur_ekonomis_tahun"`
+	UmurEkonomisBulan   int               `json:"umur_ekonomis_bulan"`
+	AkumulasiPenyusutan float64           `json:"akumulasi_penyusutan"`
+	NilaiSisa           float64           `json:"nilai_sisa"`
+	Keterangan          string            `json:"keterangan"`
+	Lokasi              string            `json:"lokasi"`
+	LokasiID            *uint             `json:"lokasi_id"`
+	LocationInfo        *LocationResponse `json:"location_info,omitempty"`
+	AsalPengadaan       string            `json:"asal_pengadaan"`
+	CategoryID          uuid.UUID         `json:"category_id"`
+	Category            CategoryResponse  `json:"category"`
+	Status              string            `json:"status"`
+	BulkID              *uuid.UUID        `json:"bulk_id,omitempty"`
+	BulkSequence        int               `json:"bulk_sequence,omitempty"`
+	IsBulkParent        bool              `json:"is_bulk_parent"`
+	BulkTotalCount      int               `json:"bulk_total_count,omitempty"`
+	CreatedAt           time.Time         `json:"created_at"`
+	UpdatedAt           time.Time         `json:"updated_at"`
+}
+
+// CategoryRequest DTOs
 type CreateCategoryRequest struct {
 	Code        string `json:"code" binding:"required"`
 	Name        string `json:"name" binding:"required"`
@@ -117,6 +153,36 @@ type UpdateCategoryRequest struct {
 	Code        string `json:"code" binding:"required"`
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
+}
+
+// CategoryResponse represents the response structure for category data
+type CategoryResponse struct {
+	ID          uuid.UUID `json:"id"`
+	Code        string    `json:"code"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// LocationResponse represents the response structure for location data
+type LocationResponse struct {
+	ID          uint      `json:"id"`
+	Code        string    `json:"code"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Building    string    `json:"building"`
+	Floor       string    `json:"floor"`
+	Room        string    `json:"room"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// SuccessResponse represents a generic success response
+type SuccessResponse struct {
+	Status  string      `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 // Validate validates the create asset request

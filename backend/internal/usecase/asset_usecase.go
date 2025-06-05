@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"en-inventory/internal/domain"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -20,6 +21,53 @@ func NewAssetUsecase(assetRepo domain.AssetRepository, categoryRepo domain.Asset
 	}
 }
 
+// generateAssetCode generates asset code based on location, category, procurement source, year, and sequence
+func (u *assetUsecase) generateAssetCode(asset *domain.Asset) (string, error) {
+	// A = Location code (3 digits) - default 001 if not found
+	locationCode := "001"
+	if asset.LokasiID != nil {
+		location, err := u.locationRepo.GetByID(*asset.LokasiID)
+		if err == nil && location.Code != "" {
+			locationCode = fmt.Sprintf("%03s", location.Code)
+		}
+	}
+
+	// B = Category code (2 digits) - default 10 if not found
+	categoryCode := "10"
+	if asset.CategoryID != uuid.Nil {
+		category, err := u.categoryRepo.GetByID(asset.CategoryID)
+		if err == nil && category.Code != "" {
+			categoryCode = fmt.Sprintf("%02s", category.Code)
+		}
+	}
+
+	// C = Procurement source code (1 digit)
+	procurementMap := map[string]string{
+		"pembelian":        "1",
+		"bantuan":          "2",
+		"hibah":            "3",
+		"sumbangan":        "4",
+		"produksi_sendiri": "5",
+	}
+	procurementCode := procurementMap[asset.AsalPengadaan]
+	if procurementCode == "" {
+		procurementCode = "1" // default
+	}
+
+	// D = Procurement year (2 digits)
+	year := asset.TanggalPerolehan.Year()
+	yearCode := fmt.Sprintf("%02d", year%100)                    // E = Sequence number (3 digits) - find highest existing sequence + 1
+	allAssets, err := u.assetRepo.List(map[string]interface{}{}) // Get all assets to find max sequence
+	if err != nil {
+		return "", err
+	}
+
+	// Use simple counting approach for sequence
+	sequenceCode := fmt.Sprintf("%03d", len(allAssets)+1)
+
+	return fmt.Sprintf("%s.%s.%s.%s.%s", locationCode, categoryCode, procurementCode, yearCode, sequenceCode), nil
+}
+
 func (u *assetUsecase) CreateAsset(asset *domain.Asset) error {
 	// Validate category exists
 	if asset.CategoryID != uuid.Nil {
@@ -28,7 +76,68 @@ func (u *assetUsecase) CreateAsset(asset *domain.Asset) error {
 			return err
 		}
 	}
+
+	// Generate asset code if not provided or empty
+	if asset.Kode == "" {
+		code, err := u.generateAssetCode(asset)
+		if err != nil {
+			return err
+		}
+		asset.Kode = code
+	}
+
 	return u.assetRepo.Create(asset)
+}
+
+func (u *assetUsecase) CreateBulkAsset(asset *domain.Asset, quantity int) ([]domain.Asset, error) {
+	// Validate category exists
+	if asset.CategoryID != uuid.Nil {
+		_, err := u.categoryRepo.GetByID(asset.CategoryID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Generate asset code if not provided or empty
+	if asset.Kode == "" {
+		code, err := u.generateAssetCode(asset)
+		if err != nil {
+			return nil, err
+		}
+		asset.Kode = code
+	}
+
+	// Generate bulk ID for grouping
+	bulkID := uuid.New()
+
+	// Create assets array
+	assets := make([]domain.Asset, quantity)
+
+	for i := 0; i < quantity; i++ {
+		// Copy the original asset
+		assets[i] = *asset
+		assets[i].ID = uuid.New()
+		assets[i].BulkID = &bulkID
+		assets[i].BulkSequence = i + 1
+		assets[i].BulkTotalCount = quantity
+		assets[i].IsBulkParent = (i == 0) // First asset is the parent
+
+		// Generate unique code with sequence
+		if i == 0 {
+			// Parent keeps original code
+			assets[i].Kode = asset.Kode
+		} else {
+			// Child assets get sequence suffix
+			assets[i].Kode = asset.Kode + "-" + fmt.Sprintf("%03d", i+1)
+		}
+	}
+
+	err := u.assetRepo.CreateBulk(assets)
+	if err != nil {
+		return nil, err
+	}
+
+	return assets, nil
 }
 
 func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
@@ -91,4 +200,20 @@ func (u *assetUsecase) GetLocationByCode(code string) (*domain.Location, error) 
 
 func (u *assetUsecase) GetCategoryByCode(code string) (*domain.AssetCategory, error) {
 	return u.categoryRepo.GetByCode(code)
+}
+
+func (u *assetUsecase) GetBulkAssets(bulkID uuid.UUID) ([]domain.Asset, error) {
+	return u.assetRepo.GetBulkAssets(bulkID)
+}
+
+func (u *assetUsecase) ListAssetsWithBulk(filter map[string]interface{}, page, pageSize int) ([]domain.Asset, int, error) {
+	// Validate category exists if category_id is in filter
+	if categoryID, ok := filter["category_id"]; ok {
+		_, err := u.categoryRepo.GetByID(categoryID.(uuid.UUID))
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return u.assetRepo.ListPaginatedWithBulk(filter, page, pageSize)
 }

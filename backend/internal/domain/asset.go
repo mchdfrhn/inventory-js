@@ -27,8 +27,13 @@ type Asset struct {
 	CategoryID          uuid.UUID     `json:"category_id" gorm:"type:uuid;not null;column:category_id"`
 	Category            AssetCategory `json:"category" gorm:"foreignkey:CategoryID"`
 	Status              string        `json:"status" gorm:"size:20;default:'baik'"`
-	CreatedAt           time.Time     `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt           time.Time     `json:"updated_at" gorm:"autoUpdateTime"`
+	// Bulk asset fields
+	BulkID         *uuid.UUID `json:"bulk_id,omitempty" gorm:"type:uuid;column:bulk_id;index"`
+	BulkSequence   int        `json:"bulk_sequence,omitempty" gorm:"default:1"`
+	IsBulkParent   bool       `json:"is_bulk_parent" gorm:"default:false"`
+	BulkTotalCount int        `json:"bulk_total_count,omitempty" gorm:"default:1"`
+	CreatedAt      time.Time  `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt      time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
 // TableName specifies the table name for GORM
@@ -48,11 +53,14 @@ type AssetCategory struct {
 
 type AssetRepository interface {
 	Create(asset *Asset) error
+	CreateBulk(assets []Asset) error
 	Update(asset *Asset) error
 	Delete(id uuid.UUID) error
 	GetByID(id uuid.UUID) (*Asset, error)
+	GetBulkAssets(bulkID uuid.UUID) ([]Asset, error)
 	List(filter map[string]interface{}) ([]Asset, error)
 	ListPaginated(filter map[string]interface{}, page, pageSize int) ([]Asset, int, error)
+	ListPaginatedWithBulk(filter map[string]interface{}, page, pageSize int) ([]Asset, int, error)
 }
 
 type AssetCategoryRepository interface {
@@ -67,11 +75,14 @@ type AssetCategoryRepository interface {
 
 type AssetUsecase interface {
 	CreateAsset(asset *Asset) error
+	CreateBulkAsset(asset *Asset, quantity int) ([]Asset, error)
 	UpdateAsset(asset *Asset) error
 	DeleteAsset(id uuid.UUID) error
 	GetAsset(id uuid.UUID) (*Asset, error)
+	GetBulkAssets(bulkID uuid.UUID) ([]Asset, error)
 	ListAssets(filter map[string]interface{}) ([]Asset, error)
 	ListAssetsPaginated(filter map[string]interface{}, page, pageSize int) ([]Asset, int, error)
+	ListAssetsWithBulk(filter map[string]interface{}, page, pageSize int) ([]Asset, int, error)
 	GetAllAssets() ([]Asset, error)
 	GetLocationByID(id uint) (*Location, error)
 	GetCategoryByID(id uuid.UUID) (*AssetCategory, error)

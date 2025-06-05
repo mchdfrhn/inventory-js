@@ -25,6 +25,7 @@ import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
 import ExportButton from '../components/ExportButton';
 import AssetCard from '../components/AssetCard';
+import BulkAssetCard from '../components/BulkAssetCard';
 import ViewToggle from '../components/ViewToggle';
 import PageSizeSelector from '../components/PageSizeSelector';
 import { useNotification } from '../context/NotificationContext';
@@ -155,10 +156,9 @@ export default function AssetsPage() {
       setTempLocationFilter(locationParam);
     }
   }, [searchParams]);
-
   const { data, isLoading, error } = useQuery({
     queryKey: ['assets', page, pageSize],
-    queryFn: () => assetApi.list(page, pageSize),
+    queryFn: () => assetApi.listWithBulk(page, pageSize),
   });
     // Fetch categories for filter
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useQuery({
@@ -1187,16 +1187,23 @@ export default function AssetsPage() {
                 </div>
               </div>
             </div>
-          ) : viewType === 'grid' ? (
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">            {filteredAndSortedAssets?.length ? (
+          ) : viewType === 'grid' ? (            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">            {filteredAndSortedAssets?.length ? (
               filteredAndSortedAssets.map((asset: Asset) => (
-                <AssetCard 
-                  key={asset.id}
-                  asset={asset}
-                  onDelete={openDeleteModal}
-                />
+                asset.is_bulk_parent ? (
+                  <BulkAssetCard 
+                    key={asset.id}
+                    asset={asset}
+                    onDelete={openDeleteModal}
+                  />
+                ) : (
+                  <AssetCard 
+                    key={asset.id}
+                    asset={asset}
+                    onDelete={openDeleteModal}
+                  />
+                )
               ))
-            ) : (              <div className="col-span-full flex flex-col items-center justify-center py-20">
+            ) : (<div className="col-span-full flex flex-col items-center justify-center py-20">
                 <div className="rounded-full bg-gray-100/80 p-4">
                   <ExclamationCircleIcon className="h-8 w-8 text-gray-400" />
                 </div>                        <p className="mt-4 text-lg font-medium text-gray-500">
@@ -1313,9 +1320,15 @@ export default function AssetsPage() {
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>              <tbody className="divide-y divide-gray-300/50">
-                {filteredAndSortedAssets?.length ? (
-                  filteredAndSortedAssets.map((asset: Asset) => (<tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">                      <td className="whitespace-nowrap py-4 pl-6 pr-3">
-                        <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{asset.kode}</span>
+                {filteredAndSortedAssets?.length ? (                  filteredAndSortedAssets.map((asset: Asset) => (<tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">                      <td className="whitespace-nowrap py-4 pl-6 pr-3">
+                        <div className="flex flex-col space-y-1">
+                          <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{asset.kode}</span>
+                          {asset.is_bulk_parent && (
+                            <span className="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-1 rounded-md">
+                              📦 Bulk ({asset.bulk_total_count} item)
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4">
                         <div className="flex items-center">

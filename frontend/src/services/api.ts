@@ -70,9 +70,13 @@ export interface Asset {
   asal_pengadaan: string;          // New: procurement source
   lokasi_id?: number;              // New: reference to Location model
   location_info?: Location;        // New: linked location object
-  category_id: string;
-  // Only valid status values now
+  category_id: string;  // Only valid status values now
   status: 'baik' | 'rusak' | 'tidak_memadai';
+  // Bulk asset fields
+  bulk_id?: string;
+  bulk_sequence?: number;
+  is_bulk_parent?: boolean;
+  bulk_total_count?: number;
   category?: {
     id: string;
     name: string;
@@ -148,6 +152,31 @@ export const assetApi = {
 
   getByCategory: async (categoryId: string) => {
     const response = await api.get<PaginatedResponse<Asset>>(`/assets?category_id=${categoryId}`);
+    return response.data;
+  },
+
+  // New: Create bulk asset
+  createBulk: async (asset: Omit<Asset, 'id' | 'created_at' | 'updated_at'>, quantity: number) => {
+    const response = await api.post<{ status: string; message: string; data: Asset[] }>('/assets/bulk', {
+      asset,
+      quantity
+    });
+    return response.data;
+  },
+
+  // New: Get bulk assets
+  getBulkAssets: async (bulkId: string) => {
+    const response = await api.get<{ status: string; message: string; data: Asset[] }>(`/assets/bulk/${bulkId}`);
+    return response.data;
+  },
+
+  // New: List assets with bulk grouping
+  listWithBulk: async (page = 1, pageSize = 25, categoryId?: string) => {
+    let url = `/assets/with-bulk?page=${page}&page_size=${pageSize}`;
+    if (categoryId) {
+      url += `&category_id=${categoryId}`;
+    }
+    const response = await api.get<PaginatedResponse<Asset>>(url);
     return response.data;
   },
 };

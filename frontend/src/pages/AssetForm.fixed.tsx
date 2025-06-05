@@ -125,10 +125,9 @@ export default function AssetForm() {
       setIsSubmitting(false);
     },
   });
-
   // Create category mutation
   const createCategoryMutation = useMutation({
-    mutationFn: (categoryData: { name: string; description: string }) => {
+    mutationFn: (categoryData: { name: string; description: string; code: string }) => {
       return categoryApi.create(categoryData);
     },
     onSuccess: (response) => {
@@ -218,11 +217,12 @@ export default function AssetForm() {
       setIsCreatingCategory(false);
       return;
     }
-    
-    // Create new category
+      // Create new category
+    const categoryCode = `CAT${(Date.now() % 10000).toString().padStart(4, '0')}`;
     createCategoryMutation.mutate({
       name: newCategory.name.trim(),
       description: newCategory.description.trim() || '',
+      code: categoryCode,
     });
   };
 

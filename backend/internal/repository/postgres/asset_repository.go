@@ -200,6 +200,18 @@ func (r *assetRepository) GetByID(id uuid.UUID) (*domain.Asset, error) {
 	return &asset, nil
 }
 
+func (r *assetRepository) GetBulkAssets(bulkID uuid.UUID) ([]domain.Asset, error) {
+	var assets []domain.Asset
+	err := r.db.Preload("Category").Preload("LocationInfo").
+		Where("bulk_id = ?", bulkID).
+		Order("bulk_sequence ASC").
+		Find(&assets).Error
+	if err != nil {
+		return nil, err
+	}
+	return assets, nil
+}
+
 func (r *assetRepository) List(filter map[string]interface{}) ([]domain.Asset, error) {
 	var assets []domain.Asset
 	query := r.db
@@ -209,8 +221,8 @@ func (r *assetRepository) List(filter map[string]interface{}) ([]domain.Asset, e
 	}
 	if status, ok := filter["status"]; ok {
 		query = query.Where("status = ?", status)
-	} // Order by the last 3 digits (sequence number) in descending order
-	err := query.Preload("Category").Preload("LocationInfo").Order("CAST(RIGHT(kode, 3) AS INTEGER) DESC").Find(&assets).Error
+	} // Order by created_at instead of parsing kode to avoid empty string errors
+	err := query.Preload("Category").Preload("LocationInfo").Order("created_at DESC").Find(&assets).Error
 	return assets, err
 }
 
@@ -225,14 +237,13 @@ func (r *assetRepository) ListPaginated(filter map[string]interface{}, page, pag
 	if status, ok := filter["status"]; ok {
 		query = query.Where("status = ?", status)
 	}
-
 	// Get total count with filters
 	if err := query.Model(&domain.Asset{}).Count(&total).Error; err != nil {
 		return nil, 0, err
-	} // Get paginated records with filters ordered by sequence number (last 3 digits) DESC
+	} // Get paginated records with filters ordered by creation date DESC
 	offset := (page - 1) * pageSize
 	err := query.Preload("Category").Preload("LocationInfo").
-		Order("CAST(RIGHT(kode, 3) AS INTEGER) DESC").
+		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&assets).Error
@@ -241,4 +252,97 @@ func (r *assetRepository) ListPaginated(filter map[string]interface{}, page, pag
 	}
 
 	return assets, int(total), nil
+}
+
+func (r *assetRepository) ListPaginatedWithBulk(filter map[string]interface{}, page, pageSize int) ([]domain.Asset, int, error) {
+	var assets []domain.Asset
+	var total int64
+
+	// Base query that only shows bulk parent records or single assets
+	query := r.db.Where("is_bulk_parent = ? OR bulk_id IS NULL", true)
+
+	if categoryID, ok := filter["category_id"]; ok {
+		query = query.Where("category_id = ?", categoryID)
+	}
+	if status, ok := filter["status"]; ok {
+		query = query.Where("status = ?", status)
+	}
+
+	// Get total count with filters
+	if err := query.Model(&domain.Asset{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	// Get paginated records with filters ordered by creation date DESC
+	offset := (page - 1) * pageSize
+	err := query.Preload("Category").Preload("LocationInfo").
+		Order("created_at DESC").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&assets).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return assets, int(total), nil
+}
+
+func (r *assetRepository) CreateBulk(assets []domain.Asset) error {
+	// Use transaction for bulk insert
+	tx := r.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Error; err != nil {
+		return err
+	}
+
+	// Insert all assets in batch
+	for i := range assets {
+		// Generate ID if not set
+		if assets[i].ID == uuid.Nil {
+			assets[i].ID = uuid.New()
+		}
+
+		// Normalize status value
+		assets[i].Status = normalizeStatus(assets[i].Status)
+
+		// Calculate depreciation for each asset
+		umurEkonomisBulan := assets[i].UmurEkonomisTahun * 12
+		assets[i].UmurEkonomisBulan = umurEkonomisBulan
+
+		now := time.Now()
+		bulanPemakaian := 0
+		if !assets[i].TanggalPerolehan.IsZero() {
+			totalBulanPemakaian := int(now.Sub(assets[i].TanggalPerolehan).Hours() / (24 * 30))
+			if totalBulanPemakaian > 0 {
+				bulanPemakaian = totalBulanPemakaian
+			}
+		}
+
+		if bulanPemakaian > umurEkonomisBulan {
+			bulanPemakaian = umurEkonomisBulan
+		}
+
+		if umurEkonomisBulan > 0 {
+			penyusutanPerBulan := assets[i].HargaPerolehan / float64(umurEkonomisBulan)
+			assets[i].AkumulasiPenyusutan = penyusutanPerBulan * float64(bulanPemakaian)
+			assets[i].AkumulasiPenyusutan = math.Round(assets[i].AkumulasiPenyusutan*100) / 100
+
+			assets[i].NilaiSisa = assets[i].HargaPerolehan - assets[i].AkumulasiPenyusutan
+			if assets[i].NilaiSisa < 0 {
+				assets[i].NilaiSisa = 0
+			}
+			assets[i].NilaiSisa = math.Round(assets[i].NilaiSisa*100) / 100
+		}
+
+		if err := tx.Create(&assets[i]).Error; err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to create bulk asset %d: %w", i+1, err)
+		}
+	}
+
+	return tx.Commit().Error
 }

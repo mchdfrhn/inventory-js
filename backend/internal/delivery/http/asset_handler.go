@@ -33,6 +33,9 @@ func NewAssetHandler(r *gin.Engine, au domain.AssetUsecase) {
 		assets := api.Group("/assets")
 		{
 			assets.POST("", handler.CreateAsset)
+			assets.POST("/bulk", handler.CreateBulkAsset)
+			assets.GET("/bulk/:bulk_id", handler.GetBulkAssets)
+			assets.GET("/with-bulk", handler.ListAssetsWithBulk)
 			assets.POST("/import", handler.Import)
 			assets.PUT("/:id", handler.UpdateAsset)
 			assets.DELETE("/:id", handler.DeleteAsset)
@@ -595,4 +598,242 @@ func (h *AssetHandler) generateAssetCodeWithDetails(asset domain.Asset) (string,
 	E := fmt.Sprintf("%03d", maxSequence+1) // 3 digits sequence
 
 	return fmt.Sprintf("%s.%s.%s.%s.%s", A, B, C, D, E), nil
+}
+
+// CreateBulkAsset creates multiple assets with unique codes
+func (h *AssetHandler) CreateBulkAsset(c *gin.Context) {
+	var req dto.BulkAssetRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Status:  "error",
+			Message: "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	if req.Quantity <= 1 {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Status:  "error",
+			Message: "Quantity must be greater than 1 for bulk creation",
+		})
+		return
+	}
+
+	// Validate asset data
+	if err := validator.New().Struct(req.Asset); err != nil {
+		var validationErrors []string
+		for _, e := range err.(validator.ValidationErrors) {
+			validationErrors = append(validationErrors, fmt.Sprintf("Field '%s' validation failed: %s", e.Field(), e.Tag()))
+		}
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Status:  "error",
+			Message: "Validation failed: " + strings.Join(validationErrors, ", "),
+		})
+		return
+	}
+
+	// Convert DTO to domain model using the ToAsset method
+	domainAsset, err := req.Asset.ToAsset()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Status:  "error",
+			Message: "Invalid asset data: " + err.Error(),
+		})
+		return
+	}
+
+	// Create bulk assets using the usecase
+	assets, err := h.assetUsecase.CreateBulkAsset(domainAsset, req.Quantity)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, dto.Response{
+				Status:  "error",
+				Message: "Related record not found",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, dto.Response{
+			Status:  "error",
+			Message: "Failed to create bulk assets: " + err.Error(),
+		})
+		return
+	}
+
+	// Convert to DTOs
+	var assetDTOs []dto.AssetResponse
+	for _, asset := range assets {
+		assetDTOs = append(assetDTOs, dto.AssetResponse{
+			ID:                  asset.ID,
+			Kode:                asset.Kode,
+			Nama:                asset.Nama,
+			Spesifikasi:         asset.Spesifikasi,
+			Quantity:            asset.Quantity,
+			Satuan:              asset.Satuan,
+			TanggalPerolehan:    asset.TanggalPerolehan,
+			HargaPerolehan:      asset.HargaPerolehan,
+			UmurEkonomisTahun:   asset.UmurEkonomisTahun,
+			UmurEkonomisBulan:   asset.UmurEkonomisBulan,
+			AkumulasiPenyusutan: asset.AkumulasiPenyusutan,
+			NilaiSisa:           asset.NilaiSisa,
+			Keterangan:          asset.Keterangan,
+			Lokasi:              asset.Lokasi,
+			LokasiID:            asset.LokasiID,
+			AsalPengadaan:       asset.AsalPengadaan,
+			CategoryID:          asset.CategoryID,
+			Status:              asset.Status,
+			BulkID:              asset.BulkID,
+			BulkSequence:        asset.BulkSequence,
+			IsBulkParent:        asset.IsBulkParent,
+			BulkTotalCount:      asset.BulkTotalCount,
+			CreatedAt:           asset.CreatedAt,
+			UpdatedAt:           asset.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusCreated, dto.SuccessResponse{
+		Status:  "success",
+		Message: fmt.Sprintf("Successfully created %d assets", len(assets)),
+		Data:    assetDTOs,
+	})
+}
+
+// GetBulkAssets gets all assets in a bulk group
+func (h *AssetHandler) GetBulkAssets(c *gin.Context) {
+	bulkIDStr := c.Param("bulk_id")
+	bulkID, err := uuid.Parse(bulkIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Status:  "error",
+			Message: "Invalid bulk ID format",
+		})
+		return
+	}
+
+	assets, err := h.assetUsecase.GetBulkAssets(bulkID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.Response{
+			Status:  "error",
+			Message: "Failed to get bulk assets: " + err.Error(),
+		})
+		return
+	}
+
+	// Convert to DTOs
+	var assetDTOs []dto.AssetResponse
+	for _, asset := range assets {
+		assetDTOs = append(assetDTOs, dto.AssetResponse{
+			ID:                  asset.ID,
+			Kode:                asset.Kode,
+			Nama:                asset.Nama,
+			Spesifikasi:         asset.Spesifikasi,
+			Quantity:            asset.Quantity,
+			Satuan:              asset.Satuan,
+			TanggalPerolehan:    asset.TanggalPerolehan,
+			HargaPerolehan:      asset.HargaPerolehan,
+			UmurEkonomisTahun:   asset.UmurEkonomisTahun,
+			UmurEkonomisBulan:   asset.UmurEkonomisBulan,
+			AkumulasiPenyusutan: asset.AkumulasiPenyusutan,
+			NilaiSisa:           asset.NilaiSisa,
+			Keterangan:          asset.Keterangan,
+			Lokasi:              asset.Lokasi,
+			LokasiID:            asset.LokasiID,
+			AsalPengadaan:       asset.AsalPengadaan,
+			CategoryID:          asset.CategoryID,
+			Status:              asset.Status,
+			BulkID:              asset.BulkID,
+			BulkSequence:        asset.BulkSequence,
+			IsBulkParent:        asset.IsBulkParent,
+			BulkTotalCount:      asset.BulkTotalCount,
+			CreatedAt:           asset.CreatedAt,
+			UpdatedAt:           asset.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, dto.SuccessResponse{
+		Status:  "success",
+		Message: "Bulk assets retrieved successfully",
+		Data:    assetDTOs,
+	})
+}
+
+// ListAssetsWithBulk lists assets with bulk support (only showing bulk parents)
+func (h *AssetHandler) ListAssetsWithBulk(c *gin.Context) {
+	page := 1
+	pageSize := 10
+
+	if p := c.Query("page"); p != "" {
+		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
+			page = parsedPage
+		}
+	}
+
+	if ps := c.Query("page_size"); ps != "" {
+		if parsedPageSize, err := strconv.Atoi(ps); err == nil && parsedPageSize > 0 && parsedPageSize <= 100 {
+			pageSize = parsedPageSize
+		}
+	}
+
+	filter := make(map[string]interface{})
+	assets, total, err := h.assetUsecase.ListAssetsWithBulk(filter, page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.Response{
+			Status:  "error",
+			Message: "Failed to list assets: " + err.Error(),
+		})
+		return
+	}
+
+	// Convert to DTOs
+	var assetDTOs []dto.AssetResponse
+	for _, asset := range assets {
+		assetDTOs = append(assetDTOs, dto.AssetResponse{
+			ID:                  asset.ID,
+			Kode:                asset.Kode,
+			Nama:                asset.Nama,
+			Spesifikasi:         asset.Spesifikasi,
+			Quantity:            asset.Quantity,
+			Satuan:              asset.Satuan,
+			TanggalPerolehan:    asset.TanggalPerolehan,
+			HargaPerolehan:      asset.HargaPerolehan,
+			UmurEkonomisTahun:   asset.UmurEkonomisTahun,
+			UmurEkonomisBulan:   asset.UmurEkonomisBulan,
+			AkumulasiPenyusutan: asset.AkumulasiPenyusutan,
+			NilaiSisa:           asset.NilaiSisa,
+			Keterangan:          asset.Keterangan,
+			Lokasi:              asset.Lokasi,
+			LokasiID:            asset.LokasiID,
+			AsalPengadaan:       asset.AsalPengadaan,
+			CategoryID:          asset.CategoryID,
+			Status:              asset.Status,
+			BulkID:              asset.BulkID,
+			BulkSequence:        asset.BulkSequence,
+			IsBulkParent:        asset.IsBulkParent,
+			BulkTotalCount:      asset.BulkTotalCount,
+			CreatedAt:           asset.CreatedAt,
+			UpdatedAt:           asset.UpdatedAt,
+		})
+	}
+
+	totalPages := (total + pageSize - 1) / pageSize
+	c.JSON(http.StatusOK, dto.PaginatedResponse{
+		Status:  "success",
+		Message: "Assets with bulk support retrieved successfully",
+		Data:    assetDTOs,
+		Pagination: struct {
+			CurrentPage int  `json:"current_page"`
+			PageSize    int  `json:"page_size"`
+			TotalItems  int  `json:"total_items"`
+			TotalPages  int  `json:"total_pages"`
+			HasPrevious bool `json:"has_previous"`
+			HasNext     bool `json:"has_next"`
+		}{
+			CurrentPage: page,
+			PageSize:    pageSize,
+			TotalItems:  total,
+			TotalPages:  totalPages,
+			HasPrevious: page > 1,
+			HasNext:     page < totalPages,
+		},
+	})
 }
