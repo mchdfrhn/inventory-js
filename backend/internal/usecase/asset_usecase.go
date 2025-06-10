@@ -53,17 +53,53 @@ func (u *assetUsecase) generateAssetCode(asset *domain.Asset) (string, error) {
 	if procurementCode == "" {
 		procurementCode = "1" // default
 	}
-
 	// D = Procurement year (2 digits)
 	year := asset.TanggalPerolehan.Year()
-	yearCode := fmt.Sprintf("%02d", year%100)                    // E = Sequence number (3 digits) - find highest existing sequence + 1
-	allAssets, err := u.assetRepo.List(map[string]interface{}{}) // Get all assets to find max sequence
+	yearCode := fmt.Sprintf("%02d", year%100) // E = Sequence number (3 digits) - find highest existing sequence + 1
+	// Get all assets ordered by created_at DESC (newest first)
+	allAssets, err := u.assetRepo.List(map[string]interface{}{})
 	if err != nil {
 		return "", err
 	}
+	// Find the highest sequence number from existing codes
+	maxSequence := 0
+	// If no assets exist, start from 001
+	if len(allAssets) == 0 {
+		maxSequence = 0 // Will become 001 after +1
+	} else {
+		// Find highest sequence from existing asset codes
+		for _, existingAsset := range allAssets {
+			code := existingAsset.Kode
 
-	// Use simple counting approach for sequence
-	sequenceCode := fmt.Sprintf("%03d", len(allAssets)+1)
+			// For bulk assets (those with "-XXX" suffix), extract sequence from parent code
+			if len(code) > 4 && code[len(code)-4] == '-' {
+				// Extract the parent code (everything before the last "-XXX")
+				parentCode := code[:len(code)-4]
+				if len(parentCode) >= 3 {
+					lastThreeDigits := parentCode[len(parentCode)-3:]
+					var sequence int
+					if n, err := fmt.Sscanf(lastThreeDigits, "%d", &sequence); err == nil && n == 1 {
+						if sequence > maxSequence {
+							maxSequence = sequence
+						}
+					}
+				}
+			} else {
+				// For normal asset codes, extract last 3 digits
+				if len(code) >= 3 {
+					lastThreeDigits := code[len(code)-3:]
+					var sequence int
+					if n, err := fmt.Sscanf(lastThreeDigits, "%d", &sequence); err == nil && n == 1 {
+						if sequence > maxSequence {
+							maxSequence = sequence
+						}
+					}
+				}
+			}
+		}
+	}
+	// Next sequence is maxSequence + 1, ensuring it starts from 001 when empty
+	sequenceCode := fmt.Sprintf("%03d", maxSequence+1)
 
 	return fmt.Sprintf("%s.%s.%s.%s.%s", locationCode, categoryCode, procurementCode, yearCode, sequenceCode), nil
 }

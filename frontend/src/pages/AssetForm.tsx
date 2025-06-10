@@ -471,13 +471,11 @@ export default function AssetForm() {
             </div>
           </div>
         )}        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Info untuk create mode */}
-          {!isEditMode && (
+          {/* Info untuk create mode */}          {!isEditMode && (
             <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 flex items-center">
               <InformationCircleIcon className="h-5 w-5 mr-2 text-blue-500 flex-shrink-0" />
               <div>
                 <span className="font-medium">Kode Asset akan dibuat otomatis</span>
-                <p className="text-sm mt-1">Kode asset akan di-generate secara otomatis oleh sistem saat menyimpan data</p>
               </div>
             </div>
           )}
