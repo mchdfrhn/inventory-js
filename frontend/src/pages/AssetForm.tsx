@@ -68,6 +68,23 @@ export default function AssetForm() {
     status: 'baik',
   });
 
+  // New state for formatted display of harga_perolehan
+  const [displayHarga, setDisplayHarga] = useState<string>('');
+
+  // Initialize displayHarga when component mounts
+  useEffect(() => {
+    if (!isEditMode) {
+      setDisplayHarga('');
+    }
+  }, [isEditMode]);
+  // Helper function to format number with thousand separators
+  const formatCurrency = (value: string | number): string => {
+    if (!value) return '';
+    const numValue = typeof value === 'string' ? value.replace(/\./g, '') : value.toString();
+    if (!/^\d+$/.test(numValue)) return numValue;
+    return numValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
   // Fetch asset data if in edit mode
   const { data: assetData, isLoading: isLoadingAsset } = useQuery({
     queryKey: ['asset', id],
@@ -226,6 +243,7 @@ export default function AssetForm() {
         status: mappedStatus,
       };        
       setFormData(updatedFormData);
+      setDisplayHarga(formatCurrency(harga_perolehan || 0));
     }
   }, [assetData]);
 
@@ -338,9 +356,9 @@ export default function AssetForm() {
     
     // Update form data
     let newValue: string | number | undefined = value;
-    
-    // Convert numeric values - only convert to number if value is not empty
-    if (['quantity', 'harga_perolehan', 'umur_ekonomis_tahun'].includes(name)) {
+      // Convert numeric values - only convert to number if value is not empty
+    // Skip harga_perolehan as it has its own handler
+    if (['quantity', 'umur_ekonomis_tahun'].includes(name)) {
       if (value === '') {
         newValue = ''; // Keep as empty string when field is cleared
       } else {
@@ -356,8 +374,7 @@ export default function AssetForm() {
         newValue = Number(value);
       }
     }
-    
-    // Update form data
+      // Update form data
     setFormData(prev => ({ ...prev, [name]: newValue as any }));
     
     // Validate the field
@@ -366,6 +383,34 @@ export default function AssetForm() {
       ...prev, 
       [name]: errorMessage 
     }));
+  };
+  // Special handler for harga_perolehan with currency formatting
+  const handleHargaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    
+    // Remove all non-digit characters
+    const numberValue = value.replace(/\D/g, '');
+    
+    // Limit to reasonable amount (max 15 digits to prevent overflow)
+    if (numberValue.length > 15) return;
+    
+    // Update display with formatted value
+    setDisplayHarga(formatCurrency(numberValue));
+    
+    // Update form data with actual number
+    const numericValue = numberValue ? parseInt(numberValue, 10) : '';
+    setFormData(prev => ({ ...prev, harga_perolehan: numericValue }));
+    
+    // Mark field as touched
+    setTouched(prev => ({ ...prev, harga_perolehan: true }));
+    
+    // Clear any existing error when user starts typing
+    if (fieldErrors.harga_perolehan) {
+      setFieldErrors(prev => ({ 
+        ...prev, 
+        harga_perolehan: '' 
+      }));
+    }
   };
 
   // Validate a single field
@@ -682,17 +727,14 @@ export default function AssetForm() {
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className="text-gray-500 sm:text-sm">Rp</span>
-                  </div>
-                  <input
-                    type="number"
+                  </div>                  <input
+                    type="text"
                     name="harga_perolehan"
                     id="harga_perolehan"
                     required
-                    min="0"
-                    step="1000"
                     className="block w-full pl-12 pr-3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    value={formData.harga_perolehan}
-                    onChange={handleChange}
+                    value={displayHarga}
+                    onChange={handleHargaChange}
                     placeholder="0"
                   />
                 </div>
