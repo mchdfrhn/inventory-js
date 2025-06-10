@@ -82,8 +82,8 @@ type CreateAssetRequest struct {
 	HargaPerolehan    float64 `json:"harga_perolehan" binding:"required"`
 	UmurEkonomisTahun int     `json:"umur_ekonomis_tahun" binding:"required"`
 	Keterangan        string  `json:"keterangan"`
-	Lokasi            string  `json:"lokasi"`
-	LokasiID          *uint   `json:"lokasi_id"`      // Reference to Location model
+	Lokasi            string  `json:"lokasi"`         // Optional field for backward compatibility
+	LokasiID          *uint   `json:"lokasi_id"`      // Reference to Location model - required in validation
 	AsalPengadaan     string  `json:"asal_pengadaan"` // Procurement source
 	CategoryID        string  `json:"category_id" binding:"required,uuid"`
 	Status            string  `json:"status"`
@@ -114,35 +114,40 @@ type BulkAssetRequest struct {
 
 // AssetResponse represents the response structure for asset data
 type AssetResponse struct {
-	ID                  uuid.UUID         `json:"id"`
-	Kode                string            `json:"kode"`
-	Nama                string            `json:"nama"`
-	Spesifikasi         string            `json:"spesifikasi"`
-	Quantity            int               `json:"quantity"`
-	Satuan              string            `json:"satuan"`
-	TanggalPerolehan    time.Time         `json:"tanggal_perolehan"`
-	HargaPerolehan      float64           `json:"harga_perolehan"`
-	UmurEkonomisTahun   int               `json:"umur_ekonomis_tahun"`
-	UmurEkonomisBulan   int               `json:"umur_ekonomis_bulan"`
-	AkumulasiPenyusutan float64           `json:"akumulasi_penyusutan"`
-	NilaiSisa           float64           `json:"nilai_sisa"`
-	Keterangan          string            `json:"keterangan"`
-	Lokasi              string            `json:"lokasi"`
-	LokasiID            *uint             `json:"lokasi_id"`
-	LocationInfo        *LocationResponse `json:"location_info,omitempty"`
-	AsalPengadaan       string            `json:"asal_pengadaan"`
-	CategoryID          uuid.UUID         `json:"category_id"`
-	Category            CategoryResponse  `json:"category"`
-	Status              string            `json:"status"`
-	BulkID              *uuid.UUID        `json:"bulk_id,omitempty"`
-	BulkSequence        int               `json:"bulk_sequence,omitempty"`
-	IsBulkParent        bool              `json:"is_bulk_parent"`
-	BulkTotalCount      int               `json:"bulk_total_count,omitempty"`
-	CreatedAt           time.Time         `json:"created_at"`
-	UpdatedAt           time.Time         `json:"updated_at"`
+	ID                  uuid.UUID  `json:"id"`
+	Kode                string     `json:"kode"`
+	Nama                string     `json:"nama"`
+	Spesifikasi         string     `json:"spesifikasi"`
+	Quantity            int        `json:"quantity"`
+	Satuan              string     `json:"satuan"`
+	TanggalPerolehan    time.Time  `json:"tanggal_perolehan"`
+	HargaPerolehan      float64    `json:"harga_perolehan"`
+	UmurEkonomisTahun   int        `json:"umur_ekonomis_tahun"`
+	UmurEkonomisBulan   int        `json:"umur_ekonomis_bulan"`
+	AkumulasiPenyusutan float64    `json:"akumulasi_penyusutan"`
+	NilaiSisa           float64    `json:"nilai_sisa"`
+	Keterangan          string     `json:"keterangan"`
+	Lokasi              string     `json:"lokasi"`
+	LokasiID            *uint      `json:"lokasi_id"`
+	AsalPengadaan       string     `json:"asal_pengadaan"`
+	CategoryID          uuid.UUID  `json:"category_id"`
+	Status              string     `json:"status"`
+	BulkID              *uuid.UUID `json:"bulk_id"`
+	BulkSequence        int        `json:"bulk_sequence"`
+	IsBulkParent        bool       `json:"is_bulk_parent"`
+	BulkTotalCount      int        `json:"bulk_total_count"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
 }
 
-// CategoryRequest DTOs
+// SuccessResponse represents a successful operation response with data
+type SuccessResponse struct {
+	Status  string      `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+// Category Request DTOs
 type CreateCategoryRequest struct {
 	Code        string `json:"code" binding:"required"`
 	Name        string `json:"name" binding:"required"`
@@ -155,36 +160,6 @@ type UpdateCategoryRequest struct {
 	Description string `json:"description"`
 }
 
-// CategoryResponse represents the response structure for category data
-type CategoryResponse struct {
-	ID          uuid.UUID `json:"id"`
-	Code        string    `json:"code"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-}
-
-// LocationResponse represents the response structure for location data
-type LocationResponse struct {
-	ID          uint      `json:"id"`
-	Code        string    `json:"code"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Building    string    `json:"building"`
-	Floor       string    `json:"floor"`
-	Room        string    `json:"room"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-}
-
-// SuccessResponse represents a generic success response
-type SuccessResponse struct {
-	Status  string      `json:"status"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
-}
-
 // Validate validates the create asset request
 func (r *CreateAssetRequest) Validate() error {
 	if r.Quantity < 0 {
@@ -195,6 +170,9 @@ func (r *CreateAssetRequest) Validate() error {
 	}
 	if r.UmurEkonomisTahun <= 0 {
 		return fmt.Errorf("umur ekonomis harus lebih dari 0")
+	}
+	if r.LokasiID == nil || *r.LokasiID <= 0 {
+		return fmt.Errorf("lokasi_id is required and must be a valid location ID")
 	}
 
 	// Validate status - must be one of the valid values

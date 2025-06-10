@@ -27,7 +27,6 @@ type AssetFormData = {
   harga_perolehan: number | string; // Allow string for empty state
   umur_ekonomis_tahun: number | string; // Allow string for empty state
   keterangan: string;
-  lokasi: string; 
   lokasi_id: number | string | undefined; // Can be string for empty value or form handling
   asal_pengadaan: string; 
   category_id: string;
@@ -52,8 +51,7 @@ export default function AssetForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  
-  // Form state with correct typing
+    // Form state with correct typing
   const [formData, setFormData] = useState<AssetFormData>({
     kode: '',
     nama: '',
@@ -64,7 +62,6 @@ export default function AssetForm() {
     harga_perolehan: '', // Start with empty string for better UX
     umur_ekonomis_tahun: 5, // Default value 5
     keterangan: '',
-    lokasi: '',
     lokasi_id: '',
     asal_pengadaan: '', // Empty so the validation works the same
     category_id: '',
@@ -179,17 +176,15 @@ export default function AssetForm() {
         kode, 
         nama, 
         spesifikasi, 
-        quantity, 
-        satuan, 
+        quantity,        satuan, 
         tanggal_perolehan, 
         harga_perolehan,
         umur_ekonomis_tahun, 
         keterangan, 
-        lokasi, 
         lokasi_id,
         asal_pengadaan,
         category_id, 
-        status 
+        status
       } = assetData.data as any;
       
       // Use the status directly - we only accept baik, rusak, or tidak_memadai now
@@ -219,14 +214,12 @@ export default function AssetForm() {
       const updatedFormData = {
         kode: kode || '',
         nama: nama || '',
-        spesifikasi: spesifikasi || '',
-        quantity: quantity || 1,
+        spesifikasi: spesifikasi || '',        quantity: quantity || 1,
         satuan: satuan || 'unit',
         tanggal_perolehan: tanggal_perolehan ? new Date(tanggal_perolehan).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         harga_perolehan: harga_perolehan || 0,
         umur_ekonomis_tahun: umur_ekonomis_tahun || 5, // Default to 5 years if not set
         keterangan: keterangan || '',
-        lokasi: lokasi || '',
         lokasi_id: parsedLokasiId,
         asal_pengadaan: asal_pengadaan || '',
         category_id: category_id || '',
@@ -432,25 +425,29 @@ export default function AssetForm() {
               <span className="font-medium">{error}</span>
             </div>
           </div>
-        )}        <form onSubmit={handleSubmit} className="space-y-6">
+        )}        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Info untuk create mode */}
           {!isEditMode && (
             <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 flex items-center">
-              <InformationCircleIcon className="h-5 w-5 mr-2 text-blue-500" />
+              <InformationCircleIcon className="h-5 w-5 mr-2 text-blue-500 flex-shrink-0" />
               <div>
                 <span className="font-medium">Kode Asset akan dibuat otomatis</span>
                 <p className="text-sm mt-1">Kode asset akan di-generate secara otomatis oleh sistem saat menyimpan data</p>
               </div>
             </div>
           )}
-          
-          {/* Basic Information Section */}
-          <div>            <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+          {/* Section 1: Basic Information */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-500 text-white text-sm font-medium rounded-full mr-2">1</span>
+              Informasi Dasar
+            </h3>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* Field kode asset hanya ditampilkan saat edit mode */}
               {isEditMode && (
                 <div>
-                  <label htmlFor="kode" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="kode" className="block text-sm font-medium text-gray-700 mb-2">
                     Kode Aset <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -472,8 +469,8 @@ export default function AssetForm() {
                 </div>
               )}
 
-              <div>
-                <label htmlFor="nama" className="block text-sm font-medium text-gray-700 mb-1">
+              <div className={isEditMode ? "" : "md:col-span-2"}>
+                <label htmlFor="nama" className="block text-sm font-medium text-gray-700 mb-2">
                   Nama Aset <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -487,39 +484,92 @@ export default function AssetForm() {
                   value={formData.nama}
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, nama: true }))}
-                  placeholder="Contoh: Laptop Dell Inspiron"
+                  placeholder="Contoh: Laptop Dell Inspiron 15"
                 />
                 {touched.nama && fieldErrors.nama && (
                   <p className="mt-2 text-sm text-red-600">{fieldErrors.nama}</p>
                 )}
               </div>
 
+              <div className="md:col-span-2">
+                <label htmlFor="spesifikasi" className="block text-sm font-medium text-gray-700 mb-2">
+                  Spesifikasi
+                </label>
+                <textarea
+                  name="spesifikasi"
+                  id="spesifikasi"
+                  rows={3}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  value={formData.spesifikasi}
+                  onChange={handleChange}
+                  placeholder="Deskripsikan spesifikasi aset secara detail (opsional)"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Categorization & Location */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-green-500 text-white text-sm font-medium rounded-full mr-2">2</span>
+              Kategorisasi & Lokasi
+            </h3>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-2">
                   Kategori <span className="text-red-500">*</span>
                 </label>
-                <div className="flex space-x-2">
-                  <select
-                    name="category_id"
-                    id="category_id"
-                    required
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    value={formData.category_id}
-                    onChange={handleChange}
-                    onBlur={() => setTouched(prev => ({ ...prev, category_id: true }))}
-                  >
-                    <option value="">Pilih Kategori</option>
-                    {categoriesData?.data.map((category: any) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name} {category.code ? `(${category.code})` : ''}
-                      </option>
-                    ))}                  </select>
-                  {/* TODO: Add button to create new category */}
-                </div>
+                <select
+                  name="category_id"
+                  id="category_id"
+                  required
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  value={formData.category_id}
+                  onChange={handleChange}
+                  onBlur={() => setTouched(prev => ({ ...prev, category_id: true }))}
+                >
+                  <option value="">Pilih Kategori</option>
+                  {categoriesData?.data.map((category: any) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name} {category.code ? `(${category.code})` : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
-                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="lokasi_id" className="block text-sm font-medium text-gray-700 mb-2">
+                  Lokasi <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="lokasi_id"
+                  id="lokasi_id"
+                  required
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  value={formData.lokasi_id || ''}
+                  onChange={handleChange}
+                  onBlur={() => setTouched(prev => ({ ...prev, lokasi_id: true }))}
+                >
+                  <option value="">Pilih Lokasi</option>
+                  {locationsData?.data.map((location: any) => (
+                    <option key={location.id} value={location.id}>
+                      {location.name} ({location.code}) - {location.building}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Quantity & Status */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-purple-500 text-white text-sm font-medium rounded-full mr-2">3</span>
+              Kuantitas & Status
+            </h3>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
                   Jumlah <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -533,27 +583,14 @@ export default function AssetForm() {
                   onChange={handleChange}
                 />
                 {Number(formData.quantity) > 1 && !isEditMode && (
-                  <p className="mt-1 text-xs text-amber-600">
+                  <p className="mt-1 text-xs text-amber-600 bg-amber-50 p-2 rounded">
                     ⚠️ Jumlah lebih dari 1 akan membuat bulk asset dengan kode unik untuk setiap item
                   </p>
                 )}
-              </div>              <div className="col-span-full">
-                <label htmlFor="spesifikasi" className="block text-sm font-medium text-gray-700 mb-1">
-                  Spesifikasi
-                </label>
-                <textarea
-                  name="spesifikasi"
-                  id="spesifikasi"
-                  rows={2}
-                  className="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  value={formData.spesifikasi}
-                  onChange={handleChange}
-                  placeholder="Deskripsi detail tentang aset (opsional)"
-                />
               </div>
 
               <div>
-                <label htmlFor="satuan" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="satuan" className="block text-sm font-medium text-gray-700 mb-2">
                   Satuan <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -565,18 +602,40 @@ export default function AssetForm() {
                   onChange={handleChange}
                 >
                   <option value="unit">Unit</option>
-                  <option value="set">Set</option>
                   <option value="pcs">Pcs</option>
+                  <option value="set">Set</option>
                   <option value="buah">Buah</option>
                   <option value="meter">Meter</option>
-                  <option value="kg">Kg</option>
+                  <option value="kg">Kilogram</option>
                   <option value="liter">Liter</option>
                 </select>
               </div>
 
               <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                  Status Kondisi <span className="text-red-500">*</span>
+                <label htmlFor="asal_pengadaan" className="block text-sm font-medium text-gray-700 mb-2">
+                  Asal Pengadaan <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="asal_pengadaan"
+                  id="asal_pengadaan"
+                  required
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  value={formData.asal_pengadaan}
+                  onChange={handleChange}
+                  onBlur={() => setTouched(prev => ({ ...prev, asal_pengadaan: true }))}
+                >
+                  <option value="">Pilih Asal Pengadaan</option>
+                  <option value="pembelian">Pembelian</option>
+                  <option value="bantuan">Bantuan</option>
+                  <option value="hibah">Hibah</option>
+                  <option value="sumbangan">Sumbangan</option>
+                  <option value="produksi_sendiri">Produksi Sendiri</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                  Status <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="status"
@@ -594,12 +653,15 @@ export default function AssetForm() {
             </div>
           </div>
 
-          {/* Financial Information Section */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Keuangan</h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Section 4: Financial Information */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-orange-500 text-white text-sm font-medium rounded-full mr-2">4</span>
+              Informasi Keuangan
+            </h3>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div>
-                <label htmlFor="tanggal_perolehan" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="tanggal_perolehan" className="block text-sm font-medium text-gray-700 mb-2">
                   Tanggal Perolehan <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -614,7 +676,7 @@ export default function AssetForm() {
               </div>
 
               <div>
-                <label htmlFor="harga_perolehan" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="harga_perolehan" className="block text-sm font-medium text-gray-700 mb-2">
                   Harga Perolehan <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -627,17 +689,17 @@ export default function AssetForm() {
                     id="harga_perolehan"
                     required
                     min="0"
-                    step="0.01"
-                    className="block w-full pl-12 pr-12 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    step="1000"
+                    className="block w-full pl-12 pr-3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     value={formData.harga_perolehan}
                     onChange={handleChange}
-                    placeholder="0.00"
+                    placeholder="0"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="umur_ekonomis_tahun" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="umur_ekonomis_tahun" className="block text-sm font-medium text-gray-700 mb-2">
                   Umur Ekonomis (Tahun) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -650,113 +712,67 @@ export default function AssetForm() {
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   value={formData.umur_ekonomis_tahun}
                   onChange={handleChange}
-                  placeholder="Contoh: 5"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="asal_pengadaan" className="block text-sm font-medium text-gray-700 mb-1">
-                  Asal Pengadaan <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="asal_pengadaan"
-                  id="asal_pengadaan"
-                  required
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                  value={formData.asal_pengadaan}
-                  onChange={handleChange}
-                >
-                  <option value="">Pilih Asal Pengadaan</option>
-                  <option value="pembelian">Pembelian</option>
-                  <option value="bantuan">Bantuan</option>
-                  <option value="hibah">Hibah</option>
-                  <option value="sumbangan">Sumbangan</option>
-                  <option value="produksi_sendiri">Produksi Sendiri</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Location Information Section */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Lokasi</h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <label htmlFor="lokasi_id" className="block text-sm font-medium text-gray-700 mb-1">
-                  Lokasi Resmi
-                </label>
-                <div className="flex space-x-2">
-                  <select
-                    name="lokasi_id"
-                    id="lokasi_id"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    value={formData.lokasi_id || ''}
-                    onChange={handleChange}
-                  >
-                    <option value="">Pilih Lokasi (Opsional)</option>
-                    {locationsData?.data.map((location: any) => (
-                      <option key={location.id} value={location.id}>
-                        {location.name} ({location.code}) - {location.building}
-                      </option>
-                    ))}                  </select>
-                  {/* TODO: Add button to create new location */}
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="lokasi" className="block text-sm font-medium text-gray-700 mb-1">
-                  Deskripsi Lokasi Tambahan
-                </label>
-                <input
-                  type="text"
-                  name="lokasi"
-                  id="lokasi"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                  value={formData.lokasi}
-                  onChange={handleChange}
-                  placeholder="Contoh: Ruang 101, Lantai 2"
+                  placeholder="5"
                 />
               </div>
             </div>
           </div>
 
-          {/* Additional Information Section */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Tambahan</h3>
-            <div className="grid grid-cols-1 gap-6">
-              <div>
-                <label htmlFor="keterangan" className="block text-sm font-medium text-gray-700 mb-1">
-                  Keterangan
-                </label>
-                <textarea
-                  name="keterangan"
-                  id="keterangan"
-                  rows={3}
-                  className="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  value={formData.keterangan}
-                  onChange={handleChange}
-                  placeholder="Catatan tambahan tentang aset (opsional)"
-                />
-              </div>
+          {/* Section 5: Additional Information */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-500 text-white text-sm font-medium rounded-full mr-2">5</span>
+              Informasi Tambahan
+            </h3>
+            <div>
+              <label htmlFor="keterangan" className="block text-sm font-medium text-gray-700 mb-2">
+                Keterangan
+              </label>
+              <textarea
+                name="keterangan"
+                id="keterangan"
+                rows={4}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                value={formData.keterangan}
+                onChange={handleChange}
+                placeholder="Catatan tambahan tentang aset (opsional)"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Berikan informasi tambahan yang diperlukan seperti nomor seri, kondisi khusus, atau catatan lainnya.
+              </p>
             </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end space-x-3">
+          </div>          {/* Submit Button */}
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
             <Link
               to="/assets"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
             >
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Batal
             </Link>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+              className={`inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ${
                 isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
               }`}
             >
-              {isSubmitting ? 'Menyimpan...' : (isEditMode ? 'Perbarui Aset' : 'Simpan Aset')}
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Menyimpan...
+                </>
+              ) : isEditMode ? (
+                <>
+                  <PencilIcon className="h-4 w-4 mr-2" />
+                  Perbarui Aset
+                </>
+              ) : (
+                'Simpan Aset'
+              )}
             </button>
           </div>
         </form>
