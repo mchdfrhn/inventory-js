@@ -51,6 +51,26 @@ const formatStatus = (status: string): string => {
   return 'Baik'; // Default fallback
 };
 
+// Helper function to calculate total acquisition price for bulk assets
+const getTotalHargaPerolehan = (asset: Asset): number => {
+  // For bulk assets, multiply harga_perolehan by bulk_total_count
+  if (asset.bulk_total_count && asset.bulk_total_count > 1) {
+    return asset.harga_perolehan * asset.bulk_total_count;
+  }
+  // For regular assets, return harga_perolehan as is
+  return asset.harga_perolehan;
+};
+
+// Helper function to calculate total nilai sisa for bulk assets
+const getTotalNilaiSisa = (asset: Asset): number => {
+  // For bulk assets, multiply nilai_sisa by bulk_total_count
+  if (asset.bulk_total_count && asset.bulk_total_count > 1) {
+    return asset.nilai_sisa * asset.bulk_total_count;
+  }
+  // For regular assets, return nilai_sisa as is
+  return asset.nilai_sisa;
+};
+
 
 
 export default function AssetsPage() {  
@@ -399,14 +419,12 @@ export default function AssetsPage() {
       case 'quantity':
         aValue = a.quantity;
         bValue = b.quantity;
-        break;
-      case 'harga_perolehan':
-        aValue = a.harga_perolehan;
-        bValue = b.harga_perolehan;
-        break;
-      case 'nilai_sisa':
-        aValue = a.nilai_sisa;
-        bValue = b.nilai_sisa;
+        break;      case 'harga_perolehan':
+        aValue = getTotalHargaPerolehan(a);
+        bValue = getTotalHargaPerolehan(b);
+        break;      case 'nilai_sisa':
+        aValue = getTotalNilaiSisa(a);
+        bValue = getTotalNilaiSisa(b);
         break;
       case 'penyusutan':
         aValue = a.harga_perolehan > 0 ? (a.akumulasi_penyusutan / a.harga_perolehan) * 100 : 0;
@@ -1351,14 +1369,13 @@ export default function AssetsPage() {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4">
                         <div className="text-sm text-gray-900">{asset.quantity} {asset.satuan}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4">
+                      </td>                      <td className="whitespace-nowrap px-3 py-4">
                         <div className="text-sm text-gray-900">
                           {new Intl.NumberFormat('id-ID', {
                             style: 'currency',
                             currency: 'IDR',
                             minimumFractionDigits: 0
-                          }).format(asset.harga_perolehan)}
+                          }).format(getTotalHargaPerolehan(asset))}
                         </div>
                       </td>                      <td className="whitespace-nowrap px-3 py-4">
                         <div className="text-sm text-gray-900">
@@ -1366,7 +1383,7 @@ export default function AssetsPage() {
                             style: 'currency',
                             currency: 'IDR',
                             minimumFractionDigits: 0
-                          }).format(asset.nilai_sisa)}
+                          }).format(getTotalNilaiSisa(asset))}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4">
