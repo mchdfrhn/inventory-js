@@ -83,9 +83,8 @@ export default function AssetsPage() {
   const [viewType, setViewType] = useState<'table' | 'grid'>(
     localStorage.getItem('assetViewType') as 'table' | 'grid' || 'table'
   );
-  
-  // Sorting state
-  const [sortField, setSortField] = useState<string>('nama');
+    // Sorting state
+  const [sortField, setSortField] = useState<string>('kode');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -364,12 +363,19 @@ export default function AssetsPage() {
   // Sorting functionality
   const filteredAndSortedAssets = filteredAssets?.sort((a: Asset, b: Asset) => {
     let aValue: any, bValue: any;
-      switch (sortField) {
-      case 'kode':
+      switch (sortField) {      case 'kode':
         // Extract the 3-digit sequence number from the end of the code
-        // Assuming format like "XXX-YYY-001" or "ABC123"
+        // Format: "048.30.1.25.001" or bulk "048.30.1.25.001-002"
         const extractSequenceNumber = (kode: string): number => {
-          const match = kode.match(/(\d{3})$/);
+          // For bulk assets, remove the suffix (-XXX) first
+          let codeToProcess = kode;
+          if (kode.includes('-')) {
+            const parts = kode.split('-');
+            codeToProcess = parts[0]; // Get the parent code part
+          }
+          
+          // Extract the last 3 digits after the last dot
+          const match = codeToProcess.match(/\.(\d{3})$/);
           return match ? parseInt(match[1], 10) : 0;
         };
         
