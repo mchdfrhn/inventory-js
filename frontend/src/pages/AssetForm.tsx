@@ -570,11 +570,12 @@ export default function AssetForm() {
                   value={formData.category_id}
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, category_id: true }))}
-                >
-                  <option value="">Pilih Kategori</option>
-                  {categoriesData?.data.map((category: any) => (
+                >                  <option value="">Pilih Kategori</option>
+                  {categoriesData?.data
+                    .sort((a: any, b: any) => (a.code || '').localeCompare(b.code || ''))
+                    .map((category: any) => (
                     <option key={category.id} value={category.id}>
-                      {category.name} {category.code ? `(${category.code})` : ''}
+                      {category.code} - {category.name}
                     </option>
                   ))}
                 </select>
@@ -592,11 +593,12 @@ export default function AssetForm() {
                   value={formData.lokasi_id || ''}
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, lokasi_id: true }))}
-                >
-                  <option value="">Pilih Lokasi</option>
-                  {locationsData?.data.map((location: any) => (
+                >                  <option value="">Pilih Lokasi</option>
+                  {locationsData?.data
+                    .sort((a: any, b: any) => (a.code || '').localeCompare(b.code || ''))
+                    .map((location: any) => (
                     <option key={location.id} value={location.id}>
-                      {location.name} ({location.code}) - {location.building}
+                      {location.code} - {location.name}
                     </option>
                   ))}
                 </select>
