@@ -60,14 +60,16 @@ func (u *assetUsecase) generateAssetCode(asset *domain.Asset) (string, error) {
 	allAssets, err := u.assetRepo.List(map[string]interface{}{})
 	if err != nil {
 		return "", err
-	}
-	// Find the highest sequence number from existing codes
-	maxSequence := 0
+	} // Find the next available sequence number by checking for gaps (fill missing numbers)
+	// Based only on the last 3 digits (sequence number) of all asset codes
+	existingSequences := make(map[int]bool)
+	var sequenceCode string
+
 	// If no assets exist, start from 001
 	if len(allAssets) == 0 {
-		maxSequence = 0 // Will become 001 after +1
+		sequenceCode = fmt.Sprintf("%03d", 1)
 	} else {
-		// Find highest sequence from existing asset codes
+		// Collect all existing sequence numbers from all asset codes
 		for _, existingAsset := range allAssets {
 			code := existingAsset.Kode
 
@@ -79,9 +81,7 @@ func (u *assetUsecase) generateAssetCode(asset *domain.Asset) (string, error) {
 					lastThreeDigits := parentCode[len(parentCode)-3:]
 					var sequence int
 					if n, err := fmt.Sscanf(lastThreeDigits, "%d", &sequence); err == nil && n == 1 {
-						if sequence > maxSequence {
-							maxSequence = sequence
-						}
+						existingSequences[sequence] = true
 					}
 				}
 			} else {
@@ -90,16 +90,19 @@ func (u *assetUsecase) generateAssetCode(asset *domain.Asset) (string, error) {
 					lastThreeDigits := code[len(code)-3:]
 					var sequence int
 					if n, err := fmt.Sscanf(lastThreeDigits, "%d", &sequence); err == nil && n == 1 {
-						if sequence > maxSequence {
-							maxSequence = sequence
-						}
+						existingSequences[sequence] = true
 					}
 				}
 			}
 		}
+
+		// Find the first available sequence number starting from 1
+		nextSequence := 1
+		for existingSequences[nextSequence] {
+			nextSequence++
+		}
+		sequenceCode = fmt.Sprintf("%03d", nextSequence)
 	}
-	// Next sequence is maxSequence + 1, ensuring it starts from 001 when empty
-	sequenceCode := fmt.Sprintf("%03d", maxSequence+1)
 
 	return fmt.Sprintf("%s.%s.%s.%s.%s", locationCode, categoryCode, procurementCode, yearCode, sequenceCode), nil
 }
