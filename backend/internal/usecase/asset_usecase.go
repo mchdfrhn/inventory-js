@@ -136,22 +136,16 @@ func (u *assetUsecase) CreateBulkAsset(asset *domain.Asset, quantity int) ([]dom
 			return nil, err
 		}
 	}
-
-	// Generate asset code if not provided or empty
-	if asset.Kode == "" {
-		code, err := u.generateAssetCode(asset)
-		if err != nil {
-			return nil, err
-		}
-		asset.Kode = code
+	// Generate sequential asset codes for bulk creation
+	codes, err := u.generateBulkAssetCodes(asset, quantity)
+	if err != nil {
+		return nil, err
 	}
-
 	// Generate bulk ID for grouping
 	bulkID := uuid.New()
 
 	// Create assets array
 	assets := make([]domain.Asset, quantity)
-
 	for i := 0; i < quantity; i++ {
 		// Copy the original asset
 		assets[i] = *asset
@@ -161,22 +155,117 @@ func (u *assetUsecase) CreateBulkAsset(asset *domain.Asset, quantity int) ([]dom
 		assets[i].BulkTotalCount = quantity
 		assets[i].IsBulkParent = (i == 0) // First asset is the parent
 
-		// Generate unique code with sequence
-		if i == 0 {
-			// Parent keeps original code
-			assets[i].Kode = asset.Kode
-		} else {
-			// Child assets get sequence suffix
-			assets[i].Kode = asset.Kode + "-" + fmt.Sprintf("%03d", i+1)
-		}
+		// Use the pre-generated sequential codes
+		assets[i].Kode = codes[i]
 	}
 
-	err := u.assetRepo.CreateBulk(assets)
+	err = u.assetRepo.CreateBulk(assets)
 	if err != nil {
 		return nil, err
 	}
 
 	return assets, nil
+}
+
+// generateBulkAssetCodes generates sequential asset codes for bulk creation
+func (u *assetUsecase) generateBulkAssetCodes(asset *domain.Asset, quantity int) ([]string, error) {
+	// A = Location code (3 digits) - default 001 if not found
+	locationCode := "001"
+	if asset.LokasiID != nil {
+		location, err := u.locationRepo.GetByID(*asset.LokasiID)
+		if err == nil && location.Code != "" {
+			locationCode = fmt.Sprintf("%03s", location.Code)
+		}
+	}
+
+	// B = Category code (2 digits) - default 10 if not found
+	categoryCode := "10"
+	if asset.CategoryID != uuid.Nil {
+		category, err := u.categoryRepo.GetByID(asset.CategoryID)
+		if err == nil && category.Code != "" {
+			categoryCode = fmt.Sprintf("%02s", category.Code)
+		}
+	}
+
+	// C = Procurement source code (1 digit)
+	procurementMap := map[string]string{
+		"pembelian":        "1",
+		"bantuan":          "2",
+		"hibah":            "3",
+		"sumbangan":        "4",
+		"produksi_sendiri": "5",
+	}
+	procurementCode, exists := procurementMap[asset.AsalPengadaan]
+	if !exists {
+		procurementCode = "1" // default to pembelian
+	}
+
+	// D = Procurement year (2 digits)
+	year := asset.TanggalPerolehan.Year()
+	yearCode := fmt.Sprintf("%02d", year%100)
+
+	// E = Get all assets to find available sequences
+	allAssets, err := u.assetRepo.List(map[string]interface{}{})
+	if err != nil {
+		return nil, err
+	}
+	// Find consecutive available sequence numbers
+	existingSequences := make(map[int]bool)
+
+	// Collect all existing sequence numbers from all asset codes
+	for _, existingAsset := range allAssets {
+		code := existingAsset.Kode
+
+		// For bulk assets (those with "-XXX" suffix), extract sequence from parent code
+		if len(code) > 4 && code[len(code)-4] == '-' {
+			// Extract the parent code (everything before the last "-XXX")
+			parentCode := code[:len(code)-4]
+			if len(parentCode) >= 3 {
+				lastThreeDigits := parentCode[len(parentCode)-3:]
+				var sequence int
+				if n, err := fmt.Sscanf(lastThreeDigits, "%d", &sequence); err == nil && n == 1 {
+					existingSequences[sequence] = true
+				}
+			}
+		} else {
+			// For normal asset codes, extract last 3 digits
+			if len(code) >= 3 {
+				lastThreeDigits := code[len(code)-3:]
+				var sequence int
+				if n, err := fmt.Sscanf(lastThreeDigits, "%d", &sequence); err == nil && n == 1 {
+					existingSequences[sequence] = true
+				}
+			}
+		}
+	}
+
+	// Find consecutive available sequences
+	nextSequence := 1
+	for {
+		// Check if we have enough consecutive sequences available
+		available := true
+		for i := 0; i < quantity; i++ {
+			if existingSequences[nextSequence+i] {
+				available = false
+				break
+			}
+		}
+
+		if available {
+			break
+		}
+
+		nextSequence++
+	}
+
+	// Generate codes for the bulk
+	codes := make([]string, quantity)
+	for i := 0; i < quantity; i++ {
+		sequenceCode := fmt.Sprintf("%03d", nextSequence+i)
+		codes[i] = fmt.Sprintf("%s.%s.%s.%s.%s", locationCode, categoryCode, procurementCode, yearCode, sequenceCode)
+	}
+
+	return codes, nil
 }
 
 func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
