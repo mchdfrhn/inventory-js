@@ -56,6 +56,7 @@ type AssetRepository interface {
 	CreateBulk(assets []Asset) error
 	Update(asset *Asset) error
 	Delete(id uuid.UUID) error
+	DeleteBulkAssets(bulkID uuid.UUID) error // Tambahkan method baru untuk delete bulk
 	GetByID(id uuid.UUID) (*Asset, error)
 	GetBulkAssets(bulkID uuid.UUID) ([]Asset, error)
 	List(filter map[string]interface{}) ([]Asset, error)
@@ -78,6 +79,7 @@ type AssetUsecase interface {
 	CreateBulkAsset(asset *Asset, quantity int) ([]Asset, error)
 	UpdateAsset(asset *Asset) error
 	DeleteAsset(id uuid.UUID) error
+	DeleteBulkAssets(bulkID uuid.UUID) error // Tambahkan method baru untuk delete bulk
 	GetAsset(id uuid.UUID) (*Asset, error)
 	GetBulkAssets(bulkID uuid.UUID) ([]Asset, error)
 	ListAssets(filter map[string]interface{}) ([]Asset, error)

@@ -35,6 +35,7 @@ func NewAssetHandler(r *gin.Engine, au domain.AssetUsecase) {
 			assets.POST("", handler.CreateAsset)
 			assets.POST("/bulk", handler.CreateBulkAsset)
 			assets.GET("/bulk/:bulk_id", handler.GetBulkAssets)
+			assets.DELETE("/bulk/:bulk_id", handler.DeleteBulkAssets)
 			assets.GET("/with-bulk", handler.ListAssetsWithBulk)
 			assets.POST("/import", handler.Import)
 			assets.PUT("/:id", handler.UpdateAsset)
@@ -236,6 +237,31 @@ func (h *AssetHandler) DeleteAsset(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.Response{
 		Status:  "success",
 		Message: "Asset deleted successfully",
+	})
+}
+
+// DeleteBulkAssets menghapus semua asset dalam bulk berdasarkan bulk_id
+func (h *AssetHandler) DeleteBulkAssets(c *gin.Context) {
+	bulkID, err := uuid.Parse(c.Param("bulk_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Status:  "error",
+			Message: "Invalid bulk ID format",
+		})
+		return
+	}
+
+	if err := h.assetUsecase.DeleteBulkAssets(bulkID); err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Status:  "error",
+			Message: "Failed to delete bulk assets: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.Response{
+		Status:  "success",
+		Message: "All bulk assets deleted successfully",
 	})
 }
 

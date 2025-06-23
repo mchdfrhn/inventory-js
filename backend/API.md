@@ -282,6 +282,22 @@ Soft deletes an asset (marks it as deleted but keeps the record).
 }
 ```
 
+### Delete Bulk Assets
+`DELETE /assets/bulk/{bulk_id}`
+
+Deletes all assets in a bulk group by bulk_id.
+
+#### Parameters
+- `bulk_id` (UUID): The bulk ID of the assets to delete
+
+#### Response
+```json
+{
+    "status": "success",
+    "message": "All bulk assets deleted successfully"
+}
+```
+
 ### Get Asset
 `GET /assets/{id}`
 

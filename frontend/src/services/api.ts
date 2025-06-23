@@ -148,6 +148,13 @@ export const assetApi = {
   delete: async (id: string) => {
     const response = await api.delete<{ status: string; message: string }>(`/assets/${id}`);
     return response.data;
+  },  // New: Delete bulk assets - menghapus semua asset dalam bulk
+  deleteBulk: async (bulkId: string) => {
+    if (!bulkId) {
+      throw new Error('Bulk ID is required for bulk deletion');
+    }
+    const response = await api.delete<{ status: string; message: string }>(`/assets/bulk/${bulkId}`);
+    return response.data;
   },
 
   getByCategory: async (categoryId: string) => {

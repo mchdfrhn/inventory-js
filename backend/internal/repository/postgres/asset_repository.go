@@ -191,6 +191,11 @@ func (r *assetRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&domain.Asset{}, id).Error
 }
 
+// DeleteBulkAssets menghapus semua asset dalam satu bulk berdasarkan bulk_id
+func (r *assetRepository) DeleteBulkAssets(bulkID uuid.UUID) error {
+	return r.db.Where("bulk_id = ?", bulkID).Delete(&domain.Asset{}).Error
+}
+
 func (r *assetRepository) GetByID(id uuid.UUID) (*domain.Asset, error) {
 	var asset domain.Asset
 	err := r.db.Preload("Category").Preload("LocationInfo").Where("id = ?", id).First(&asset).Error

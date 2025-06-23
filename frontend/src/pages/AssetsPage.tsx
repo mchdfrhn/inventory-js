@@ -189,16 +189,27 @@ export default function AssetsPage() {
   const { data: locationsData, isLoading: locationsLoading, error: locationsError } = useQuery({
     queryKey: ['locations_for_filter'],
     queryFn: () => locationApi.list(1, 100), // Get up to 100 locations
-  });
-  
-  // Delete mutation
+  });  // Delete mutation - supports both single asset and bulk asset deletion
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => assetApi.delete(id),
-    onSuccess: () => {
+    mutationFn: async (asset: Asset) => {
+      // Jika asset adalah bulk parent, hapus semua asset dalam bulk
+      if (asset.is_bulk_parent && asset.bulk_id) {
+        return assetApi.deleteBulk(asset.bulk_id);
+      }
+      // Jika asset biasa, hapus hanya asset tersebut
+      return assetApi.delete(asset.id);
+    },
+    onSuccess: (_, asset) => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       setDeleteModalOpen(false);
       setAssetToDelete(null);
-      addNotification('success', 'Aset berhasil dihapus');
+      
+      // Tampilkan notifikasi sesuai jenis penghapusan
+      if (asset.is_bulk_parent) {
+        addNotification('success', `Bulk asset berhasil dihapus (${asset.bulk_total_count || 1} item)`);
+      } else {
+        addNotification('success', 'Aset berhasil dihapus');
+      }
     },
     onError: (err) => {
       setDeleteError('Gagal menghapus aset. Silakan coba lagi.');
@@ -213,11 +224,10 @@ export default function AssetsPage() {
     setDeleteModalOpen(true);
     setDeleteError(null);
   };
-
   // Handle delete confirmation
   const confirmDelete = () => {
     if (assetToDelete) {
-      deleteMutation.mutate(assetToDelete.id);
+      deleteMutation.mutate(assetToDelete);
     }
   };
   // Handle import submission
@@ -1558,11 +1568,19 @@ export default function AssetsPage() {
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                     <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
                       Hapus Aset
-                    </Dialog.Title>
-                    <div className="mt-2">                      <p className="text-sm text-gray-500">
+                    </Dialog.Title>                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
                         Apakah Anda yakin ingin menghapus{' '}
-                        <span className="font-semibold">{assetToDelete?.nama}</span>? Tindakan ini tidak dapat dibatalkan.
+                        <span className="font-semibold">{assetToDelete?.nama}</span>
+                        {assetToDelete?.is_bulk_parent && assetToDelete?.bulk_total_count && 
+                          ` dan semua ${assetToDelete.bulk_total_count} item dalam bulk ini`
+                        }? Tindakan ini tidak dapat dibatalkan.
                       </p>
+                      {assetToDelete?.is_bulk_parent && (
+                        <p className="mt-2 text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                          ⚠️ Menghapus bulk asset akan menghapus semua {assetToDelete.bulk_total_count || 1} item sekaligus!
+                        </p>
+                      )}
                       {deleteError && (
                         <p className="mt-2 text-sm text-red-600">{deleteError}</p>
                       )}

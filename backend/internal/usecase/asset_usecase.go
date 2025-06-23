@@ -346,6 +346,11 @@ func (u *assetUsecase) DeleteAsset(id uuid.UUID) error {
 	return u.assetRepo.Delete(id)
 }
 
+// DeleteBulkAssets menghapus semua asset dalam satu bulk berdasarkan bulk_id
+func (u *assetUsecase) DeleteBulkAssets(bulkID uuid.UUID) error {
+	return u.assetRepo.DeleteBulkAssets(bulkID)
+}
+
 func (u *assetUsecase) GetAsset(id uuid.UUID) (*domain.Asset, error) {
 	return u.assetRepo.GetByID(id)
 }
