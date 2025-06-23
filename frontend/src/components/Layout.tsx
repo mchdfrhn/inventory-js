@@ -11,7 +11,8 @@ import {
   ArrowTrendingUpIcon,
   SunIcon,
   MoonIcon,
-  MapPinIcon
+  MapPinIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
@@ -22,6 +23,7 @@ const navigation = [  { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Aset', href: '/assets', icon: CubeIcon },
   { name: 'Kategori', href: '/categories', icon: TagIcon },
   { name: 'Lokasi', href: '/locations', icon: MapPinIcon },
+  { name: 'Riwayat Aktivitas', href: '/audit-logs', icon: ClockIcon },
   { name: 'Analitik', href: '#', icon: ArrowTrendingUpIcon, soon: true },
 ]
 

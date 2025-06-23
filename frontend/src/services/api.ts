@@ -110,6 +110,22 @@ export interface Location {
   asset_count?: number; // New field for tracking asset count
 }
 
+// New: AuditLog interface
+export interface AuditLog {
+  id: string;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  changes?: any;
+  old_values?: any;
+  new_values?: any;
+  user_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  description: string;
+  created_at: string;
+}
+
 export interface PaginatedResponse<T> {
   status: string;
   message: string;
@@ -369,5 +385,40 @@ export const locationApi = {
       console.error('Error fetching locations with asset counts:', error);
       throw error;
     }
+  },
+}
+
+// Audit Log API
+export const auditLogApi = {
+  list: async (params?: {
+    entity_type?: string;
+    entity_id?: string;
+    action?: string;
+    user_id?: string;
+    from_date?: string;
+    to_date?: string;
+    page?: number;
+    page_size?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params) {
+      if (params.entity_type) queryParams.append('entity_type', params.entity_type);
+      if (params.entity_id) queryParams.append('entity_id', params.entity_id);
+      if (params.action) queryParams.append('action', params.action);
+      if (params.user_id) queryParams.append('user_id', params.user_id);
+      if (params.from_date) queryParams.append('from_date', params.from_date);
+      if (params.to_date) queryParams.append('to_date', params.to_date);
+      if (params.page) queryParams.append('page', params.page.toString());
+      if (params.page_size) queryParams.append('page_size', params.page_size.toString());
+    }
+    
+    const response = await api.get<PaginatedResponse<AuditLog>>(`/audit-logs?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  getEntityHistory: async (entityType: string, entityId: string) => {
+    const response = await api.get<{ status: string; message: string; data: AuditLog[] }>(`/audit-logs/entity/${entityType}/${entityId}`);
+    return response.data;
   },
 }

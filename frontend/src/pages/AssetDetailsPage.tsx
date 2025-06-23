@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { assetApi } from '../services/api';
 import AssetDetailView from '../components/AssetDetailView';
 import DepreciationChart from '../components/DepreciationChart';
+import AssetHistory from '../components/AssetHistory';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 export default function AssetDetailsPage() {
@@ -73,9 +74,7 @@ export default function AssetDetailsPage() {
         </div>
       </div>
 
-      <AssetDetailView asset={asset} />
-
-      <div className="mt-6 border-t border-gray-200 pt-6">
+      <AssetDetailView asset={asset} />      <div className="mt-6 border-t border-gray-200 pt-6">
         <button
           type="button"
           onClick={() => setShowDepreciationChart(!showDepreciationChart)}
@@ -91,6 +90,11 @@ export default function AssetDetailsPage() {
             <DepreciationChart asset={asset} className="mt-4" />
           </div>
         )}
+      </div>
+
+      {/* Asset History Section */}
+      <div className="mt-6">
+        <AssetHistory assetId={asset.id} />
       </div>
     </div>
   );

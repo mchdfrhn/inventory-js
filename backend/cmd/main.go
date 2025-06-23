@@ -60,11 +60,11 @@ func main() {
 			"time":   time.Now().Format(time.RFC3339),
 		})
 	})
-
 	// Initialize API handlers with router
 	httpdelivery.NewAssetHandler(router, usecases.Asset)
 	httpdelivery.NewCategoryHandler(router, usecases.Category)
 	httpdelivery.NewLocationHandler(router, usecases.Location)
+	httpdelivery.NewAuditLogHandler(router, usecases.AuditLog)
 
 	// Start server with graceful shutdown
 	go func() {
@@ -103,9 +103,8 @@ func initDB(cfg *config.Config, logger *zap.Logger) *gorm.DB {
 	db, err := gorm.Open(pgdriver.Open(cfg.Database.GetDSN()), &gorm.Config{})
 	if err != nil {
 		logger.Fatal("Failed to connect to database", zap.Error(err))
-	}
-	// Auto migrate the schema
-	err = db.AutoMigrate(&domain.Asset{}, &domain.AssetCategory{}, &models.Location{})
+	} // Auto migrate the schema
+	err = db.AutoMigrate(&domain.Asset{}, &domain.AssetCategory{}, &models.Location{}, &domain.AuditLog{})
 	if err != nil {
 		logger.Fatal("Failed to migrate database", zap.Error(err))
 	}
@@ -166,6 +165,7 @@ type repositories struct {
 	asset    domain.AssetRepository         // Handles asset-related database operations
 	category domain.AssetCategoryRepository // Handles category-related database operations
 	location domain.LocationRepository      // Handles location-related database operations
+	auditLog domain.AuditLogRepository      // Handles audit log database operations
 }
 
 // initRepositories creates and initializes all repository implementations.
@@ -176,6 +176,7 @@ func initRepositories(db *gorm.DB) *repositories {
 		asset:    postgres.NewAssetRepository(db),
 		category: postgres.NewAssetCategoryRepository(db),
 		location: postgres.NewLocationRepository(db),
+		auditLog: postgres.NewAuditLogRepository(db),
 	}
 }
 
@@ -185,15 +186,20 @@ type usecases struct {
 	Asset    domain.AssetUsecase         // Handles asset-related business logic
 	Category domain.AssetCategoryUsecase // Handles category-related business logic
 	Location domain.LocationUseCase      // Handles location-related business logic
+	AuditLog domain.AuditLogUsecase      // Handles audit log business logic
 }
 
 // initUsecases creates and initializes all usecase implementations.
 // It injects the necessary repositories into each usecase to maintain
 // proper dependency injection and separation of concerns.
 func initUsecases(repos *repositories) *usecases {
+	// Initialize audit log usecase first
+	auditLogUsecase := usecase.NewAuditLogUsecase(repos.auditLog)
+
 	return &usecases{
-		Asset:    usecase.NewAssetUsecase(repos.asset, repos.category, repos.location),
+		Asset:    usecase.NewAssetUsecase(repos.asset, repos.category, repos.location, auditLogUsecase),
 		Category: usecase.NewAssetCategoryUsecase(repos.category),
 		Location: usecase.NewLocationUseCase(repos.location),
+		AuditLog: auditLogUsecase,
 	}
 }

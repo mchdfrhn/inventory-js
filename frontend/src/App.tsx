@@ -10,6 +10,7 @@ import AssetDetailsPage from './pages/AssetDetailsPage'
 import CategoryForm from './pages/CategoryForm'
 import LocationsPage from './pages/LocationsPage'
 import LocationForm from './pages/LocationForm'
+import AuditLogPage from './pages/AuditLogPage'
 import { NotificationProvider } from './context/NotificationContext'
 import ToastContainer from './components/ToastContainer'
 import './App.css'
@@ -41,11 +42,13 @@ function App() {
               {/* Category routes */}
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="categories/new" element={<CategoryForm />} />
-              <Route path="categories/edit/:id" element={<CategoryForm />} />
-                {/* Location routes */}
+              <Route path="categories/edit/:id" element={<CategoryForm />} />              {/* Location routes */}
               <Route path="locations" element={<LocationsPage />} />
               <Route path="locations/new" element={<LocationForm />} />
               <Route path="locations/edit/:id" element={<LocationForm />} />
+
+              {/* Audit Log route */}
+              <Route path="audit-logs" element={<AuditLogPage />} />
 
               {/* Debug route */}
               <Route path="debug" element={<DebugPage />} />

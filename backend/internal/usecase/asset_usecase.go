@@ -8,16 +8,18 @@ import (
 )
 
 type assetUsecase struct {
-	assetRepo    domain.AssetRepository
-	categoryRepo domain.AssetCategoryRepository
-	locationRepo domain.LocationRepository
+	assetRepo       domain.AssetRepository
+	categoryRepo    domain.AssetCategoryRepository
+	locationRepo    domain.LocationRepository
+	auditLogUsecase domain.AuditLogUsecase
 }
 
-func NewAssetUsecase(assetRepo domain.AssetRepository, categoryRepo domain.AssetCategoryRepository, locationRepo domain.LocationRepository) domain.AssetUsecase {
+func NewAssetUsecase(assetRepo domain.AssetRepository, categoryRepo domain.AssetCategoryRepository, locationRepo domain.LocationRepository, auditLogUsecase domain.AuditLogUsecase) domain.AssetUsecase {
 	return &assetUsecase{
-		assetRepo:    assetRepo,
-		categoryRepo: categoryRepo,
-		locationRepo: locationRepo,
+		assetRepo:       assetRepo,
+		categoryRepo:    categoryRepo,
+		locationRepo:    locationRepo,
+		auditLogUsecase: auditLogUsecase,
 	}
 }
 
@@ -125,7 +127,26 @@ func (u *assetUsecase) CreateAsset(asset *domain.Asset) error {
 		asset.Kode = code
 	}
 
-	return u.assetRepo.Create(asset)
+	// Create the asset
+	err := u.assetRepo.Create(asset)
+	if err != nil {
+		return err
+	}
+
+	// Log the creation activity
+	if u.auditLogUsecase != nil {
+		u.auditLogUsecase.LogActivity(
+			"asset",
+			asset.ID,
+			"create",
+			nil,
+			asset,
+			fmt.Sprintf("Asset '%s' created with code '%s'", asset.Nama, asset.Kode),
+			nil,
+		)
+	}
+
+	return nil
 }
 
 func (u *assetUsecase) CreateBulkAsset(asset *domain.Asset, quantity int) ([]domain.Asset, error) {
@@ -339,16 +360,104 @@ func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
 		}
 	}
 
-	return u.assetRepo.Update(asset)
+	// Update the asset
+	err = u.assetRepo.Update(asset)
+	if err != nil {
+		return err
+	}
+
+	// Log the update activity
+	if u.auditLogUsecase != nil {
+		u.auditLogUsecase.LogActivity(
+			"asset",
+			asset.ID,
+			"update",
+			existingAsset,
+			asset,
+			fmt.Sprintf("Asset '%s' updated", asset.Nama),
+			nil,
+		)
+	}
+
+	return nil
 }
 
 func (u *assetUsecase) DeleteAsset(id uuid.UUID) error {
-	return u.assetRepo.Delete(id)
+	// Get asset data before deletion for audit log
+	existingAsset, err := u.assetRepo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Delete the asset
+	err = u.assetRepo.Delete(id)
+	if err != nil {
+		return err
+	}
+
+	// Log the deletion activity
+	if u.auditLogUsecase != nil {
+		u.auditLogUsecase.LogActivity(
+			"asset",
+			id,
+			"delete",
+			existingAsset,
+			nil,
+			fmt.Sprintf("Asset '%s' with code '%s' deleted", existingAsset.Nama, existingAsset.Kode),
+			nil,
+		)
+	}
+
+	return nil
 }
 
 // DeleteBulkAssets menghapus semua asset dalam satu bulk berdasarkan bulk_id
 func (u *assetUsecase) DeleteBulkAssets(bulkID uuid.UUID) error {
-	return u.assetRepo.DeleteBulkAssets(bulkID)
+	// Get bulk assets before deletion for audit log
+	bulkAssets, err := u.assetRepo.GetBulkAssets(bulkID)
+	if err != nil {
+		return err
+	}
+
+	// Delete the bulk assets
+	err = u.assetRepo.DeleteBulkAssets(bulkID)
+	if err != nil {
+		return err
+	}
+
+	// Log the bulk deletion activity
+	if u.auditLogUsecase != nil && len(bulkAssets) > 0 {
+		// Log for each asset in the bulk
+		for _, asset := range bulkAssets {
+			u.auditLogUsecase.LogActivity(
+				"asset",
+				asset.ID,
+				"delete",
+				asset,
+				nil,
+				fmt.Sprintf("Asset '%s' with code '%s' deleted as part of bulk deletion", asset.Nama, asset.Kode),
+				map[string]string{"bulk_id": bulkID.String()},
+			)
+		}
+
+		// Log the bulk operation itself
+		if len(bulkAssets) > 0 {
+			parentAsset := bulkAssets[0]
+			if parentAsset.IsBulkParent {
+				u.auditLogUsecase.LogActivity(
+					"asset",
+					parentAsset.ID,
+					"bulk_delete",
+					nil,
+					nil,
+					fmt.Sprintf("Bulk delete operation: %d assets deleted", len(bulkAssets)),
+					map[string]string{"bulk_id": bulkID.String(), "count": fmt.Sprintf("%d", len(bulkAssets))},
+				)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (u *assetUsecase) GetAsset(id uuid.UUID) (*domain.Asset, error) {

@@ -170,6 +170,33 @@ type UpdateCategoryRequest struct {
 	Description string `json:"description"`
 }
 
+// AuditLog DTOs
+type AuditLogResponse struct {
+	ID          uuid.UUID   `json:"id"`
+	EntityType  string      `json:"entity_type"`
+	EntityID    uuid.UUID   `json:"entity_id"`
+	Action      string      `json:"action"`
+	Changes     interface{} `json:"changes,omitempty"`
+	OldValues   interface{} `json:"old_values,omitempty"`
+	NewValues   interface{} `json:"new_values,omitempty"`
+	UserID      *string     `json:"user_id,omitempty"`
+	IPAddress   string      `json:"ip_address,omitempty"`
+	UserAgent   string      `json:"user_agent,omitempty"`
+	Description string      `json:"description"`
+	CreatedAt   time.Time   `json:"created_at"`
+}
+
+type AuditLogListRequest struct {
+	EntityType string    `form:"entity_type"`
+	EntityID   string    `form:"entity_id"`
+	Action     string    `form:"action"`
+	UserID     string    `form:"user_id"`
+	FromDate   time.Time `form:"from_date" time_format:"2006-01-02"`
+	ToDate     time.Time `form:"to_date" time_format:"2006-01-02"`
+	Page       int       `form:"page,default=1"`
+	PageSize   int       `form:"page_size,default=10"`
+}
+
 // Validate validates the create asset request
 func (r *CreateAssetRequest) Validate() error {
 	if r.Quantity < 0 {
