@@ -90,10 +90,10 @@ type CreateAssetRequest struct {
 }
 
 type UpdateAssetRequest struct {
-	Kode              string  `json:"kode" binding:"required"`
+	Kode              string  `json:"kode" binding:"required"` // Will be ignored/preserved - for display only
 	Nama              string  `json:"nama" binding:"required"`
 	Spesifikasi       string  `json:"spesifikasi"`
-	Quantity          int     `json:"quantity" binding:"required"`
+	Quantity          int     `json:"quantity" binding:"required"` // Will be ignored/preserved - for display only
 	Satuan            string  `json:"satuan" binding:"required"`
 	TanggalPerolehan  string  `json:"tanggal_perolehan"` // Format: "2006-01-02"
 	HargaPerolehan    float64 `json:"harga_perolehan" binding:"required"`

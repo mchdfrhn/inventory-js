@@ -486,29 +486,32 @@ export default function AssetForm() {
               <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-500 text-white text-sm font-medium rounded-full mr-2">1</span>
               Informasi Dasar
             </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Field kode asset hanya ditampilkan saat edit mode */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">              {/* Field kode asset hanya ditampilkan saat edit mode dan readonly */}
               {isEditMode && (
                 <div>
                   <label htmlFor="kode" className="block text-sm font-medium text-gray-700 mb-2">
                     Kode Aset <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="kode"
-                    id="kode"
-                    required
-                    className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                      touched.kode && fieldErrors.kode ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' : ''
-                    }`}
-                    value={formData.kode}
-                    onChange={handleChange}
-                    onBlur={() => setTouched(prev => ({ ...prev, kode: true }))}
-                    placeholder="Kode asset"
-                  />
-                  {touched.kode && fieldErrors.kode && (
-                    <p className="mt-2 text-sm text-red-600">{fieldErrors.kode}</p>
-                  )}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="kode"
+                      id="kode"
+                      required
+                      readOnly
+                      className="block w-full rounded-md border-gray-300 bg-gray-50 text-gray-500 shadow-sm sm:text-sm cursor-not-allowed"
+                      value={formData.kode}
+                      placeholder="Kode asset"
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    🔒 Kode asset tidak dapat diubah untuk menjaga konsistensi urutan
+                  </p>
                 </div>
               )}
 
@@ -612,25 +615,49 @@ export default function AssetForm() {
               <span className="inline-flex items-center justify-center w-6 h-6 bg-purple-500 text-white text-sm font-medium rounded-full mr-2">3</span>
               Kuantitas & Status
             </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">              <div>
                 <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
                   Jumlah <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  name="quantity"
-                  id="quantity"
-                  required
-                  min="1"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                />
-                {Number(formData.quantity) > 1 && !isEditMode && (
-                  <p className="mt-1 text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                    ⚠️ Jumlah lebih dari 1 akan membuat bulk asset dengan kode unik untuk setiap item
-                  </p>
+                {isEditMode ? (
+                  <div className="relative">
+                    <input
+                      type="number"
+                      name="quantity"
+                      id="quantity"
+                      required
+                      readOnly
+                      min="1"
+                      className="block w-full rounded-md border-gray-300 bg-gray-50 text-gray-500 shadow-sm sm:text-sm cursor-not-allowed"
+                      value={formData.quantity}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      🔒 Jumlah asset tidak dapat diubah untuk menjaga konsistensi sequence kode
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="number"
+                      name="quantity"
+                      id="quantity"
+                      required
+                      min="1"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      value={formData.quantity}
+                      onChange={handleChange}
+                    />
+                    {Number(formData.quantity) > 1 && (
+                      <p className="mt-1 text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                        ⚠️ Jumlah lebih dari 1 akan membuat bulk asset dengan kode unik untuk setiap item
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 

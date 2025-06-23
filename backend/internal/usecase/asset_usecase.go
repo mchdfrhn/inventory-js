@@ -269,8 +269,8 @@ func (u *assetUsecase) generateBulkAssetCodes(asset *domain.Asset, quantity int)
 }
 
 func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
-	// Validate asset exists
-	_, err := u.assetRepo.GetByID(asset.ID)
+	// Validate asset exists and get current data
+	existingAsset, err := u.assetRepo.GetByID(asset.ID)
 	if err != nil {
 		return err
 	}
@@ -280,6 +280,62 @@ func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
 		_, err := u.categoryRepo.GetByID(asset.CategoryID)
 		if err != nil {
 			return err
+		}
+	}
+
+	// Preserve kode and quantity to prevent manual editing
+	asset.Kode = existingAsset.Kode
+	asset.Quantity = existingAsset.Quantity
+
+	// Check if structural components changed that affect the asset code
+	needsCodeRegeneration := false
+
+	// Check location change
+	if (asset.LokasiID == nil && existingAsset.LokasiID != nil) ||
+		(asset.LokasiID != nil && existingAsset.LokasiID == nil) ||
+		(asset.LokasiID != nil && existingAsset.LokasiID != nil && *asset.LokasiID != *existingAsset.LokasiID) {
+		needsCodeRegeneration = true
+	}
+
+	// Check category change
+	if asset.CategoryID != existingAsset.CategoryID {
+		needsCodeRegeneration = true
+	}
+
+	// Check procurement source change
+	if asset.AsalPengadaan != existingAsset.AsalPengadaan {
+		needsCodeRegeneration = true
+	}
+
+	// Check procurement year change
+	if asset.TanggalPerolehan.Year() != existingAsset.TanggalPerolehan.Year() {
+		needsCodeRegeneration = true
+	}
+
+	// Regenerate code if structural components changed
+	if needsCodeRegeneration {
+		// For bulk assets, only regenerate if this is the bulk parent
+		if existingAsset.BulkID != nil && !existingAsset.IsBulkParent {
+			// For non-parent bulk assets, don't regenerate - they should follow the parent
+			// This prevents breaking the bulk sequence
+		} else {
+			// Extract the current sequence number to preserve it
+			currentSequence := u.extractSequenceFromCode(existingAsset.Kode)
+
+			// Generate new code with the same sequence but updated structural components
+			newCode, err := u.generateAssetCodeWithSequence(asset, currentSequence)
+			if err != nil {
+				return err
+			}
+			asset.Kode = newCode
+
+			// If this is a bulk parent, update all related bulk assets
+			if existingAsset.BulkID != nil && existingAsset.IsBulkParent {
+				err = u.updateBulkAssetsCodes(existingAsset.BulkID, asset, currentSequence)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 
@@ -344,4 +400,106 @@ func (u *assetUsecase) ListAssetsWithBulk(filter map[string]interface{}, page, p
 	}
 
 	return u.assetRepo.ListPaginatedWithBulk(filter, page, pageSize)
+}
+
+// extractSequenceFromCode extracts the 3-digit sequence number from asset code
+func (u *assetUsecase) extractSequenceFromCode(kode string) int {
+	// For bulk assets (those with "-XXX" suffix), extract sequence from parent code
+	if len(kode) > 4 && kode[len(kode)-4] == '-' {
+		// Extract the parent code (everything before the last "-XXX")
+		parentCode := kode[:len(kode)-4]
+		if len(parentCode) >= 3 {
+			lastThreeDigits := parentCode[len(parentCode)-3:]
+			var sequence int
+			if n, err := fmt.Sscanf(lastThreeDigits, "%d", &sequence); err == nil && n == 1 {
+				return sequence
+			}
+		}
+	} else {
+		// For normal asset codes, extract last 3 digits
+		if len(kode) >= 3 {
+			lastThreeDigits := kode[len(kode)-3:]
+			var sequence int
+			if n, err := fmt.Sscanf(lastThreeDigits, "%d", &sequence); err == nil && n == 1 {
+				return sequence
+			}
+		}
+	}
+	return 0
+}
+
+// generateAssetCodeWithSequence generates asset code with a specific sequence number
+func (u *assetUsecase) generateAssetCodeWithSequence(asset *domain.Asset, sequence int) (string, error) {
+	// A = Location code (3 digits) - default 001 if not found
+	locationCode := "001"
+	if asset.LokasiID != nil {
+		location, err := u.locationRepo.GetByID(*asset.LokasiID)
+		if err == nil && location.Code != "" {
+			locationCode = fmt.Sprintf("%03s", location.Code)
+		}
+	}
+
+	// B = Category code (2 digits) - default 10 if not found
+	categoryCode := "10"
+	if asset.CategoryID != uuid.Nil {
+		category, err := u.categoryRepo.GetByID(asset.CategoryID)
+		if err == nil && category.Code != "" {
+			categoryCode = fmt.Sprintf("%02s", category.Code)
+		}
+	}
+
+	// C = Procurement source code (1 digit)
+	procurementMap := map[string]string{
+		"pembelian":        "1",
+		"bantuan":          "2",
+		"hibah":            "3",
+		"sumbangan":        "4",
+		"produksi_sendiri": "5",
+	}
+	procurementCode := procurementMap[asset.AsalPengadaan]
+	if procurementCode == "" {
+		procurementCode = "1" // default
+	}
+
+	// D = Procurement year (2 digits)
+	year := asset.TanggalPerolehan.Year()
+	yearCode := fmt.Sprintf("%02d", year%100)
+
+	// E = Use the provided sequence number
+	sequenceCode := fmt.Sprintf("%03d", sequence)
+
+	return fmt.Sprintf("%s.%s.%s.%s.%s", locationCode, categoryCode, procurementCode, yearCode, sequenceCode), nil
+}
+
+// updateBulkAssetsCodes updates all assets in a bulk group with new codes
+func (u *assetUsecase) updateBulkAssetsCodes(bulkID *uuid.UUID, templateAsset *domain.Asset, startSequence int) error {
+	// Get all bulk assets
+	bulkAssets, err := u.assetRepo.GetBulkAssets(*bulkID)
+	if err != nil {
+		return err
+	}
+
+	// Update each bulk asset's code
+	for i, bulkAsset := range bulkAssets {
+		newSequence := startSequence + i
+		newCode, err := u.generateAssetCodeWithSequence(templateAsset, newSequence)
+		if err != nil {
+			return err
+		}
+
+		// Create updated asset with new code
+		updatedAsset := bulkAsset
+		updatedAsset.Kode = newCode
+		updatedAsset.LokasiID = templateAsset.LokasiID
+		updatedAsset.CategoryID = templateAsset.CategoryID
+		updatedAsset.AsalPengadaan = templateAsset.AsalPengadaan
+		updatedAsset.TanggalPerolehan = templateAsset.TanggalPerolehan
+
+		err = u.assetRepo.Update(&updatedAsset)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
