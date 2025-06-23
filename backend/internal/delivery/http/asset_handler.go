@@ -773,7 +773,6 @@ func (h *AssetHandler) ListAssetsWithBulk(c *gin.Context) {
 			pageSize = parsedPageSize
 		}
 	}
-
 	filter := make(map[string]interface{})
 	assets, total, err := h.assetUsecase.ListAssetsWithBulk(filter, page, pageSize)
 	if err != nil {
@@ -787,7 +786,7 @@ func (h *AssetHandler) ListAssetsWithBulk(c *gin.Context) {
 	// Convert to DTOs
 	var assetDTOs []dto.AssetResponse
 	for _, asset := range assets {
-		assetDTOs = append(assetDTOs, dto.AssetResponse{
+		assetDTO := dto.AssetResponse{
 			ID:                  asset.ID,
 			Kode:                asset.Kode,
 			Nama:                asset.Nama,
@@ -812,7 +811,17 @@ func (h *AssetHandler) ListAssetsWithBulk(c *gin.Context) {
 			BulkTotalCount:      asset.BulkTotalCount,
 			CreatedAt:           asset.CreatedAt,
 			UpdatedAt:           asset.UpdatedAt,
-		})
+		} // Include category information
+		assetDTO.Category = &dto.CategoryResponse{
+			ID:          asset.Category.ID,
+			Code:        asset.Category.Code,
+			Name:        asset.Category.Name,
+			Description: asset.Category.Description,
+			CreatedAt:   asset.Category.CreatedAt,
+			UpdatedAt:   asset.Category.UpdatedAt,
+		}
+
+		assetDTOs = append(assetDTOs, assetDTO)
 	}
 
 	totalPages := (total + pageSize - 1) / pageSize

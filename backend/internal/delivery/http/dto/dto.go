@@ -113,31 +113,41 @@ type BulkAssetRequest struct {
 }
 
 // AssetResponse represents the response structure for asset data
+type CategoryResponse struct {
+	ID          uuid.UUID `json:"id"`
+	Code        string    `json:"code"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 type AssetResponse struct {
-	ID                  uuid.UUID  `json:"id"`
-	Kode                string     `json:"kode"`
-	Nama                string     `json:"nama"`
-	Spesifikasi         string     `json:"spesifikasi"`
-	Quantity            int        `json:"quantity"`
-	Satuan              string     `json:"satuan"`
-	TanggalPerolehan    time.Time  `json:"tanggal_perolehan"`
-	HargaPerolehan      float64    `json:"harga_perolehan"`
-	UmurEkonomisTahun   int        `json:"umur_ekonomis_tahun"`
-	UmurEkonomisBulan   int        `json:"umur_ekonomis_bulan"`
-	AkumulasiPenyusutan float64    `json:"akumulasi_penyusutan"`
-	NilaiSisa           float64    `json:"nilai_sisa"`
-	Keterangan          string     `json:"keterangan"`
-	Lokasi              string     `json:"lokasi"`
-	LokasiID            *uint      `json:"lokasi_id"`
-	AsalPengadaan       string     `json:"asal_pengadaan"`
-	CategoryID          uuid.UUID  `json:"category_id"`
-	Status              string     `json:"status"`
-	BulkID              *uuid.UUID `json:"bulk_id"`
-	BulkSequence        int        `json:"bulk_sequence"`
-	IsBulkParent        bool       `json:"is_bulk_parent"`
-	BulkTotalCount      int        `json:"bulk_total_count"`
-	CreatedAt           time.Time  `json:"created_at"`
-	UpdatedAt           time.Time  `json:"updated_at"`
+	ID                  uuid.UUID         `json:"id"`
+	Kode                string            `json:"kode"`
+	Nama                string            `json:"nama"`
+	Spesifikasi         string            `json:"spesifikasi"`
+	Quantity            int               `json:"quantity"`
+	Satuan              string            `json:"satuan"`
+	TanggalPerolehan    time.Time         `json:"tanggal_perolehan"`
+	HargaPerolehan      float64           `json:"harga_perolehan"`
+	UmurEkonomisTahun   int               `json:"umur_ekonomis_tahun"`
+	UmurEkonomisBulan   int               `json:"umur_ekonomis_bulan"`
+	AkumulasiPenyusutan float64           `json:"akumulasi_penyusutan"`
+	NilaiSisa           float64           `json:"nilai_sisa"`
+	Keterangan          string            `json:"keterangan"`
+	Lokasi              string            `json:"lokasi"`
+	LokasiID            *uint             `json:"lokasi_id"`
+	AsalPengadaan       string            `json:"asal_pengadaan"`
+	CategoryID          uuid.UUID         `json:"category_id"`
+	Category            *CategoryResponse `json:"category,omitempty"`
+	Status              string            `json:"status"`
+	BulkID              *uuid.UUID        `json:"bulk_id"`
+	BulkSequence        int               `json:"bulk_sequence"`
+	IsBulkParent        bool              `json:"is_bulk_parent"`
+	BulkTotalCount      int               `json:"bulk_total_count"`
+	CreatedAt           time.Time         `json:"created_at"`
+	UpdatedAt           time.Time         `json:"updated_at"`
 }
 
 // SuccessResponse represents a successful operation response with data
