@@ -213,32 +213,38 @@ export default function TemplateManagementPage() {
                   )}
                 </div>
 
-                <div className="flex items-center space-x-2 mt-auto">
+                <div className="flex items-stretch gap-2 mt-auto">
                   <button
                     onClick={() => {
                       setSelectedTemplate(template);
                       setShowPreview(true);
                     }}
-                    className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm font-medium"
+                    className={`${!defaultTemplates.find(t => t.id === template.id) 
+                      ? 'w-10 h-10 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors flex items-center justify-center' 
+                      : 'flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm font-medium min-w-0'
+                    }`}
+                    title="Preview Template"
                   >
-                    <EyeIcon className="h-4 w-4" />
-                    <span>Preview</span>
+                    <EyeIcon className="h-4 w-4 flex-shrink-0" />
+                    {defaultTemplates.find(t => t.id === template.id) && (
+                      <span className="truncate">Preview</span>
+                    )}
                   </button>
                   <button
                     onClick={() => handleEditTemplate(template)}
-                    className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm font-medium"
+                    className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 px-2 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm font-medium min-w-0"
                   >
-                    <Cog6ToothIcon className="h-4 w-4" />
-                    <span>Edit</span>
+                    <Cog6ToothIcon className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">Edit</span>
                   </button>
                   {!defaultTemplates.find(t => t.id === template.id) && (
                     <button
                       onClick={() => handleDeleteTemplate(template.id)}
-                      className="bg-red-50 hover:bg-red-100 text-red-700 px-3 py-2 rounded-lg transition-colors flex items-center justify-center space-x-1 text-sm font-medium"
+                      className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 px-2 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm font-medium min-w-0"
                       title="Hapus Template"
                     >
-                      <TrashIcon className="h-4 w-4" />
-                      <span>Hapus</span>
+                      <TrashIcon className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">Hapus</span>
                     </button>
                   )}
                 </div>
