@@ -41,6 +41,8 @@ if (!rootElement) {
   throw new Error('Failed to find the root element')
 }
 
+console.log('Starting React app...');
+
 createRoot(rootElement).render(
   <StrictMode>
     <ErrorBoundary>

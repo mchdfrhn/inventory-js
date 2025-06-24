@@ -13,6 +13,7 @@ import LocationForm from './pages/LocationForm'
 import AuditLogPage from './pages/AuditLogPage'
 import TemplateManagementPage from './pages/TemplateManagementPage'
 import ReportsPage from './pages/ReportsPage'
+import TestPage from './pages/TestPage'
 import { NotificationProvider } from './context/NotificationContext'
 import ToastContainer from './components/ToastContainer'
 import './App.css'
@@ -27,12 +28,15 @@ const queryClient = new QueryClient({
 })
 
 function App() {
+  console.log('App component rendering...');
+  
   return (
     <QueryClientProvider client={queryClient}>
       <NotificationProvider>
         <Router>
           <ToastContainer />
-          <Routes>            <Route path="/" element={<Layout />}>
+          <Routes>
+            <Route path="/" element={<Layout />}>
               <Route index element={<DashboardPage />} />
               
               {/* Asset routes */}
@@ -44,7 +48,9 @@ function App() {
               {/* Category routes */}
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="categories/new" element={<CategoryForm />} />
-              <Route path="categories/edit/:id" element={<CategoryForm />} />              {/* Location routes */}
+              <Route path="categories/edit/:id" element={<CategoryForm />} />
+              
+              {/* Location routes */}
               <Route path="locations" element={<LocationsPage />} />
               <Route path="locations/new" element={<LocationForm />} />
               <Route path="locations/edit/:id" element={<LocationForm />} />
@@ -60,7 +66,9 @@ function App() {
 
               {/* Debug route */}
               <Route path="debug" element={<DebugPage />} />
-
+              
+              {/* Test route */}
+              <Route path="test" element={<TestPage />} />
             </Route>
           </Routes>
         </Router>

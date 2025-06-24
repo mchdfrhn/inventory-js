@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react';
-import { DocumentTextIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { 
+  DocumentTextIcon, 
+  ExclamationCircleIcon, 
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  XMarkIcon,
+  CheckCircleIcon
+} from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 import { templateService, type ReportTemplate, defaultTemplates, columnOptions } from '../services/templateService';
 import { useNotification } from '../context/NotificationContext';
+import { useAssetFilters, type Asset } from '../hooks/useAssetFilters';
+import FilterSummary from '../components/FilterSummary';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
@@ -12,11 +23,25 @@ const ReportsPage = () => {
   const { addNotification } = useNotification();
   
   const [mounted, setMounted] = useState(false);
-  const [assets, setAssets] = useState<any[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  
+  // Initialize asset filters
+  const {
+    filters,
+    filteredAssets,
+    filterOptions,
+    clearFilters,
+    updateFilters,
+    hasActiveFilters,
+    getFilterSummary,
+    totalAssets,
+    filteredCount,
+  } = useAssetFilters(assets);
 
   useEffect(() => {
     setMounted(true);
@@ -28,25 +53,175 @@ const ReportsPage = () => {
       setLoading(true);
       setError(null);
       
-      // Mock data for demonstration
-      const mockAssets = [
+      // Enhanced mock data with complete Asset interface for demo
+      const mockAssets: Asset[] = [
         {
           id: 1,
           kode: 'AST001',
           nama: 'Laptop Dell Inspiron',
+          spesifikasi: 'Intel i5, 8GB RAM, 256GB SSD',
+          category: { name: 'Elektronik' },
+          lokasi: 'Ruang IT',
+          location_info: {
+            name: 'Lab Komputer',
+            building: 'Gedung A',
+            floor: '2',
+            room: 'A201'
+          },
+          status: 'baik',
           harga_perolehan: 15000000,
           nilai_sisa: 12000000,
           akumulasi_penyusutan: 3000000,
-          status: 'baik'
+          tanggal_perolehan: '2023-01-15',
+          asal_pengadaan: 'Hibah',
+          umur_ekonomis_tahun: 5
         },
         {
           id: 2,
           kode: 'AST002',
           nama: 'Meja Kantor',
+          spesifikasi: 'Kayu jati, ukuran 120x60 cm',
+          category: { name: 'Furniture' },
+          lokasi: 'Ruang Dosen',
+          location_info: {
+            name: 'Ruang Dosen',
+            building: 'Gedung B',
+            floor: '1',
+            room: 'B101'
+          },
+          status: 'baik',
           harga_perolehan: 2500000,
           nilai_sisa: 2000000,
           akumulasi_penyusutan: 500000,
-          status: 'baik'
+          tanggal_perolehan: '2022-08-20',
+          asal_pengadaan: 'Pembelian',
+          umur_ekonomis_tahun: 10
+        },
+        {
+          id: 3,
+          kode: 'AST003',
+          nama: 'Proyektor',
+          spesifikasi: 'LED, Full HD 1080p',
+          category: { name: 'Elektronik' },
+          lokasi: 'Ruang Kelas',
+          location_info: {
+            name: 'Ruang Kelas 1',
+            building: 'Gedung A',
+            floor: '1',
+            room: 'A101'
+          },
+          status: 'rusak',
+          harga_perolehan: 8000000,
+          nilai_sisa: 4000000,
+          akumulasi_penyusutan: 4000000,
+          tanggal_perolehan: '2021-05-10',
+          asal_pengadaan: 'Hibah',
+          umur_ekonomis_tahun: 7
+        },
+        {
+          id: 4,
+          kode: 'AST004',
+          nama: 'AC Split',
+          spesifikasi: '1.5 PK, Inverter',
+          category: { name: 'Elektronik' },
+          lokasi: 'Ruang Rapat',
+          location_info: {
+            name: 'Ruang Rapat Utama',
+            building: 'Gedung C',
+            floor: '3',
+            room: 'C301'
+          },
+          status: 'baik',
+          harga_perolehan: 5500000,
+          nilai_sisa: 3500000,
+          akumulasi_penyusutan: 2000000,
+          tanggal_perolehan: '2022-12-01',
+          asal_pengadaan: 'Pembelian',
+          umur_ekonomis_tahun: 8
+        },
+        {
+          id: 5,
+          kode: 'AST005',
+          nama: 'Kursi Kantor',
+          spesifikasi: 'Ergonomis, adjustable height',
+          category: { name: 'Furniture' },
+          lokasi: 'Ruang Dosen',
+          location_info: {
+            name: 'Ruang Dosen',
+            building: 'Gedung B',
+            floor: '1',
+            room: 'B101'
+          },
+          status: 'baik',
+          harga_perolehan: 1200000,
+          nilai_sisa: 800000,
+          akumulasi_penyusutan: 400000,
+          tanggal_perolehan: '2023-03-15',
+          asal_pengadaan: 'Pembelian',
+          umur_ekonomis_tahun: 5
+        },
+        {
+          id: 6,
+          kode: 'AST006',
+          nama: 'Printer Laser',
+          spesifikasi: 'HP LaserJet, Monochrome',
+          category: { name: 'Elektronik' },
+          lokasi: 'Ruang Administrasi',
+          location_info: {
+            name: 'Ruang Tata Usaha',
+            building: 'Gedung B',
+            floor: '2',
+            room: 'B201'
+          },
+          status: 'rusak',
+          harga_perolehan: 3500000,
+          nilai_sisa: 1500000,
+          akumulasi_penyusutan: 2000000,
+          tanggal_perolehan: '2020-11-25',
+          asal_pengadaan: 'Hibah',
+          umur_ekonomis_tahun: 6
+        },
+        {
+          id: 7,
+          kode: 'AST007',
+          nama: 'Whiteboard',
+          spesifikasi: 'Magnetic, 120x200 cm',
+          category: { name: 'Furniture' },
+          lokasi: 'Ruang Kelas',
+          location_info: {
+            name: 'Ruang Kelas 2',
+            building: 'Gedung A',
+            floor: '1',
+            room: 'A102'
+          },
+          status: 'baik',
+          harga_perolehan: 800000,
+          nilai_sisa: 600000,
+          akumulasi_penyusutan: 200000,
+          tanggal_perolehan: '2023-07-10',
+          asal_pengadaan: 'Pembelian',
+          umur_ekonomis_tahun: 8
+        },
+        {
+          id: 8,
+          kode: 'AST008',
+          nama: 'Server Rack',
+          spesifikasi: '42U, dengan cooling system',
+          category: { name: 'Elektronik' },
+          lokasi: 'Ruang Server',
+          location_info: {
+            name: 'Data Center',
+            building: 'Gedung A',
+            floor: 'Basement',
+            room: 'A-B01'
+          },
+          status: 'baik',
+          harga_perolehan: 25000000,
+          nilai_sisa: 18000000,
+          akumulasi_penyusutan: 7000000,
+          tanggal_perolehan: '2022-01-30',
+          asal_pengadaan: 'Hibah',
+          umur_ekonomis_tahun: 10
         }
       ];
       
@@ -72,27 +247,27 @@ const ReportsPage = () => {
     }).format(value);
   };
 
-  const calculateStats = () => {
-    if (!assets.length) return {
+  const calculateStats = (assetsData: Asset[] = assets) => {
+    if (!assetsData.length) return {
       totalValue: 0,
       currentValue: 0,
       totalDepreciation: 0,
       statusCounts: { baik: 0, rusak: 0, hilang: 0 }
     };
 
-    const totalValue = assets.reduce((sum: number, asset: any) => 
+    const totalValue = assetsData.reduce((sum: number, asset: Asset) => 
       sum + (asset.harga_perolehan || 0), 0
     );
     
-    const currentValue = assets.reduce((sum: number, asset: any) => 
+    const currentValue = assetsData.reduce((sum: number, asset: Asset) => 
       sum + (asset.nilai_sisa || 0), 0
     );
     
-    const totalDepreciation = assets.reduce((sum: number, asset: any) => 
+    const totalDepreciation = assetsData.reduce((sum: number, asset: Asset) => 
       sum + (asset.akumulasi_penyusutan || 0), 0
     );
 
-    const statusCounts = assets.reduce((counts: any, asset: any) => {
+    const statusCounts = assetsData.reduce((counts: any, asset: Asset) => {
       const status = asset.status || 'baik';
       counts[status] = (counts[status] || 0) + 1;
       return counts;
@@ -109,8 +284,19 @@ const ReportsPage = () => {
       setIsGenerating(true);
       addNotification('info', 'Sedang menyiapkan laporan PDF...');
       
+      // Use filtered assets for PDF generation
+      const assetsToExport = filteredAssets.length > 0 ? filteredAssets : assets;
+      
+      if (assetsToExport.length === 0) {
+        addNotification('warning', 'Tidak ada data yang sesuai dengan filter untuk dicetak');
+        return;
+      }
+      
+      // Calculate stats based on filtered data
+      const filteredStats = calculateStats(assetsToExport);
+      
       // Create HTML content for the report
-      const reportContent = generateReportHTML(template, assets, stats);
+      const reportContent = generateReportHTML(template, assetsToExport, filteredStats);
       
       // Create a new window for printing
       const printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -127,7 +313,8 @@ const ReportsPage = () => {
       printWindow.onload = () => {
         setTimeout(() => {
           printWindow.print();
-          addNotification('success', `Laporan "${template.name}" berhasil dibuat!`);
+          const filterInfo = hasActiveFilters() ? ` (${filteredCount} dari ${totalAssets} aset)` : '';
+          addNotification('success', `Laporan "${template.name}" berhasil dibuat!${filterInfo}`);
         }, 500);
       };
       
@@ -381,6 +568,72 @@ const ReportsPage = () => {
           </div>
         </div>
 
+        {/* Search and Filter Controls */}
+        <div className="px-6 py-4 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-4">
+          {/* Left side - Search */}
+          <div className="relative rounded-md shadow-sm max-w-md flex-grow">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+            </div>
+            <input
+              type="search"
+              name="search"
+              id="search-reports"
+              className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"
+              placeholder="Cari template atau aset..."
+              value={filters.searchText}
+              onChange={(e) => updateFilters({ ...filters, searchText: e.target.value })}
+            />
+          </div>
+
+          {/* Right side - Controls */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => navigate('/template-management')}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm font-medium bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:-translate-y-0.5 transition-all duration-300"
+            >
+              <DocumentTextIcon className="h-4 w-4" />
+              <span>Kelola Template</span>
+            </button>
+            <div className="hidden sm:block h-6 w-px bg-gray-300"></div>
+            <button
+              type="button"
+              onClick={() => setFilterPanelOpen(true)}
+              className={`
+                flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm
+                ${hasActiveFilters()
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  : 'bg-white/80 border-gray-200 text-gray-600 hover:bg-gray-50'}
+                transition-all duration-300
+              `}
+            >
+              <FunnelIcon className="h-4 w-4" />
+              <span>Filter</span>
+              {hasActiveFilters() && (
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
+                  {Object.values(filters).filter(v => v && (Array.isArray(v) ? v.length > 0 : true)).length}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Summary */}
+        {hasActiveFilters() && (
+          <div className="px-6 py-3">
+            <FilterSummary
+              filterSummary={getFilterSummary()}
+              hasActiveFilters={hasActiveFilters()}
+              filteredCount={filteredCount}
+              totalAssets={totalAssets}
+              onClearFilters={() => {
+                clearFilters();
+                addNotification('info', 'Filter dihapus. Menampilkan semua aset');
+              }}
+            />
+          </div>
+        )}
+
         {/* Stats */}
         <div className="px-6 py-4 bg-white/50">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -410,6 +663,374 @@ const ReportsPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Filter Panel Dialog */}
+        <Transition.Root show={filterPanelOpen} as={Fragment}>
+          <Dialog as="div" className="fixed inset-y-0 right-0 z-50 overflow-y-auto" onClose={setFilterPanelOpen}>
+            <div className="flex h-full">
+              <Transition.Child
+                as={Fragment}
+                enter="transition-opacity ease-linear duration-300"
+                enterFrom="opacity-0"
+                enterTo="opacity-100"
+                leave="transition-opacity ease-linear duration-300"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+              >
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+              </Transition.Child>
+              
+              <Transition.Child
+                as={Fragment}
+                enter="transition ease-in-out duration-300 transform"
+                enterFrom="translate-x-full"
+                enterTo="translate-x-0"
+                leave="transition ease-in-out duration-300 transform"
+                leaveFrom="translate-x-0"
+                leaveTo="translate-x-full"
+              >
+                <div className="relative ml-auto flex h-full w-full max-w-md flex-col overflow-y-auto bg-white pt-5 pb-4 shadow-xl">
+                  <div className="px-6 flex items-center justify-between border-b border-gray-200 pb-4">
+                    <Dialog.Title className="text-lg font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
+                      Filter Laporan
+                    </Dialog.Title>
+                    <button
+                      type="button"
+                      className="rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 p-1 transition-colors"
+                      onClick={() => setFilterPanelOpen(false)}
+                    >
+                      <span className="sr-only">Tutup Panel</span>
+                      <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </div>
+                  
+                  <div className="mt-4 px-6 flex-1 overflow-y-auto">
+                    <div className="mt-4 flex flex-col space-y-5">
+                      {/* Status Filter */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                          <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                          Status Aset
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                            <input 
+                              type="radio" 
+                              className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                              name="status" 
+                              value="" 
+                              checked={filters.statuses.length === 0}
+                              onChange={() => updateFilters({ ...filters, statuses: [] })} 
+                            />
+                            <span className="ml-2 text-sm">Semua Status</span>
+                          </label>
+                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
+                            <input 
+                              type="radio" 
+                              className="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500" 
+                              name="status" 
+                              value="baik"
+                              checked={filters.statuses.includes('baik') && filters.statuses.length === 1} 
+                              onChange={() => updateFilters({ ...filters, statuses: ['baik'] })}
+                            />
+                            <span className="ml-2 text-sm text-green-700">Baik</span>
+                          </label>
+                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
+                            <input 
+                              type="radio" 
+                              className="form-radio h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500" 
+                              name="status" 
+                              value="rusak"
+                              checked={filters.statuses.includes('rusak') && filters.statuses.length === 1} 
+                              onChange={() => updateFilters({ ...filters, statuses: ['rusak'] })}
+                            />
+                            <span className="ml-2 text-sm text-red-700">Rusak</span>
+                          </label>
+                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
+                            <input 
+                              type="radio" 
+                              className="form-radio h-4 w-4 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
+                              name="status" 
+                              value="tidak_memadai"
+                              checked={filters.statuses.includes('tidak_memadai') && filters.statuses.length === 1} 
+                              onChange={() => updateFilters({ ...filters, statuses: ['tidak_memadai'] })}
+                            />
+                            <span className="ml-2 text-sm text-yellow-700">Tidak Memadai</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Depreciation Filter */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                          <span className="inline-block w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                          Nilai Penyusutan
+                        </h3>
+                        <div className="space-y-2">
+                          <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                            <input 
+                              type="radio" 
+                              className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                              name="depreciation" 
+                              value="all" 
+                              checked={!filters.priceMin && !filters.priceMax}
+                              onChange={() => updateFilters({ ...filters, priceMin: null, priceMax: null })} 
+                            />
+                            <span className="ml-2 text-sm">Semua Nilai</span>
+                          </label>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
+                              <input 
+                                type="radio" 
+                                className="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500" 
+                                name="depreciation" 
+                                value="0-25"
+                                checked={filters.priceMin === 0 && filters.priceMax === 25} 
+                                onChange={() => updateFilters({ ...filters, priceMin: 0, priceMax: 25 })}
+                              />
+                              <span className="ml-2 text-sm text-green-700">0-25%</span>
+                            </label>
+                            
+                            <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                              <input 
+                                type="radio" 
+                                className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                                name="depreciation" 
+                                value="26-50"
+                                checked={filters.priceMin === 26 && filters.priceMax === 50} 
+                                onChange={() => updateFilters({ ...filters, priceMin: 26, priceMax: 50 })}
+                              />
+                              <span className="ml-2 text-sm text-blue-700">26-50%</span>
+                            </label>
+                            
+                            <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
+                              <input 
+                                type="radio" 
+                                className="form-radio h-4 w-4 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
+                                name="depreciation" 
+                                value="51-75"
+                                checked={filters.priceMin === 51 && filters.priceMax === 75} 
+                                onChange={() => updateFilters({ ...filters, priceMin: 51, priceMax: 75 })}
+                              />
+                              <span className="ml-2 text-sm text-yellow-700">51-75%</span>
+                            </label>
+                            
+                            <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
+                              <input 
+                                type="radio" 
+                                className="form-radio h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500" 
+                                name="depreciation" 
+                                value="76-100"
+                                checked={filters.priceMin === 76 && filters.priceMax === 100} 
+                                onChange={() => updateFilters({ ...filters, priceMin: 76, priceMax: 100 })}
+                              />
+                              <span className="ml-2 text-sm text-red-700">76-100%</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Acquisition Year Filter */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                          <span className="inline-block w-3 h-3 bg-indigo-500 rounded-full mr-2"></span>
+                          Tahun Perolehan
+                        </h3>
+                        <div className="relative">
+                          <select 
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            value={filters.dateFrom || ''}
+                            onChange={(e) => updateFilters({ ...filters, dateFrom: e.target.value })}
+                          >
+                            <option value="">Semua Tahun</option>
+                            {Array.from({ length: 10 }, (_, i) => {
+                              const year = new Date().getFullYear() - i;
+                              return (
+                                <option key={year} value={year.toString()}>
+                                  {year}
+                                </option>
+                              );
+                            })}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Acquisition Source Filter */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                          <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
+                          Asal Pengadaan
+                        </h3>
+                        <div className="space-y-2">
+                          <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                            <input
+                              type="radio"
+                              className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              name="acquisitionSource"
+                              value=""
+                              checked={filters.sources.length === 0}
+                              onChange={() => updateFilters({ ...filters, sources: [] })}
+                            />
+                            <span className="ml-2 text-sm">Semua</span>
+                          </label>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            {["Pembelian", "Bantuan", "Hibah", "STTST"].map((source) => (
+                              <label key={source} className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                                <input
+                                  type="radio"
+                                  className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                  name="acquisitionSource"
+                                  value={source}
+                                  checked={filters.sources.includes(source) && filters.sources.length === 1}
+                                  onChange={() => updateFilters({ ...filters, sources: [source] })}
+                                />
+                                <span className="ml-2 text-sm">{source}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Category Filter */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                          <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                          Kategori
+                        </h3>
+                        <div className="relative">
+                          <select 
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            value={filters.categories.length > 0 ? filters.categories[0] : ''}
+                            onChange={(e) => updateFilters({ ...filters, categories: e.target.value ? [e.target.value] : [] })}
+                          >
+                            <option value="">Semua Kategori</option>
+                            {filterOptions.categories.map((category) => (
+                              <option key={category} value={category}>
+                                {category}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Location Filter */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                          <span className="inline-block w-3 h-3 bg-pink-500 rounded-full mr-2"></span>
+                          Lokasi
+                        </h3>
+                        <div className="relative">
+                          <select 
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            value={filters.locations.length > 0 ? filters.locations[0] : ''}
+                            onChange={(e) => updateFilters({ ...filters, locations: e.target.value ? [e.target.value] : [] })}
+                          >
+                            <option value="">Semua Lokasi</option>
+                            {filterOptions.locations.map((location) => (
+                              <option key={location} value={location}>
+                                {location}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Active Filters - Show badge for active filters */}
+                      {hasActiveFilters() && (
+                        <div className="mt-4 mb-2 flex flex-wrap gap-2">
+                          <h3 className="w-full text-xs font-medium text-gray-500 mb-1">Filter Aktif:</h3>
+                          
+                          {filters.categories.length > 0 && (
+                            <div className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                              <span>Kategori: </span>
+                              <span className="ml-1 font-semibold">{filters.categories[0]}</span>
+                              <button
+                                type="button"
+                                className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-green-600 hover:bg-green-200 hover:text-green-800 focus:outline-none"
+                                onClick={() => updateFilters({ ...filters, categories: [] })}
+                              >
+                                <span className="sr-only">Hapus filter kategori</span>
+                                <XMarkIcon className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                          
+                          {filters.locations.length > 0 && (
+                            <div className="inline-flex items-center rounded-full bg-pink-50 border border-pink-200 px-2.5 py-0.5 text-xs font-medium text-pink-800">
+                              <span>Lokasi: </span>
+                              <span className="ml-1 font-semibold">{filters.locations[0]}</span>
+                              <button
+                                type="button"
+                                className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-pink-600 hover:bg-pink-200 hover:text-pink-800 focus:outline-none"
+                                onClick={() => updateFilters({ ...filters, locations: [] })}
+                              >
+                                <span className="sr-only">Hapus filter lokasi</span>
+                                <XMarkIcon className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Filter Actions */}
+                      <div className="mt-6 px-1">
+                        <div className="flex flex-col space-y-3">
+                          <button
+                            type="button"
+                            className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                            onClick={() => {
+                              setFilterPanelOpen(false);
+                              addNotification('success', `Filter diterapkan. Menampilkan ${filteredCount} dari ${totalAssets} aset`);
+                            }}
+                          >
+                            <CheckCircleIcon className="h-4 w-4 mr-2" />
+                            Terapkan Filter
+                          </button>
+                          
+                          <button
+                            type="button"
+                            className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                            onClick={() => {
+                              clearFilters();
+                              setFilterPanelOpen(false);
+                              addNotification('info', 'Filter dihapus. Menampilkan semua aset');
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Reset Filter
+                          </button>
+                        </div>
+                        
+                        <div className="mt-6 pt-4 border-t border-gray-200 text-xs text-center text-gray-500">
+                          Klik di luar panel untuk menutup
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Transition.Child>
+            </div>
+          </Dialog>
+        </Transition.Root>
 
         {/* Content */}
         <div className="p-6">
