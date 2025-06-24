@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Cog6ToothIcon, PlusIcon, TrashIcon, EyeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, Fragment } from 'react';
+import { Cog6ToothIcon, PlusIcon, TrashIcon, EyeIcon, ArrowLeftIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
+import { Dialog, Transition } from '@headlessui/react';
 import ReportPreview from '../components/ReportPreview';
 import { templateService, columnOptions, defaultTemplates, type ReportTemplate } from '../services/templateService';
 import { useNotification } from '../context/NotificationContext';
@@ -55,6 +56,8 @@ export default function TemplateManagementPage() {
   const [editingTemplate, setEditingTemplate] = useState<ReportTemplate | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<ReportTemplate | null>(null);
   const [mounted, setMounted] = useState(false);
 
   // Mounting animation
@@ -110,28 +113,33 @@ export default function TemplateManagementPage() {
     }
   };
 
-  const handleDeleteTemplate = (templateId: string) => {
-    if (defaultTemplates.find(t => t.id === templateId)) {
+  const handleDeleteTemplate = (template: ReportTemplate) => {
+    if (defaultTemplates.find(t => t.id === template.id)) {
       addNotification('error', 'Template default tidak dapat dihapus');
       return;
     }
 
-    // Use a more sophisticated confirmation dialog in the future
-    const templateToDelete = templates.find(t => t.id === templateId);
-    if (window.confirm(`Yakin ingin menghapus template "${templateToDelete?.name}"? Tindakan ini tidak dapat dibatalkan.`)) {
-      try {
-        const success = templateService.deleteTemplate(templateId);
-        
-        if (success) {
-          loadTemplates(); // Reload templates
-          addNotification('success', 'Template berhasil dihapus!');
-        } else {
-          addNotification('error', 'Template tidak dapat dihapus');
-        }
-      } catch (error) {
-        console.error('Error deleting template:', error);
-        addNotification('error', 'Terjadi kesalahan saat menghapus template');
+    setTemplateToDelete(template);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteTemplate = () => {
+    if (!templateToDelete) return;
+
+    try {
+      const success = templateService.deleteTemplate(templateToDelete.id);
+      
+      if (success) {
+        loadTemplates(); // Reload templates
+        setDeleteModalOpen(false);
+        setTemplateToDelete(null);
+        addNotification('success', 'Template berhasil dihapus!');
+      } else {
+        addNotification('error', 'Template tidak dapat dihapus');
       }
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      addNotification('error', 'Terjadi kesalahan saat menghapus template');
     }
   };
 
@@ -239,7 +247,7 @@ export default function TemplateManagementPage() {
                   </button>
                   {!defaultTemplates.find(t => t.id === template.id) && (
                     <button
-                      onClick={() => handleDeleteTemplate(template.id)}
+                      onClick={() => handleDeleteTemplate(template)}
                       className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 px-2 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm font-medium min-w-0"
                       title="Hapus Template"
                     >
@@ -482,6 +490,75 @@ export default function TemplateManagementPage() {
         )}
         </div>
       </GlassCard>
+
+      {/* Delete Confirmation Modal */}
+      <Transition.Root show={deleteModalOpen} as={Fragment}>
+        <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" onClose={setDeleteModalOpen}>
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm transition-opacity" />
+            </Transition.Child>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+              &#8203;
+            </span>
+
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
+                      Hapus Template
+                    </Dialog.Title>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        Apakah Anda yakin ingin menghapus template{' '}
+                        <span className="font-semibold">"{templateToDelete?.name}"</span>?{' '}
+                        Tindakan ini tidak dapat dibatalkan.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                  <GradientButton
+                    variant="danger"
+                    className="w-full sm:ml-3 sm:w-auto"
+                    onClick={confirmDeleteTemplate}
+                  >
+                    Hapus Template
+                  </GradientButton>
+                  <button
+                    type="button"
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm transition-all duration-200 hover:-translate-y-0.5"
+                    onClick={() => setDeleteModalOpen(false)}
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition.Root>
     </div>
   );
 }
