@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { auditLogApi, type AuditLog } from '../services/api';
 import { 
   ClockIcon,
   UserIcon, 
   ComputerDesktopIcon,
-  FunnelIcon,
   XMarkIcon,
   EyeIcon,
-  ExclamationCircleIcon
+  ExclamationCircleIcon,
+  AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
+import { Dialog, Transition } from '@headlessui/react';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
@@ -33,12 +34,22 @@ export default function AuditLogPage() {
     from_date: '',
     to_date: ''
   });
-  const [showFilters, setShowFilters] = useState(false);
+  const [tempFilters, setTempFilters] = useState<AuditLogFilters>({
+    entity_type: '',
+    entity_id: '',
+    action: '',
+    from_date: '',
+    to_date: ''
+  });
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [isApplyingFilter, setIsApplyingFilter] = useState(false);
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Sync tempFilters with current filters on mount
+    setTempFilters(filters);
+  }, [filters]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['audit-logs', page, pageSize, filters],
@@ -50,12 +61,39 @@ export default function AuditLogPage() {
   });
 
   const handleFilterChange = (key: keyof AuditLogFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setPage(1); // Reset to first page when filters change
+    setTempFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const applyFilters = async () => {
+    setIsApplyingFilter(true);
+    try {
+      setFilters(tempFilters);
+      setPage(1); // Reset to first page when filters change
+      setFilterPanelOpen(false);
+    } finally {
+      setIsApplyingFilter(false);
+    }
+  };
+
+  const resetTempFiltersToDefaults = () => {
+    setTempFilters({
+      entity_type: '',
+      entity_id: '',
+      action: '',
+      from_date: '',
+      to_date: ''
+    });
   };
 
   const clearFilters = () => {
     setFilters({
+      entity_type: '',
+      entity_id: '',
+      action: '',
+      from_date: '',
+      to_date: ''
+    });
+    setTempFilters({
       entity_type: '',
       entity_id: '',
       action: '',
@@ -211,106 +249,359 @@ export default function AuditLogPage() {
                 Log aktivitas yang mencatat semua perubahan data aset dalam sistem
               </p>
             </div>
-            <GradientButton
-              variant="secondary"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center"
-            >
-              <FunnelIcon className="h-4 w-4 mr-2" />
-              Filter
-            </GradientButton>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setFilterPanelOpen(true)}
+                className={`
+                  flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm
+                  ${filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
+                    : 'bg-white/80 border-gray-200 text-gray-600 hover:bg-gray-50'}
+                  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md
+                `}
+              >
+                <AdjustmentsHorizontalIcon className="h-4 w-4" />
+                <span>{filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date ? 'Filter Aktif' : 'Filter'}</span>
+                {(filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date) && (
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
+                    {(filters.entity_type ? 1 : 0) + 
+                     (filters.entity_id ? 1 : 0) + 
+                     (filters.action ? 1 : 0) + 
+                     (filters.from_date ? 1 : 0) +
+                     (filters.to_date ? 1 : 0)}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Filter Side Panel */}
+        <Transition.Root show={filterPanelOpen} as={Fragment}>
+          <Dialog as="div" className="fixed inset-y-0 right-0 z-50 overflow-y-auto" onClose={setFilterPanelOpen}>
+            <div className="flex h-full">
+              <Transition.Child
+                as={Fragment}
+                enter="transition-opacity ease-linear duration-300"
+                enterFrom="opacity-0"
+                enterTo="opacity-100"
+                leave="transition-opacity ease-linear duration-300"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+              >
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+              </Transition.Child>
+
+              <Transition.Child
+                as={Fragment}
+                enter="transition ease-in-out duration-300 transform"
+                enterFrom="translate-x-full"
+                enterTo="translate-x-0"
+                leave="transition ease-in-out duration-300 transform"
+                leaveFrom="translate-x-0"
+                leaveTo="translate-x-full"
+              >
+                <div className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white pt-5 pb-4 shadow-xl">
+                  <div className="px-6 flex items-center justify-between border-b border-gray-200 pb-4">
+                    <Dialog.Title className="text-lg font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Filter Log Aktivitas</Dialog.Title>
+                    <button
+                      type="button"
+                      className="rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 p-1 transition-colors"
+                      onClick={() => setFilterPanelOpen(false)}
+                    >
+                      <span className="sr-only">Tutup Panel</span>
+                      <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </div>
+                  
+                  <div className="mt-4 flex flex-col px-6 space-y-5 overflow-y-auto">
+                    {/* Entity Type Filter */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                        <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                        Jenis Entitas
+                      </h3>
+                      <div className="space-y-2">
+                        <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                          <input
+                            type="radio"
+                            className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            name="entity_type"
+                            value=""
+                            checked={tempFilters.entity_type === ''}
+                            onChange={(e) => handleFilterChange('entity_type', e.target.value)}
+                          />
+                          <span className="ml-2 text-sm">Semua</span>
+                        </label>
+                        
+                        <div className="grid grid-cols-1 gap-2">
+                          {["asset", "category", "location"].map((type) => (
+                            <label key={type} className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                              <input
+                                type="radio"
+                                className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                name="entity_type"
+                                value={type}
+                                checked={tempFilters.entity_type === type}
+                                onChange={(e) => handleFilterChange('entity_type', e.target.value)}
+                              />
+                              <span className="ml-2 text-sm capitalize">{type === 'asset' ? 'Asset' : type === 'category' ? 'Kategori' : 'Lokasi'}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Filter */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                        <span className="inline-block w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                        Aksi
+                      </h3>
+                      <div className="space-y-2">
+                        <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                          <input
+                            type="radio"
+                            className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            name="action"
+                            value=""
+                            checked={tempFilters.action === ''}
+                            onChange={(e) => handleFilterChange('action', e.target.value)}
+                          />
+                          <span className="ml-2 text-sm">Semua</span>
+                        </label>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { value: "create", label: "Dibuat" },
+                            { value: "update", label: "Diperbarui" },
+                            { value: "delete", label: "Dihapus" },
+                            { value: "bulk_delete", label: "Hapus Bulk" }
+                          ].map((action) => (
+                            <label key={action.value} className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                              <input
+                                type="radio"
+                                className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                name="action"
+                                value={action.value}
+                                checked={tempFilters.action === action.value}
+                                onChange={(e) => handleFilterChange('action', e.target.value)}
+                              />
+                              <span className="ml-2 text-sm">{action.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Date Range Filter */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                        <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                        Rentang Tanggal
+                      </h3>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Dari Tanggal
+                          </label>
+                          <input
+                            type="date"
+                            value={tempFilters.from_date}
+                            onChange={(e) => handleFilterChange('from_date', e.target.value)}
+                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Sampai Tanggal
+                          </label>
+                          <input
+                            type="date"
+                            value={tempFilters.to_date}
+                            onChange={(e) => handleFilterChange('to_date', e.target.value)}
+                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Entity ID Filter */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                        <span className="inline-block w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+                        ID Entitas
+                      </h3>
+                      <input
+                        type="text"
+                        value={tempFilters.entity_id}
+                        onChange={(e) => handleFilterChange('entity_id', e.target.value)}
+                        placeholder="UUID entitas"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      />
+                    </div>
+
+                    {/* Active Filters */}
+                    {(tempFilters.entity_type || tempFilters.entity_id || tempFilters.action || tempFilters.from_date || tempFilters.to_date) && (
+                      <div className="mt-4 mb-2 flex flex-wrap gap-2">
+                        <h3 className="w-full text-xs font-medium text-gray-500 mb-1">Filter Aktif:</h3>
+                        
+                        {tempFilters.entity_type && (
+                          <div className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                            <span>Entitas: </span>
+                            <span className="ml-1 font-semibold capitalize">
+                              {tempFilters.entity_type === 'asset' ? 'Asset' : tempFilters.entity_type === 'category' ? 'Kategori' : 'Lokasi'}
+                            </span>
+                            <button
+                              type="button"
+                              className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none"
+                              onClick={() => handleFilterChange('entity_type', '')}
+                            >
+                              <span className="sr-only">Hapus filter entitas</span>
+                              <XMarkIcon className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                        
+                        {tempFilters.action && (
+                          <div className="inline-flex items-center rounded-full bg-purple-50 border border-purple-200 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+                            <span>Aksi: </span>
+                            <span className="ml-1 font-semibold">
+                              {tempFilters.action === 'create' ? 'Dibuat' : 
+                               tempFilters.action === 'update' ? 'Diperbarui' : 
+                               tempFilters.action === 'delete' ? 'Dihapus' : 
+                               tempFilters.action === 'bulk_delete' ? 'Hapus Bulk' : tempFilters.action}
+                            </span>
+                            <button
+                              type="button"
+                              className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-purple-600 hover:bg-purple-200 hover:text-purple-800 focus:outline-none"
+                              onClick={() => handleFilterChange('action', '')}
+                            >
+                              <span className="sr-only">Hapus filter aksi</span>
+                              <XMarkIcon className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Filter Actions */}
+                    <div className="mt-6 px-1">
+                      <div className="flex flex-col space-y-3">
+                        <button
+                          type="button"
+                          className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                          onClick={applyFilters}
+                          disabled={isApplyingFilter}
+                        >
+                          {isApplyingFilter ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Menerapkan Filter...
+                            </>
+                          ) : (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Terapkan Filter
+                            </>
+                          )}
+                        </button>
+                        
+                        <button
+                          type="button"
+                          className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                          onClick={resetTempFiltersToDefaults}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Reset Filter
+                        </button>
+                      </div>
+                      
+                      <div className="mt-6 pt-4 border-t border-gray-200 text-xs text-center text-gray-500">
+                        Klik di luar panel untuk menutup
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Transition.Child>
+            </div>
+          </Dialog>
+        </Transition.Root>
+
         {/* Content */}
         <div className="p-6">
-          {/* Filters */}
-          {showFilters && (
-            <div className="mb-6 bg-white/70 backdrop-blur-sm rounded-lg p-6 border border-gray-200/50">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Jenis Entitas
-                  </label>
-                  <select
-                    value={filters.entity_type}
-                    onChange={(e) => handleFilterChange('entity_type', e.target.value)}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
-                    <option value="">Semua</option>
-                    <option value="asset">Asset</option>
-                    <option value="category">Kategori</option>
-                    <option value="location">Lokasi</option>
-                  </select>
+          {/* Active Filters Display */}
+          <Transition
+            show={!!(filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date)}
+            enter="transition-all duration-300 ease-out"
+            enterFrom="opacity-0 -translate-y-2"
+            enterTo="opacity-100 translate-y-0"
+            leave="transition-all duration-300 ease-in"
+            leaveFrom="opacity-100 translate-y-0"
+            leaveTo="opacity-0 -translate-y-2"
+          >
+            <div className="mb-6 bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700 flex items-center">
+                    <svg className="w-4 h-4 mr-1.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
+                    </svg>
+                    Filter aktif:
+                  </span>
+                  
+                  {filters.entity_type && (
+                    <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800 transition-all duration-200 hover:bg-blue-100">
+                      Entitas: {filters.entity_type === 'asset' ? 'Asset' : filters.entity_type === 'category' ? 'Kategori' : 'Lokasi'}
+                    </span>
+                  )}
+                  
+                  {filters.action && (
+                    <span className="inline-flex items-center rounded-full bg-purple-50 border border-purple-200 px-2.5 py-0.5 text-xs font-medium text-purple-800 transition-all duration-200 hover:bg-purple-100">
+                      Aksi: {filters.action === 'create' ? 'Dibuat' : 
+                             filters.action === 'update' ? 'Diperbarui' : 
+                             filters.action === 'delete' ? 'Dihapus' : 
+                             filters.action === 'bulk_delete' ? 'Hapus Bulk' : filters.action}
+                    </span>
+                  )}
+                  
+                  {filters.from_date && (
+                    <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-0.5 text-xs font-medium text-green-800 transition-all duration-200 hover:bg-green-100">
+                      Dari: {filters.from_date}
+                    </span>
+                  )}
+                  
+                  {filters.to_date && (
+                    <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-0.5 text-xs font-medium text-green-800 transition-all duration-200 hover:bg-green-100">
+                      Sampai: {filters.to_date}
+                    </span>
+                  )}
+                  
+                  {filters.entity_id && (
+                    <span className="inline-flex items-center rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-xs font-medium text-orange-800 transition-all duration-200 hover:bg-orange-100">
+                      ID: {filters.entity_id.substring(0, 8)}...
+                    </span>
+                  )}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Aksi
-                  </label>
-                  <select
-                    value={filters.action}
-                    onChange={(e) => handleFilterChange('action', e.target.value)}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
-                    <option value="">Semua</option>
-                    <option value="create">Dibuat</option>
-                    <option value="update">Diperbarui</option>
-                    <option value="delete">Dihapus</option>
-                    <option value="bulk_delete">Hapus Bulk</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Dari Tanggal
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.from_date}
-                    onChange={(e) => handleFilterChange('from_date', e.target.value)}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sampai Tanggal
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.to_date}
-                    onChange={(e) => handleFilterChange('to_date', e.target.value)}
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ID Entitas
-                  </label>
-                  <input
-                    type="text"
-                    value={filters.entity_id}
-                    onChange={(e) => handleFilterChange('entity_id', e.target.value)}
-                    placeholder="UUID entitas"
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4 flex justify-end">
-                <GradientButton
-                  variant="secondary"
+                
+                <button
                   onClick={clearFilters}
-                  className="flex items-center"
+                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-600 transition-colors duration-200 hover:bg-red-50 px-2 py-1 rounded-md"
                 >
-                  <XMarkIcon className="h-4 w-4 mr-2" />
-                  Bersihkan Filter
-                </GradientButton>
+                  <XMarkIcon className="h-4 w-4" />
+                  Bersihkan
+                </button>
               </div>
             </div>
-          )}
+          </Transition>
         </div>
 
           {/* Audit Logs */}
