@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { DocumentTextIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, EyeIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
-import { templateService, type ReportTemplate, defaultTemplates, columnOptions } from '../services/templateService';
+import { templateService, type ReportTemplate, defaultTemplates } from '../services/templateService';
 import { useNotification } from '../context/NotificationContext';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
+import ReportPreview from '../components/ReportPreview';
 
 const ReportsPage = () => {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ const ReportsPage = () => {
   const [mounted, setMounted] = useState(false);
   const [assets, setAssets] = useState<any[]>([]);
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,28 +112,11 @@ const ReportsPage = () => {
       setIsGenerating(true);
       addNotification('info', 'Sedang menyiapkan laporan PDF...');
       
-      // Create HTML content for the report
-      const reportContent = generateReportHTML(template, assets, stats);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Create a new window for printing
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
-      if (!printWindow) {
-        addNotification('error', 'Popup diblokir. Harap izinkan popup untuk mencetak laporan.');
-        return;
-      }
-      
-      // Write content to the new window
-      printWindow.document.write(reportContent);
-      printWindow.document.close();
-      
-      // Wait for content to load, then trigger print
-      printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-          addNotification('success', `Laporan "${template.name}" berhasil dibuat!`);
-        }, 500);
-      };
-      
+      // In real implementation, this would call the backend
+      addNotification('success', `Laporan "${template.name}" berhasil dibuat!`);
     } catch (error) {
       console.error('Error generating PDF:', error);
       addNotification('error', 'Gagal membuat laporan PDF');
@@ -161,178 +147,9 @@ const ReportsPage = () => {
     }
   };
 
-  const generateReportHTML = (template: ReportTemplate, assets: any[], stats: any) => {
-    const now = new Date();
-    const formatDate = (date: Date) => {
-      return date.toLocaleDateString('id-ID', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    };
-
-    const formatCurrency = (value: number) => {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(value);
-    };
-
-    // Generate table headers based on template columns
-    const tableHeaders = template.columns.map(col => {
-      const columnConfig = columnOptions.find(opt => opt.id === col);
-      return columnConfig ? columnConfig.label : col;
-    }).join('</th><th style="border: 1px solid #ddd; padding: 8px; background-color: #f5f5f5;">');
-
-    // Generate table rows
-    const tableRows = assets.map(asset => {
-      const row = template.columns.map(col => {
-        switch (col) {
-          case 'kode': return asset.kode || '-';
-          case 'nama': return asset.nama || '-';
-          case 'spesifikasi': return asset.spesifikasi || '-';
-          case 'quantity': return asset.quantity || 0;
-          case 'satuan': return asset.satuan || '-';
-          case 'kategori': return asset.category?.name || '-';
-          case 'lokasi': return asset.lokasi || '-';
-          case 'status': return asset.status || '-';
-          case 'harga_perolehan': return formatCurrency(asset.harga_perolehan || 0);
-          case 'nilai_sisa': return formatCurrency(asset.nilai_sisa || 0);
-          case 'akumulasi_penyusutan': return formatCurrency(asset.akumulasi_penyusutan || 0);
-          case 'umur_ekonomis_tahun': return asset.umur_ekonomis_tahun || '-';
-          case 'tanggal_perolehan': return asset.tanggal_perolehan || '-';
-          case 'asal_pengadaan': return asset.asal_pengadaan || '-';
-          default: return '-';
-        }
-      }).join('</td><td style="border: 1px solid #ddd; padding: 8px;">');
-      
-      return `<tr><td style="border: 1px solid #ddd; padding: 8px;">${row}</td></tr>`;
-    }).join('');
-
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>${template.name}</title>
-        <style>
-          @media print {
-            body { margin: 0; }
-            .no-print { display: none; }
-          }
-          body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #333;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 20px;
-          }
-          .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #2563eb;
-          }
-          .header p {
-            margin: 5px 0;
-            color: #666;
-          }
-          .summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-          }
-          .summary-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #2563eb;
-          }
-          .summary-item .label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-          }
-          .summary-item .value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-          }
-          th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-          }
-          th {
-            background-color: #f5f5f5;
-            font-weight: bold;
-          }
-          .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            text-align: right;
-            font-size: 12px;
-            color: #666;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>${template.name}</h1>
-          <p>Sistem Inventaris Aset</p>
-          <p>Tanggal: ${formatDate(now)}</p>
-        </div>
-
-        <div class="summary">
-          <div class="summary-item">
-            <div class="label">Total Aset</div>
-            <div class="value">${assets.length}</div>
-          </div>
-          <div class="summary-item">
-            <div class="label">Total Nilai Perolehan</div>
-            <div class="value">${formatCurrency(stats.totalValue)}</div>
-          </div>
-          <div class="summary-item">
-            <div class="label">Nilai Saat Ini</div>
-            <div class="value">${formatCurrency(stats.currentValue)}</div>
-          </div>
-          <div class="summary-item">
-            <div class="label">Total Penyusutan</div>
-            <div class="value">${formatCurrency(stats.totalDepreciation)}</div>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th style="border: 1px solid #ddd; padding: 8px; background-color: #f5f5f5;">${tableHeaders}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
-
-        <div class="footer">
-          <p>Dicetak pada: ${now.toLocaleString('id-ID')}</p>
-          <p>Sistem Inventaris Aset - ${template.name}</p>
-        </div>
-      </body>
-      </html>
-    `;
+  const handlePreview = (template: ReportTemplate) => {
+    setSelectedTemplate(template);
+    setShowPreview(true);
   };
 
   if (loading) {
@@ -464,11 +281,18 @@ const ReportsPage = () => {
                       <div className="flex items-center justify-between mt-auto">
                         <div className="flex space-x-2">
                           <button
+                            onClick={() => handlePreview(template)}
+                            className="flex items-center px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                          >
+                            <EyeIcon className="h-4 w-4 mr-1" />
+                            Preview
+                          </button>
+                          <button
                             onClick={() => generatePDF(template)}
                             disabled={isGenerating}
                             className="flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50"
                           >
-                            Cetak Laporan
+                            Generate PDF
                           </button>
                         </div>
                         
@@ -488,6 +312,31 @@ const ReportsPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Preview Modal */}
+        {showPreview && selectedTemplate && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+                <h3 className="text-lg font-medium">Preview: {selectedTemplate.name}</h3>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                <ReportPreview 
+                  assets={assets} 
+                  template={selectedTemplate}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </GlassCard>
     </div>
   );

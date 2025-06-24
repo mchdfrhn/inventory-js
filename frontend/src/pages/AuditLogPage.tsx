@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { auditLogApi, type AuditLog } from '../services/api';
 import { 
@@ -7,10 +7,12 @@ import {
   ComputerDesktopIcon,
   FunnelIcon,
   XMarkIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  EyeIcon
+  EyeIcon,
+  ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
+import GlassCard from '../components/GlassCard';
+import GradientButton from '../components/GradientButton';
+import Loader from '../components/Loader';
 
 interface AuditLogFilters {
   entity_type: string;
@@ -21,6 +23,7 @@ interface AuditLogFilters {
 }
 
 export default function AuditLogPage() {
+  const [mounted, setMounted] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [filters, setFilters] = useState<AuditLogFilters>({
@@ -32,6 +35,10 @@ export default function AuditLogPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['audit-logs', page, pageSize, filters],
@@ -164,59 +171,62 @@ export default function AuditLogPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-96">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500 border-r-2 border-b-2 border-gray-200"></div>
-          </div>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-red-600">
-            <p>Error loading audit logs: {error instanceof Error ? error.message : 'Unknown error'}</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <GlassCard className="max-w-md w-full text-center">
+          <div className="p-8">
+            <ExclamationCircleIcon className="mx-auto h-12 w-12 text-red-500 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Terjadi Kesalahan</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              {error instanceof Error ? error.message : 'Gagal memuat riwayat aktivitas'}
+            </p>
+            <GradientButton variant="primary" onClick={() => window.location.reload()}>
+              Coba Lagi
+            </GradientButton>
           </div>
-        </div>
+        </GlassCard>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+      <GlassCard className="overflow-hidden">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-4">
-            <ClockIcon className="h-8 w-8 text-indigo-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Riwayat Aktivitas</h1>
+        <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800 flex items-center">
+                <ClockIcon className="h-6 w-6 mr-2 text-blue-600" />
+                Riwayat Aktivitas
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Log aktivitas yang mencatat semua perubahan data aset dalam sistem
+              </p>
+            </div>
+            <GradientButton
+              variant="secondary"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center"
+            >
+              <FunnelIcon className="h-4 w-4 mr-2" />
+              Filter
+            </GradientButton>
           </div>
-          <p className="text-gray-600">
-            Log aktivitas yang mencatat semua perubahan data aset dalam sistem
-          </p>
         </div>
 
-        {/* Filters */}
-        <div className="mb-6">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50"
-          >
-            <FunnelIcon className="h-5 w-5 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">Filter</span>
-            {showFilters ? (
-              <ChevronDownIcon className="h-4 w-4 text-gray-500" />
-            ) : (
-              <ChevronRightIcon className="h-4 w-4 text-gray-500" />
-            )}
-          </button>
-
+        {/* Content */}
+        <div className="p-6">
+          {/* Filters */}
           {showFilters && (
-            <div className="mt-4 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="mb-6 bg-white/70 backdrop-blur-sm rounded-lg p-6 border border-gray-200/50">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -290,22 +300,23 @@ export default function AuditLogPage() {
               </div>
 
               <div className="mt-4 flex justify-end">
-                <button
+                <GradientButton
+                  variant="secondary"
                   onClick={clearFilters}
-                  className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                  className="flex items-center"
                 >
-                  <XMarkIcon className="h-4 w-4" />
-                  <span>Clear Filters</span>
-                </button>
+                  <XMarkIcon className="h-4 w-4 mr-2" />
+                  Bersihkan Filter
+                </GradientButton>
               </div>
             </div>
           )}
         </div>
 
-        {/* Audit Logs */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {data?.data && data.data.length > 0 ? (
-            <div className="divide-y divide-gray-200">
+          {/* Audit Logs */}
+          <div className="bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200/50">
+            {data?.data && data.data.length > 0 ? (
+              <div className="divide-y divide-gray-200/50">
               {data.data.map((log: AuditLog) => (
                 <div key={log.id} className="p-6">
                   <div className="flex items-start space-x-4">
@@ -383,36 +394,38 @@ export default function AuditLogPage() {
               <p className="mt-1 text-sm text-gray-500">Belum ada aktivitas yang tercatat.</p>
             </div>
           )}
+          
+          {/* Pagination */}
+          {data?.pagination && (
+            <div className="mt-6 flex items-center justify-between bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50">
+              <div className="text-sm text-gray-700">
+                Menampilkan {((page - 1) * pageSize) + 1} - {Math.min(page * pageSize, data.pagination.total_items)} dari {data.pagination.total_items} aktivitas
+              </div>
+              <div className="flex items-center space-x-2">
+                <GradientButton
+                  variant="secondary"
+                  onClick={() => setPage(page - 1)}
+                  disabled={!data.pagination.has_previous}
+                  className="text-sm"
+                >
+                  Sebelumnya
+                </GradientButton>
+                <span className="px-3 py-2 text-sm font-medium text-gray-700">
+                  Halaman {page} dari {data.pagination.total_pages}
+                </span>
+                <GradientButton
+                  variant="secondary"
+                  onClick={() => setPage(page + 1)}
+                  disabled={!data.pagination.has_next}
+                  className="text-sm"
+                >
+                  Selanjutnya
+                </GradientButton>
+              </div>
+            </div>
+          )}
         </div>
-
-        {/* Pagination */}
-        {data?.pagination && (
-          <div className="mt-6 flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Menampilkan {((page - 1) * pageSize) + 1} - {Math.min(page * pageSize, data.pagination.total_items)} dari {data.pagination.total_items} aktivitas
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setPage(page - 1)}
-                disabled={!data.pagination.has_previous}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Sebelumnya
-              </button>
-              <span className="px-3 py-2 text-sm font-medium text-gray-700">
-                Halaman {page} dari {data.pagination.total_pages}
-              </span>
-              <button
-                onClick={() => setPage(page + 1)}
-                disabled={!data.pagination.has_next}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Selanjutnya
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      </GlassCard>
     </div>
   );
 }

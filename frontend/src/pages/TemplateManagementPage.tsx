@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { DocumentTextIcon, Cog6ToothIcon, PlusIcon, TrashIcon, EyeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { Cog6ToothIcon, PlusIcon, TrashIcon, EyeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import ReportPreview from '../components/ReportPreview';
 import { templateService, columnOptions, defaultTemplates, type ReportTemplate } from '../services/templateService';
+import { useNotification } from '../context/NotificationContext';
+import GlassCard from '../components/GlassCard';
+import GradientButton from '../components/GradientButton';
 
 // Sample assets for preview
 const sampleAssets = [
@@ -46,11 +49,18 @@ const sampleAssets = [
 
 export default function TemplateManagementPage() {
   const navigate = useNavigate();
+  const { addNotification } = useNotification();
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<ReportTemplate | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Mounting animation
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Load templates from service
   useEffect(() => {
@@ -90,35 +100,37 @@ export default function TemplateManagementPage() {
         loadTemplates(); // Reload templates
         
         const isEdit = templates.find(t => t.id === template.id);
-        alert(isEdit ? 'Template berhasil diperbarui!' : 'Template berhasil disimpan!');
+        addNotification('success', isEdit ? 'Template berhasil diperbarui!' : 'Template berhasil disimpan!');
       } else {
-        alert('Terjadi kesalahan saat menyimpan template');
+        addNotification('error', 'Terjadi kesalahan saat menyimpan template');
       }
     } catch (error) {
       console.error('Error saving template:', error);
-      alert('Terjadi kesalahan saat menyimpan template');
+      addNotification('error', 'Terjadi kesalahan saat menyimpan template');
     }
   };
 
   const handleDeleteTemplate = (templateId: string) => {
     if (defaultTemplates.find(t => t.id === templateId)) {
-      alert('Template default tidak dapat dihapus');
+      addNotification('error', 'Template default tidak dapat dihapus');
       return;
     }
 
-    if (confirm('Yakin ingin menghapus template ini?')) {
+    // Use a more sophisticated confirmation dialog in the future
+    const templateToDelete = templates.find(t => t.id === templateId);
+    if (window.confirm(`Yakin ingin menghapus template "${templateToDelete?.name}"? Tindakan ini tidak dapat dibatalkan.`)) {
       try {
         const success = templateService.deleteTemplate(templateId);
         
         if (success) {
           loadTemplates(); // Reload templates
-          alert('Template berhasil dihapus!');
+          addNotification('success', 'Template berhasil dihapus!');
         } else {
-          alert('Template tidak dapat dihapus');
+          addNotification('error', 'Template tidak dapat dihapus');
         }
       } catch (error) {
         console.error('Error deleting template:', error);
-        alert('Terjadi kesalahan saat menghapus template');
+        addNotification('error', 'Terjadi kesalahan saat menghapus template');
       }
     }
   };
@@ -129,41 +141,39 @@ export default function TemplateManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <button
-                onClick={() => navigate('/reports')}
-                className="mr-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Kembali ke Laporan"
-              >
-                <ArrowLeftIcon className="h-6 w-6" />
-              </button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                  <DocumentTextIcon className="h-8 w-8 mr-3 text-blue-600" />
-                  Manajemen Template Laporan
-                </h1>
-                <p className="mt-2 text-gray-600">
-                  Kelola template laporan PDF untuk berbagai kebutuhan pelaporan aset
-                </p>
-              </div>
-            </div>
+    <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+      <GlassCard className="overflow-hidden">
+        {/* Header section */}
+        <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">
+          <div className="flex items-center">
             <button
-              onClick={handleCreateTemplate}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              onClick={() => navigate('/reports')}
+              className="mr-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Kembali ke Laporan"
             >
-              <PlusIcon className="h-5 w-5" />
-              <span>Buat Template</span>
+              <ArrowLeftIcon className="h-6 w-6" />
             </button>
+            <div>
+              <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Manajemen Template Laporan</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Kelola template laporan PDF untuk berbagai kebutuhan
+              </p>
+            </div>
           </div>
+          <GradientButton 
+            variant="primary" 
+            onClick={handleCreateTemplate}
+            className="flex items-center"
+          >
+            <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
+            Buat Template
+          </GradientButton>
         </div>
 
-        {/* Template Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Content */}
+        <div className="p-6">
+          {/* Template Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates.map((template) => (
             <div
               key={template.id}
@@ -464,7 +474,8 @@ export default function TemplateManagementPage() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </GlassCard>
     </div>
   );
 }
