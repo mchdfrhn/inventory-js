@@ -43,6 +43,34 @@ const ReportsPage = () => {
     filteredCount,
   } = useAssetFilters(assets);
 
+  // Debug logging for asset filtering
+  useEffect(() => {
+    if (assets.length > 0) {
+      console.log(`[ReportsPage] 📊 Assets state: ${assets.length} total aset`);
+      console.log(`[ReportsPage] 🔍 Filtered assets: ${filteredAssets.length} aset (${hasActiveFilters() ? 'dengan filter' : 'tanpa filter'})`);
+      
+      if (hasActiveFilters()) {
+        console.log(`[ReportsPage] 🎯 Filter aktif:`, filters);
+        console.log(`[ReportsPage] 📈 Filter summary: ${getFilterSummary()}`);
+        
+        // Log filter reduction
+        const reduction = ((assets.length - filteredAssets.length) / assets.length * 100).toFixed(1);
+        console.log(`[ReportsPage] 📉 Filter mengurangi data sebesar ${reduction}% (${assets.length - filteredAssets.length} aset disaring)`);
+      }
+      
+      // Log sample filtered data
+      if (filteredAssets.length > 0) {
+        console.log(`[ReportsPage] 🔬 Sample filtered asset:`, {
+          id: filteredAssets[0]?.id,
+          nama: filteredAssets[0]?.nama,
+          kategori: filteredAssets[0]?.category?.name,
+          lokasi: filteredAssets[0]?.lokasi,
+          status: filteredAssets[0]?.status
+        });
+      }
+    }
+  }, [assets, filteredAssets, filters, hasActiveFilters, getFilterSummary]);
+
   useEffect(() => {
     setMounted(true);
     loadData();
@@ -53,186 +81,148 @@ const ReportsPage = () => {
       setLoading(true);
       setError(null);
       
-      // Enhanced mock data with complete Asset interface for demo
-      const mockAssets: Asset[] = [
-        {
-          id: 1,
-          kode: 'AST001',
-          nama: 'Laptop Dell Inspiron',
-          spesifikasi: 'Intel i5, 8GB RAM, 256GB SSD',
-          category: { name: 'Elektronik' },
-          lokasi: 'Ruang IT',
-          location_info: {
-            name: 'Lab Komputer',
-            building: 'Gedung A',
-            floor: '2',
-            room: 'A201'
-          },
-          status: 'baik',
-          harga_perolehan: 15000000,
-          nilai_sisa: 12000000,
-          akumulasi_penyusutan: 3000000,
-          tanggal_perolehan: '2023-01-15',
-          asal_pengadaan: 'Hibah',
-          umur_ekonomis_tahun: 5
-        },
-        {
-          id: 2,
-          kode: 'AST002',
-          nama: 'Meja Kantor',
-          spesifikasi: 'Kayu jati, ukuran 120x60 cm',
-          category: { name: 'Furniture' },
-          lokasi: 'Ruang Dosen',
-          location_info: {
-            name: 'Ruang Dosen',
-            building: 'Gedung B',
-            floor: '1',
-            room: 'B101'
-          },
-          status: 'baik',
-          harga_perolehan: 2500000,
-          nilai_sisa: 2000000,
-          akumulasi_penyusutan: 500000,
-          tanggal_perolehan: '2022-08-20',
-          asal_pengadaan: 'Pembelian',
-          umur_ekonomis_tahun: 10
-        },
-        {
-          id: 3,
-          kode: 'AST003',
-          nama: 'Proyektor',
-          spesifikasi: 'LED, Full HD 1080p',
-          category: { name: 'Elektronik' },
-          lokasi: 'Ruang Kelas',
-          location_info: {
-            name: 'Ruang Kelas 1',
-            building: 'Gedung A',
-            floor: '1',
-            room: 'A101'
-          },
-          status: 'rusak',
-          harga_perolehan: 8000000,
-          nilai_sisa: 4000000,
-          akumulasi_penyusutan: 4000000,
-          tanggal_perolehan: '2021-05-10',
-          asal_pengadaan: 'Hibah',
-          umur_ekonomis_tahun: 7
-        },
-        {
-          id: 4,
-          kode: 'AST004',
-          nama: 'AC Split',
-          spesifikasi: '1.5 PK, Inverter',
-          category: { name: 'Elektronik' },
-          lokasi: 'Ruang Rapat',
-          location_info: {
-            name: 'Ruang Rapat Utama',
-            building: 'Gedung C',
-            floor: '3',
-            room: 'C301'
-          },
-          status: 'baik',
-          harga_perolehan: 5500000,
-          nilai_sisa: 3500000,
-          akumulasi_penyusutan: 2000000,
-          tanggal_perolehan: '2022-12-01',
-          asal_pengadaan: 'Pembelian',
-          umur_ekonomis_tahun: 8
-        },
-        {
-          id: 5,
-          kode: 'AST005',
-          nama: 'Kursi Kantor',
-          spesifikasi: 'Ergonomis, adjustable height',
-          category: { name: 'Furniture' },
-          lokasi: 'Ruang Dosen',
-          location_info: {
-            name: 'Ruang Dosen',
-            building: 'Gedung B',
-            floor: '1',
-            room: 'B101'
-          },
-          status: 'baik',
-          harga_perolehan: 1200000,
-          nilai_sisa: 800000,
-          akumulasi_penyusutan: 400000,
-          tanggal_perolehan: '2023-03-15',
-          asal_pengadaan: 'Pembelian',
-          umur_ekonomis_tahun: 5
-        },
-        {
-          id: 6,
-          kode: 'AST006',
-          nama: 'Printer Laser',
-          spesifikasi: 'HP LaserJet, Monochrome',
-          category: { name: 'Elektronik' },
-          lokasi: 'Ruang Administrasi',
-          location_info: {
-            name: 'Ruang Tata Usaha',
-            building: 'Gedung B',
-            floor: '2',
-            room: 'B201'
-          },
-          status: 'rusak',
-          harga_perolehan: 3500000,
-          nilai_sisa: 1500000,
-          akumulasi_penyusutan: 2000000,
-          tanggal_perolehan: '2020-11-25',
-          asal_pengadaan: 'Hibah',
-          umur_ekonomis_tahun: 6
-        },
-        {
-          id: 7,
-          kode: 'AST007',
-          nama: 'Whiteboard',
-          spesifikasi: 'Magnetic, 120x200 cm',
-          category: { name: 'Furniture' },
-          lokasi: 'Ruang Kelas',
-          location_info: {
-            name: 'Ruang Kelas 2',
-            building: 'Gedung A',
-            floor: '1',
-            room: 'A102'
-          },
-          status: 'baik',
-          harga_perolehan: 800000,
-          nilai_sisa: 600000,
-          akumulasi_penyusutan: 200000,
-          tanggal_perolehan: '2023-07-10',
-          asal_pengadaan: 'Pembelian',
-          umur_ekonomis_tahun: 8
-        },
-        {
-          id: 8,
-          kode: 'AST008',
-          nama: 'Server Rack',
-          spesifikasi: '42U, dengan cooling system',
-          category: { name: 'Elektronik' },
-          lokasi: 'Ruang Server',
-          location_info: {
-            name: 'Data Center',
-            building: 'Gedung A',
-            floor: 'Basement',
-            room: 'A-B01'
-          },
-          status: 'baik',
-          harga_perolehan: 25000000,
-          nilai_sisa: 18000000,
-          akumulasi_penyusutan: 7000000,
-          tanggal_perolehan: '2022-01-30',
-          asal_pengadaan: 'Hibah',
-          umur_ekonomis_tahun: 10
-        }
+      console.log('[ReportsPage] 🔄 Memuat data aset dari backend...');
+      
+      // Try different possible backend URLs
+      const possibleUrls = [
+        'http://localhost:8080/api/v1/assets?page_size=100',  // Go backend correct endpoint with max page size
+        'http://localhost:8080/api/v1/assets',                // Go backend correct endpoint default
+        'http://localhost:8080/api/assets',                   // Alternative without v1
+        'http://localhost:3001/api/assets',                   // Alternative port
+        'http://localhost:5000/api/assets',                   // Another common port
+        '/api/v1/assets?page_size=100',                       // Same origin with v1
+        '/api/v1/assets',                                     // Same origin with v1 default
+        '/api/assets'                                         // Same origin fallback
       ];
+      
+      let apiAssets = [];
+      let lastError = null;
+      let successfulUrl = '';
+      
+      for (const url of possibleUrls) {
+        try {
+          console.log(`[ReportsPage] 🌐 Mencoba endpoint: ${url}`);
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const responseData = await response.json();
+            successfulUrl = url;
+            
+            // Handle the API response structure {status, message, data, pagination}
+            if (responseData.status === 'success' && responseData.data) {
+              apiAssets = responseData.data;
+              console.log(`[ReportsPage] ✅ Berhasil memuat ${apiAssets.length} aset dari: ${url}`);
+              console.log(`[ReportsPage] 📄 Pagination info:`, responseData.pagination);
+              
+              // If there are more pages, fetch them all
+              if (responseData.pagination && responseData.pagination.total_pages > 1) {
+                console.log(`[ReportsPage] 📚 Mengambil ${responseData.pagination.total_pages} halaman data...`);
+                
+                // Fetch remaining pages
+                for (let page = 2; page <= responseData.pagination.total_pages; page++) {
+                  try {
+                    const pageUrl = `${url}?page=${page}&page_size=${responseData.pagination.page_size}`;
+                    console.log(`[ReportsPage] 📄 Mengambil halaman ${page}: ${pageUrl}`);
+                    
+                    const pageResponse = await fetch(pageUrl, {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                      }
+                    });
+                    
+                    if (pageResponse.ok) {
+                      const pageData = await pageResponse.json();
+                      if (pageData.status === 'success' && pageData.data) {
+                        apiAssets = [...apiAssets, ...pageData.data];
+                        console.log(`[ReportsPage] ✅ Halaman ${page}: +${pageData.data.length} aset`);
+                      }
+                    }
+                  } catch (pageError) {
+                    console.log(`[ReportsPage] ⚠️ Error mengambil halaman ${page}:`, pageError);
+                  }
+                }
+                
+                console.log(`[ReportsPage] 📊 Total semua halaman: ${apiAssets.length} aset`);
+              }
+            } else {
+              console.log(`[ReportsPage] ⚠️ Response tidak valid dari ${url}:`, responseData);
+              throw new Error(`Invalid response structure from ${url}`);
+            }
+            break;
+          } else {
+            if (response.status === 404) {
+              console.log(`[ReportsPage] ❌ Endpoint tidak ditemukan: ${url} (404)`);
+            } else {
+              console.log(`[ReportsPage] ❌ Error HTTP dari ${url}: ${response.status} ${response.statusText}`);
+            }
+            lastError = new Error(`HTTP ${response.status}: ${response.statusText} dari ${url}`);
+          }
+        } catch (fetchError) {
+          console.log(`[ReportsPage] ❌ Network error dari ${url}:`, fetchError);
+          lastError = fetchError;
+        }
+      }
+      
+      if (apiAssets.length === 0) {
+        throw lastError || new Error('Semua endpoint backend tidak dapat diakses');
+      }
+      
+      console.log(`[ReportsPage] 📊 Data mentah dari backend (${apiAssets.length} items):`, apiAssets.slice(0, 2));
+      
+      // Transform API data to match our Asset interface if needed
+      const transformedAssets: Asset[] = apiAssets.map((asset: any) => ({
+        id: asset.id,
+        kode: asset.kode,
+        nama: asset.nama,
+        spesifikasi: asset.spesifikasi || '',
+        category: { 
+          name: asset.category?.name || 'Tidak Berkategori' 
+        },
+        lokasi: asset.location_info?.name || asset.lokasi || 'Tidak Diketahui',
+        location_info: {
+          name: asset.location_info?.name || asset.lokasi || '',
+          building: asset.location_info?.building || '',
+          floor: asset.location_info?.floor || '',
+          room: asset.location_info?.room || ''
+        },
+        status: asset.status || 'baik',
+        harga_perolehan: Number(asset.harga_perolehan || 0),
+        nilai_sisa: Number(asset.nilai_sisa || 0),
+        akumulasi_penyusutan: Number(asset.akumulasi_penyusutan || 0),
+        tanggal_perolehan: asset.tanggal_perolehan || '',
+        asal_pengadaan: asset.asal_pengadaan || 'Tidak Diketahui',
+        umur_ekonomis_tahun: Number(asset.umur_ekonomis_tahun || 0),
+        
+        // Additional fields from API
+        quantity: asset.quantity || 1,
+        satuan: asset.satuan || 'unit',
+        keterangan: asset.keterangan || ''
+      }));
+      
+      console.log(`[ReportsPage] 🔄 Data setelah transform (${transformedAssets.length} aset):`, transformedAssets.slice(0, 2));
+      console.log(`[ReportsPage] 📈 Data source: ${successfulUrl}`);
       
       const templatesData = [...defaultTemplates, ...templateService.getCustomTemplates()];
       
-      setAssets(mockAssets);
+      setAssets(transformedAssets);
       setTemplates(templatesData);
+      
+      console.log(`[ReportsPage] ✅ State berhasil diupdate: ${transformedAssets.length} aset, ${templatesData.length} template`);
+      // Removed success notification to reduce noise for users
+      
     } catch (error) {
-      console.error('Error loading data:', error);
-      setError('Gagal memuat data');
-      addNotification('error', 'Gagal memuat data laporan');
+      console.error('[ReportsPage] ❌ Error loading real data:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      setError(`Backend server tidak dapat diakses: ${errorMsg}`);
+      addNotification('error', 'Gagal mengakses backend server. Pastikan backend berjalan dengan benar.');
     } finally {
       setLoading(false);
     }
@@ -276,34 +266,44 @@ const ReportsPage = () => {
     return { totalValue, currentValue, totalDepreciation, statusCounts };
   };
 
-  const stats = calculateStats();
+  const stats = calculateStats(filteredAssets);
   const availableTemplates = templates;
 
   const generatePDF = async (template: ReportTemplate) => {
     try {
       setIsGenerating(true);
+      console.log(`[ReportsPage] 📄 Memulai pembuatan laporan PDF: "${template.name}"`);
       addNotification('info', 'Sedang menyiapkan laporan PDF...');
       
-      // Use filtered assets for PDF generation
-      const assetsToExport = filteredAssets.length > 0 ? filteredAssets : assets;
+      // Always use filtered assets (when no filters are active, filteredAssets equals assets)
+      const assetsToExport = filteredAssets;
+      
+      console.log(`[ReportsPage] 🔢 Data untuk export: ${assetsToExport.length} aset`);
+      console.log(`[ReportsPage] 🎯 Filter status: ${hasActiveFilters() ? 'AKTIF' : 'TIDAK AKTIF'}`);
       
       if (assetsToExport.length === 0) {
+        console.log(`[ReportsPage] ⚠️ Tidak ada data untuk dicetak`);
         addNotification('warning', 'Tidak ada data yang sesuai dengan filter untuk dicetak');
         return;
       }
       
       // Calculate stats based on filtered data
       const filteredStats = calculateStats(assetsToExport);
+      console.log(`[ReportsPage] 📊 Statistik untuk laporan:`, filteredStats);
       
       // Create HTML content for the report
       const reportContent = generateReportHTML(template, assetsToExport, filteredStats);
+      console.log(`[ReportsPage] 📝 HTML report content generated (${reportContent.length} characters)`);
       
       // Create a new window for printing
       const printWindow = window.open('', '_blank', 'width=800,height=600');
       if (!printWindow) {
+        console.log(`[ReportsPage] ❌ Popup diblokir oleh browser`);
         addNotification('error', 'Popup diblokir. Harap izinkan popup untuk mencetak laporan.');
         return;
       }
+      
+      console.log(`[ReportsPage] 🖨️ Print window berhasil dibuka`);
       
       // Write content to the new window
       printWindow.document.write(reportContent);
@@ -313,13 +313,16 @@ const ReportsPage = () => {
       printWindow.onload = () => {
         setTimeout(() => {
           printWindow.print();
-          const filterInfo = hasActiveFilters() ? ` (${filteredCount} dari ${totalAssets} aset)` : '';
-          addNotification('success', `Laporan "${template.name}" berhasil dibuat!${filterInfo}`);
+          const filterInfo = hasActiveFilters() 
+            ? ` dengan filter aktif (${filteredCount} dari ${totalAssets} aset)` 
+            : ` (${totalAssets} aset)`;
+          console.log(`[ReportsPage] ✅ Print dialog triggered. Filter info: ${filterInfo}`);
+          addNotification('success', `Laporan "${template.name}" berhasil dibuat${filterInfo}`);
         }, 500);
       };
       
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('[ReportsPage] ❌ Error generating PDF:', error);
       addNotification('error', 'Gagal membuat laporan PDF');
     } finally {
       setIsGenerating(false);
@@ -367,6 +370,17 @@ const ReportsPage = () => {
         maximumFractionDigits: 0,
       }).format(value);
     };
+
+    // Generate filter information for the report
+    const filterInfo = hasActiveFilters() ? getFilterSummary() : [];
+    const filterSection = filterInfo.length > 0 ? `
+      <div class="filter-info">
+        <h3>Filter yang Diterapkan:</h3>
+        <ul>
+          ${filterInfo.map(filter => `<li>${filter}</li>`).join('')}
+        </ul>
+      </div>
+    ` : '';
 
     // Generate table headers based on template columns
     const tableHeaders = template.columns.map(col => {
@@ -474,6 +488,27 @@ const ReportsPage = () => {
             font-size: 12px;
             color: #666;
           }
+          .filter-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+          }
+          .filter-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #495057;
+          }
+          .filter-info ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 12px;
+            color: #6c757d;
+          }
+          .filter-info li {
+            margin-bottom: 4px;
+          }
         </style>
       </head>
       <body>
@@ -482,6 +517,8 @@ const ReportsPage = () => {
           <p>Sistem Inventaris Aset</p>
           <p>Tanggal: ${formatDate(now)}</p>
         </div>
+
+        ${filterSection}
 
         <div class="summary">
           <div class="summary-item">
@@ -533,14 +570,30 @@ const ReportsPage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <GlassCard className="max-w-md w-full text-center">
+        <GlassCard className="max-w-lg w-full text-center">
           <div className="p-8">
             <ExclamationCircleIcon className="mx-auto h-12 w-12 text-red-500 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Terjadi Kesalahan</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Backend Server Tidak Dapat Diakses</h3>
             <p className="text-sm text-gray-500 mb-4">{error}</p>
-            <GradientButton variant="primary" onClick={loadData}>
-              Coba Lagi
-            </GradientButton>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-left">
+              <h4 className="text-sm font-medium text-yellow-800 mb-2">💡 Panduan Troubleshooting:</h4>
+              <ul className="text-xs text-yellow-700 space-y-1">
+                <li>• Pastikan backend Go server berjalan di port 8080</li>
+                <li>• Cek apakah endpoint `/api/assets` tersedia</li>
+                <li>• Verifikasi database connection</li>
+                <li>• Pastikan CORS sudah dikonfigurasi dengan benar</li>
+              </ul>
+            </div>
+            
+            <div className="flex flex-col space-y-2">
+              <GradientButton variant="primary" onClick={loadData}>
+                Coba Lagi
+              </GradientButton>
+              <p className="text-xs text-gray-400">
+                Sistem akan mencoba beberapa port: 8080, 3001, 5000
+              </p>
+            </div>
           </div>
         </GlassCard>
       </div>
@@ -558,12 +611,25 @@ const ReportsPage = () => {
                 Laporan Aset
               </h2>
               <p className="mt-1 text-sm text-gray-500">
-                Generate laporan PDF dengan template yang dapat disesuaikan
+                Generate laporan PDF dengan data asli dari database
               </p>
+              <div className="mt-2 flex items-center text-xs">
+                <div className="flex items-center text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <span>Data Real Database</span>
+                </div>
+              </div>
             </div>
             <div className="text-right">
-              <div className="text-sm text-gray-500">Total Aset</div>
-              <div className="text-2xl font-bold text-gray-900">{assets.length}</div>
+              <div className="text-sm text-gray-500">
+                {hasActiveFilters() ? 'Aset Terfilter' : 'Total Aset'}
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {hasActiveFilters() ? `${filteredCount} dari ${totalAssets}` : totalAssets}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Data dari server
+              </div>
             </div>
           </div>
         </div>
