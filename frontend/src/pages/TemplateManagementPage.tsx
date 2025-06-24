@@ -167,15 +167,15 @@ export default function TemplateManagementPage() {
           {templates.map((template) => (
             <div
               key={template.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border"
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border flex flex-col h-full min-h-[200px]"
             >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
+              <div className="p-6 flex flex-col h-full">
+                <div className="flex items-start justify-between mb-4 flex-grow">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {template.name}
                     </h3>
-                    <p className="text-sm text-gray-600 mb-3">
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
                       {template.description}
                     </p>
                   </div>
@@ -203,7 +203,7 @@ export default function TemplateManagementPage() {
                   )}
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 mt-auto">
                   <button
                     onClick={() => {
                       setSelectedTemplate(template);

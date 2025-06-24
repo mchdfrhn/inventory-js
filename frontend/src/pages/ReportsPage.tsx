@@ -535,7 +535,7 @@ const ReportsPage: React.FC = () => {
                   {availableTemplates.map((template) => (
                     <div
                       key={template.id}
-                      className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                      className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 flex flex-col h-full min-h-[160px] ${
                         selectedTemplate?.id === template.id
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300 bg-white'
@@ -550,12 +550,12 @@ const ReportsPage: React.FC = () => {
                         </div>
                       )}
                       
-                      <div className="mb-3">
+                      <div className="mb-3 flex-grow">
                         <h3 className="font-medium text-gray-900">{template.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{template.description}</p>
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{template.description}</p>
                       </div>
 
-                      <div className="flex flex-wrap gap-2 text-xs">
+                      <div className="flex flex-wrap gap-2 text-xs mb-3">
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded">
                           {template.orientation === 'portrait' ? '📄 Portrait' : '📑 Landscape'}
                         </span>
@@ -569,7 +569,7 @@ const ReportsPage: React.FC = () => {
                         )}
                       </div>
 
-                      <div className="mt-3 flex justify-end">
+                      <div className="flex justify-end mt-auto">
                         {!template.isDefault && (
                           <button
                             onClick={(e) => {
