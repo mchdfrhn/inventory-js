@@ -344,15 +344,71 @@ export default function TemplateManagementPage() {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Warna Header
                           </label>
-                          <input
-                            type="color"
-                            value={editingTemplate.headerColor}
-                            onChange={(e) => setEditingTemplate(prev => prev ? { 
-                              ...prev, 
-                              headerColor: e.target.value 
-                            } : null)}
-                            className="w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
+                          
+                          {/* Preset Color Palette */}
+                          <div className="mb-3">
+                            <p className="text-xs text-gray-500 mb-2">Warna yang direkomendasikan:</p>
+                            <div className="grid grid-cols-4 gap-2">
+                              {[
+                                { name: 'Biru Utama', value: '#2563eb' },
+                                { name: 'Biru Gelap', value: '#1e40af' },
+                                { name: 'Indigo', value: '#4f46e5' },
+                                { name: 'Hijau', value: '#059669' },
+                                { name: 'Emerald', value: '#10b981' },
+                                { name: 'Teal', value: '#0d9488' },
+                                { name: 'Abu-abu', value: '#374151' },
+                                { name: 'Slate', value: '#475569' }
+                              ].map((color) => (
+                                <button
+                                  key={color.value}
+                                  type="button"
+                                  onClick={() => setEditingTemplate(prev => prev ? { 
+                                    ...prev, 
+                                    headerColor: color.value 
+                                  } : null)}
+                                  className={`w-full h-8 rounded border-2 transition-all duration-200 hover:scale-105 ${
+                                    editingTemplate.headerColor === color.value 
+                                      ? 'border-gray-800 shadow-md' 
+                                      : 'border-gray-300 hover:border-gray-400'
+                                  }`}
+                                  style={{ backgroundColor: color.value }}
+                                  title={color.name}
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Custom Color Input */}
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">
+                              Atau masukkan kode warna hex:
+                            </label>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="text"
+                                value={editingTemplate.headerColor}
+                                onChange={(e) => {
+                                  let value = e.target.value;
+                                  // Auto-add # if not present
+                                  if (value && !value.startsWith('#')) {
+                                    value = '#' + value;
+                                  }
+                                  setEditingTemplate(prev => prev ? { 
+                                    ...prev, 
+                                    headerColor: value 
+                                  } : null);
+                                }}
+                                placeholder="#2563eb"
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                                maxLength={7}
+                              />
+                              <div 
+                                className="w-10 h-10 rounded border border-gray-300 flex-shrink-0"
+                                style={{ backgroundColor: editingTemplate.headerColor }}
+                                title="Preview warna"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
 
