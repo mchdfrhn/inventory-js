@@ -11,6 +11,8 @@ import CategoryForm from './pages/CategoryForm'
 import LocationsPage from './pages/LocationsPage'
 import LocationForm from './pages/LocationForm'
 import AuditLogPage from './pages/AuditLogPage'
+import TemplateManagementPage from './pages/TemplateManagementPage'
+import ReportsPage from './pages/ReportsPage'
 import { NotificationProvider } from './context/NotificationContext'
 import ToastContainer from './components/ToastContainer'
 import './App.css'
@@ -49,6 +51,12 @@ function App() {
 
               {/* Audit Log route */}
               <Route path="audit-logs" element={<AuditLogPage />} />
+
+              {/* Reports route */}
+              <Route path="reports" element={<ReportsPage />} />
+
+              {/* Template Management route */}
+              <Route path="template-management" element={<TemplateManagementPage />} />
 
               {/* Debug route */}
               <Route path="debug" element={<DebugPage />} />

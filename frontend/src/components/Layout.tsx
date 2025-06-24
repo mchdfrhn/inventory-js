@@ -12,17 +12,22 @@ import {
   SunIcon,
   MoonIcon,
   MapPinIcon,
-  ClockIcon
+  ClockIcon,
+  DocumentTextIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import BackToTopButton from './BackToTopButton'
 
 // Enhanced navigation items with subtle animations
-const navigation = [  { name: 'Dashboard', href: '/', icon: HomeIcon },
+const navigation = [  
+  { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Aset', href: '/assets', icon: CubeIcon },
   { name: 'Kategori', href: '/categories', icon: TagIcon },
   { name: 'Lokasi', href: '/locations', icon: MapPinIcon },
+  { name: 'Laporan', href: '/reports', icon: ChartBarIcon },
+  { name: 'Template Laporan', href: '/template-management', icon: DocumentTextIcon },
   { name: 'Riwayat Aktivitas', href: '/audit-logs', icon: ClockIcon },
   { name: 'Analitik', href: '#', icon: ArrowTrendingUpIcon, soon: true },
 ]
@@ -81,6 +86,20 @@ export default function Layout() {
       if (path.includes('/new')) return 'Tambah Kategori Baru';
       if (path.includes('/edit')) return 'Ubah Kategori';
       return 'Kategori';
+    }
+    if (path.startsWith('/reports')) {
+      return 'Laporan Aset';
+    }
+    if (path.startsWith('/template-management')) {
+      return 'Kelola Template Laporan';
+    }
+    if (path.startsWith('/locations')) {
+      if (path.includes('/new')) return 'Tambah Lokasi Baru';
+      if (path.includes('/edit')) return 'Ubah Lokasi';
+      return 'Lokasi';
+    }
+    if (path.startsWith('/audit-logs')) {
+      return 'Riwayat Aktivitas';
     }
     return 'Sistem Inventaris';
   };

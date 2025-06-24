@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPinIcon, QrCodeIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, PrinterIcon } from '@heroicons/react/24/outline';
 
 interface LocationQRCodeProps {
   locationName: string;

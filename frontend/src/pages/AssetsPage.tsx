@@ -17,7 +17,9 @@ import {
   TagIcon,
   MapPinIcon,
   DocumentArrowUpIcon,
-  DocumentArrowDownIcon
+  DocumentArrowDownIcon,
+  DocumentTextIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { Dialog, Transition } from '@headlessui/react';
 import GlassCard from '../components/GlassCard';
@@ -762,12 +764,31 @@ export default function AssetsPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </div>          {/* Filter toggles and export */}
-          <div className="flex items-center gap-3 flex-wrap">
+          </div>          {/* Filter toggles and export */}          <div className="flex items-center gap-3 flex-wrap">
             <ViewToggle currentView={viewType} onToggle={setViewType} />
             <div className="hidden sm:block h-6 w-px bg-gray-300"></div>
             <ExportButton assets={filteredAndSortedAssets || []} filename="daftar_aset_sttpu" />
-            <div className="hidden sm:block h-6 w-px bg-gray-300"></div>            <button
+            {/* Replace PDF Report Generator with navigation to Reports page */}
+            <button
+              onClick={() => window.location.href = '/reports'}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border shadow-sm text-sm font-medium bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:-translate-y-0.5 transition-all duration-300"
+            >
+              <ChartBarIcon className="h-4 w-4" />
+              <span>Laporan PDF</span>
+              {(filteredAndSortedAssets?.length || 0) > 0 && (
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs font-medium text-red-800">
+                  {filteredAndSortedAssets?.length || 0}
+                </span>
+              )}
+            </button>
+            <Link 
+              to="/template-management"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm font-medium bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:-translate-y-0.5 transition-all duration-300"
+            >
+              <DocumentTextIcon className="h-4 w-4" />
+              <span>Kelola Template</span>
+            </Link>
+            <div className="hidden sm:block h-6 w-px bg-gray-300"></div><button
               type="button"
               onClick={() => setFilterPanelOpen(true)}              className={`
                 flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm
