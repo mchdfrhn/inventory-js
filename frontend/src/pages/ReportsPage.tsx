@@ -1,96 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { DocumentTextIcon, ChartBarIcon, EyeIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { assetApi } from '../services/api';
 import type { Asset } from '../services/api';
+import { templateService, columnOptions, defaultTemplates, type ReportTemplate } from '../services/templateService';
 import jsPDF from 'jspdf';
 // Import autoTable as a function
 import autoTable from 'jspdf-autotable';
 
-interface ReportTemplate {
-  id: string;
-  name: string;
-  description: string;
-  orientation: 'portrait' | 'landscape';
-  fontSize: number;
-  headerColor: string;
-  columns: string[];
-  includeHeader: boolean;
-  includeFooter: boolean;
-  includeStats: boolean;
-  includeChart: boolean;
-  includeQRCode: boolean;
-  includeFilters: boolean;
-  isDefault?: boolean;
-}
-
-// Default templates
-const defaultTemplates: ReportTemplate[] = [
-  {
-    id: 'comprehensive',
-    name: 'Laporan Lengkap',
-    description: 'Laporan lengkap dengan semua informasi aset',
-    orientation: 'landscape',
-    fontSize: 10,
-    headerColor: '#1e40af',
-    columns: ['kode', 'nama', 'kategori', 'lokasi', 'status', 'harga_perolehan', 'nilai_sisa'],
-    includeHeader: true,
-    includeFooter: true,
-    includeStats: true,
-    includeChart: false,
-    includeQRCode: true,
-    includeFilters: true,
-    isDefault: true
-  },
-  {
-    id: 'simple',
-    name: 'Laporan Sederhana',
-    description: 'Laporan sederhana untuk ringkasan aset',
-    orientation: 'portrait',
-    fontSize: 11,
-    headerColor: '#059669',
-    columns: ['kode', 'nama', 'kategori', 'status'],
-    includeHeader: true,
-    includeFooter: false,
-    includeStats: false,
-    includeChart: false,
-    includeQRCode: false,
-    includeFilters: false
-  },
-  {
-    id: 'financial',
-    name: 'Laporan Keuangan',
-    description: 'Laporan fokus pada nilai aset',
-    orientation: 'portrait',
-    fontSize: 10,
-    headerColor: '#dc2626',
-    columns: ['kode', 'nama', 'harga_perolehan', 'akumulasi_penyusutan', 'nilai_sisa'],
-    includeHeader: true,
-    includeFooter: true,
-    includeStats: true,
-    includeChart: false,
-    includeQRCode: false,
-    includeFilters: true
-  }
-];
-
-const columnOptions = [
-  { id: 'kode', label: 'Kode Aset' },
-  { id: 'nama', label: 'Nama Aset' },
-  { id: 'spesifikasi', label: 'Spesifikasi' },
-  { id: 'kategori', label: 'Kategori' },
-  { id: 'quantity', label: 'Jumlah' },
-  { id: 'lokasi', label: 'Lokasi' },
-  { id: 'status', label: 'Status' },
-  { id: 'harga_perolehan', label: 'Harga Perolehan' },
-  { id: 'nilai_sisa', label: 'Nilai Sisa' },
-  { id: 'akumulasi_penyusutan', label: 'Akumulasi Penyusutan' },
-  { id: 'umur_ekonomis', label: 'Umur Ekonomis' },
-  { id: 'tanggal_perolehan', label: 'Tanggal Perolehan' },
-  { id: 'asal_pengadaan', label: 'Asal Pengadaan' }
-];
-
 const ReportsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
   const [availableTemplates, setAvailableTemplates] = useState<ReportTemplate[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -129,32 +49,28 @@ const ReportsPage: React.FC = () => {
 
   useEffect(() => {
     loadTemplates();
+    
+    // Subscribe to template changes
+    const unsubscribe = templateService.subscribe(loadTemplates);
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const loadTemplates = () => {
-    const savedTemplates = localStorage.getItem('pdf_report_templates');
-    let customTemplates: ReportTemplate[] = [];
-    
-    if (savedTemplates) {
-      try {
-        customTemplates = JSON.parse(savedTemplates);
-      } catch (error) {
-        console.error('Error loading templates:', error);
-      }
+    try {
+      const allTemplates = templateService.getAllTemplates();
+      setAvailableTemplates(allTemplates);
+
+      // Set selected template to default
+      const selected = templateService.getDefaultTemplate() || allTemplates[0];
+      setSelectedTemplate(selected);
+    } catch (error) {
+      console.error('Error loading templates:', error);
+      setAvailableTemplates(defaultTemplates);
+      setSelectedTemplate(defaultTemplates[0]);
     }
-
-    const allTemplates = [...defaultTemplates, ...customTemplates];
-    setAvailableTemplates(allTemplates);
-
-    // Set default template
-    const defaultTemplate = allTemplates.find(t => t.isDefault) || allTemplates[0];
-    setSelectedTemplate(defaultTemplate);
-  };
-
-  const saveTemplates = (templates: ReportTemplate[]) => {
-    const customTemplates = templates.filter(t => !defaultTemplates.find(dt => dt.id === t.id));
-    localStorage.setItem('pdf_report_templates', JSON.stringify(customTemplates));
-    loadTemplates();
   };
 
   const formatCurrency = (value: number): string => {
@@ -245,6 +161,11 @@ const ReportsPage: React.FC = () => {
     
     if (!assets || assets.length === 0) {
       alert('Tidak ada data aset untuk dicetak');
+      return;
+    }
+
+    if (!template.columns || template.columns.length === 0) {
+      alert('Template tidak memiliki kolom yang dipilih');
       return;
     }
     
@@ -483,22 +404,22 @@ const ReportsPage: React.FC = () => {
   };
 
   const setAsDefault = (templateId: string) => {
-    const updatedTemplates = availableTemplates.map(t => ({
-      ...t,
-      isDefault: t.id === templateId
-    }));
-    
-    // Update default templates in memory
-    defaultTemplates.forEach(dt => {
-      dt.isDefault = dt.id === templateId;
-    });
-    
-    setAvailableTemplates(updatedTemplates);
-    saveTemplates(updatedTemplates);
-    
-    const newDefault = updatedTemplates.find(t => t.id === templateId);
-    if (newDefault) {
-      setSelectedTemplate(newDefault);
+    try {
+      const success = templateService.setDefaultTemplate(templateId);
+      
+      if (success) {
+        loadTemplates(); // Reload templates to update isDefault flags
+        
+        const newDefault = availableTemplates.find(t => t.id === templateId);
+        if (newDefault) {
+          setSelectedTemplate(newDefault);
+        }
+      } else {
+        alert('Terjadi kesalahan saat menetapkan template default');
+      }
+    } catch (error) {
+      console.error('Error setting default template:', error);
+      alert('Terjadi kesalahan saat menetapkan template default');
     }
   };
 
@@ -600,11 +521,11 @@ const ReportsPage: React.FC = () => {
                     Template Laporan
                   </h2>
                   <button
-                    onClick={() => window.location.href = '/template-management'}
+                    onClick={() => navigate('/template-management')}
                     className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                   >
                     <PlusIcon className="h-4 w-4" />
-                    Template Baru
+                    Kelola Template
                   </button>
                 </div>
               </div>
@@ -743,11 +664,23 @@ const ReportsPage: React.FC = () => {
 
                   <button
                     onClick={() => generatePDF(selectedTemplate)}
-                    disabled={isGenerating}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-medium"
+                    disabled={isGenerating || !selectedTemplate}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   >
-                    <DocumentTextIcon className="h-5 w-5" />
-                    {isGenerating ? 'Menyiapkan...' : 'Cetak Laporan'}
+                    {isGenerating ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Menyiapkan PDF...
+                      </>
+                    ) : (
+                      <>
+                        <DocumentTextIcon className="h-5 w-5" />
+                        Cetak Laporan PDF
+                      </>
+                    )}
                   </button>
 
                   {/* Additional Template Info */}

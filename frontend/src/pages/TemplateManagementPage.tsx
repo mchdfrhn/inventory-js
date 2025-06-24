@@ -1,101 +1,8 @@
 import { useState, useEffect } from 'react';
-import { DocumentTextIcon, Cog6ToothIcon, PlusIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, Cog6ToothIcon, PlusIcon, TrashIcon, EyeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
 import ReportPreview from '../components/ReportPreview';
-
-interface ReportTemplate {
-  id: string;
-  name: string;
-  description: string;
-  includeHeader: boolean;
-  includeFooter: boolean;
-  includeStats: boolean;
-  includeChart: boolean;
-  columns: string[];
-  headerColor: string;
-  orientation: 'portrait' | 'landscape';
-  fontSize: number;
-  includeQRCode: boolean;
-  includeFilters: boolean;
-}
-
-const defaultTemplates: ReportTemplate[] = [
-  {
-    id: 'standard',
-    name: 'Laporan Standar',
-    description: 'Laporan lengkap dengan semua informasi aset',
-    includeHeader: true,
-    includeFooter: true,
-    includeStats: true,
-    includeChart: false,
-    columns: ['kode', 'nama', 'kategori', 'lokasi', 'status', 'harga_perolehan', 'nilai_sisa'],
-    headerColor: '#2563eb',
-    orientation: 'landscape',
-    fontSize: 10,
-    includeQRCode: false,
-    includeFilters: true
-  },
-  {
-    id: 'financial',
-    name: 'Laporan Keuangan',
-    description: 'Fokus pada aspek keuangan dan penyusutan aset',
-    includeHeader: true,
-    includeFooter: true,
-    includeStats: true,
-    includeChart: true,
-    columns: ['kode', 'nama', 'harga_perolehan', 'akumulasi_penyusutan', 'nilai_sisa', 'umur_ekonomis'],
-    headerColor: '#059669',
-    orientation: 'landscape',
-    fontSize: 10,
-    includeQRCode: false,
-    includeFilters: true
-  },
-  {
-    id: 'inventory',
-    name: 'Laporan Inventaris',
-    description: 'Laporan sederhana untuk inventarisasi',
-    includeHeader: true,
-    includeFooter: false,
-    includeStats: false,
-    includeChart: false,
-    columns: ['kode', 'nama', 'spesifikasi', 'quantity', 'lokasi', 'status'],
-    headerColor: '#7c3aed',
-    orientation: 'portrait',
-    fontSize: 11,
-    includeQRCode: true,
-    includeFilters: false
-  },
-  {
-    id: 'executive',
-    name: 'Laporan Eksekutif',
-    description: 'Ringkasan untuk pimpinan dengan visualisasi',
-    includeHeader: true,
-    includeFooter: true,
-    includeStats: true,
-    includeChart: true,
-    columns: ['nama', 'kategori', 'nilai_sisa', 'status'],
-    headerColor: '#dc2626',
-    orientation: 'portrait',
-    fontSize: 12,
-    includeQRCode: false,
-    includeFilters: true
-  }
-];
-
-const columnOptions = [
-  { id: 'kode', label: 'Kode Aset' },
-  { id: 'nama', label: 'Nama Aset' },
-  { id: 'spesifikasi', label: 'Spesifikasi' },
-  { id: 'kategori', label: 'Kategori' },
-  { id: 'quantity', label: 'Jumlah' },
-  { id: 'lokasi', label: 'Lokasi' },
-  { id: 'status', label: 'Status' },
-  { id: 'harga_perolehan', label: 'Harga Perolehan' },
-  { id: 'nilai_sisa', label: 'Nilai Sisa' },
-  { id: 'akumulasi_penyusutan', label: 'Akumulasi Penyusutan' },
-  { id: 'umur_ekonomis', label: 'Umur Ekonomis' },
-  { id: 'tanggal_perolehan', label: 'Tanggal Perolehan' },
-  { id: 'asal_pengadaan', label: 'Asal Pengadaan' }
-];
+import { templateService, columnOptions, defaultTemplates, type ReportTemplate } from '../services/templateService';
 
 // Sample assets for preview
 const sampleAssets = [
@@ -138,67 +45,59 @@ const sampleAssets = [
 ];
 
 export default function TemplateManagementPage() {
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<ReportTemplate | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Load templates from localStorage
+  // Load templates from service
   useEffect(() => {
-    const savedTemplates = localStorage.getItem('pdfTemplates');
-    if (savedTemplates) {
-      const customTemplates = JSON.parse(savedTemplates);
-      setTemplates([...defaultTemplates, ...customTemplates]);
-    } else {
-      setTemplates(defaultTemplates);
-    }
+    loadTemplates();
+    
+    // Subscribe to template changes
+    const unsubscribe = templateService.subscribe(loadTemplates);
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
-  // Save custom templates to localStorage
-  const saveCustomTemplates = (customTemplates: ReportTemplate[]) => {
-    localStorage.setItem('pdfTemplates', JSON.stringify(customTemplates));
+  const loadTemplates = () => {
+    try {
+      const allTemplates = templateService.getAllTemplates();
+      setTemplates(allTemplates);
+    } catch (error) {
+      console.error('Error loading templates:', error);
+      setTemplates(defaultTemplates);
+    }
   };
 
   const handleCreateTemplate = () => {
-    const newTemplate: ReportTemplate = {
-      id: `custom_${Date.now()}`,
-      name: 'Template Baru',
-      description: 'Deskripsi template',
-      includeHeader: true,
-      includeFooter: true,
-      includeStats: true,
-      includeChart: false,
-      columns: ['kode', 'nama', 'kategori', 'status'],
-      headerColor: '#2563eb',
-      orientation: 'portrait',
-      fontSize: 12,
-      includeQRCode: false,
-      includeFilters: true
-    };
+    const newTemplate = templateService.createNewTemplate();
     setEditingTemplate(newTemplate);
     setShowCreateModal(true);
   };
 
   const handleSaveTemplate = (template: ReportTemplate) => {
-    const isCustomTemplate = !defaultTemplates.find(t => t.id === template.id);
-    
-    if (isCustomTemplate) {
-      const customTemplates = templates.filter(t => !defaultTemplates.find(dt => dt.id === t.id));
-      const existingIndex = customTemplates.findIndex(t => t.id === template.id);
+    try {
+      const success = templateService.saveTemplate(template);
       
-      if (existingIndex >= 0) {
-        customTemplates[existingIndex] = template;
+      if (success) {
+        setShowCreateModal(false);
+        setEditingTemplate(null);
+        loadTemplates(); // Reload templates
+        
+        const isEdit = templates.find(t => t.id === template.id);
+        alert(isEdit ? 'Template berhasil diperbarui!' : 'Template berhasil disimpan!');
       } else {
-        customTemplates.push(template);
+        alert('Terjadi kesalahan saat menyimpan template');
       }
-      
-      saveCustomTemplates(customTemplates);
-      setTemplates([...defaultTemplates, ...customTemplates]);
+    } catch (error) {
+      console.error('Error saving template:', error);
+      alert('Terjadi kesalahan saat menyimpan template');
     }
-    
-    setShowCreateModal(false);
-    setEditingTemplate(null);
   };
 
   const handleDeleteTemplate = (templateId: string) => {
@@ -208,9 +107,19 @@ export default function TemplateManagementPage() {
     }
 
     if (confirm('Yakin ingin menghapus template ini?')) {
-      const customTemplates = templates.filter(t => !defaultTemplates.find(dt => dt.id === t.id) && t.id !== templateId);
-      saveCustomTemplates(customTemplates);
-      setTemplates([...defaultTemplates, ...customTemplates]);
+      try {
+        const success = templateService.deleteTemplate(templateId);
+        
+        if (success) {
+          loadTemplates(); // Reload templates
+          alert('Template berhasil dihapus!');
+        } else {
+          alert('Template tidak dapat dihapus');
+        }
+      } catch (error) {
+        console.error('Error deleting template:', error);
+        alert('Terjadi kesalahan saat menghapus template');
+      }
     }
   };
 
@@ -219,25 +128,29 @@ export default function TemplateManagementPage() {
     setShowCreateModal(true);
   };
 
-  const handleSetDefaultTemplate = (template: ReportTemplate) => {
-    localStorage.setItem('defaultPdfTemplate', JSON.stringify(template));
-    alert(`Template "${template.name}" telah ditetapkan sebagai default`);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <DocumentTextIcon className="h-8 w-8 mr-3 text-blue-600" />
-                Manajemen Template Laporan
-              </h1>
-              <p className="mt-2 text-gray-600">
-                Kelola template laporan PDF untuk berbagai kebutuhan pelaporan aset
-              </p>
+            <div className="flex items-center">
+              <button
+                onClick={() => navigate('/reports')}
+                className="mr-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Kembali ke Laporan"
+              >
+                <ArrowLeftIcon className="h-6 w-6" />
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                  <DocumentTextIcon className="h-8 w-8 mr-3 text-blue-600" />
+                  Manajemen Template Laporan
+                </h1>
+                <p className="mt-2 text-gray-600">
+                  Kelola template laporan PDF untuk berbagai kebutuhan pelaporan aset
+                </p>
+              </div>
             </div>
             <button
               onClick={handleCreateTemplate}
@@ -290,41 +203,34 @@ export default function TemplateManagementPage() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        setSelectedTemplate(template);
-                        setShowPreview(true);
-                      }}
-                      className="text-gray-500 hover:text-blue-600 transition-colors"
-                      title="Preview"
-                    >
-                      <EyeIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleEditTemplate(template)}
-                      className="text-gray-500 hover:text-green-600 transition-colors"
-                      title="Edit"
-                    >
-                      <Cog6ToothIcon className="h-5 w-5" />
-                    </button>
-                    {!defaultTemplates.find(t => t.id === template.id) && (
-                      <button
-                        onClick={() => handleDeleteTemplate(template.id)}
-                        className="text-gray-500 hover:text-red-600 transition-colors"
-                        title="Hapus"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                    )}
-                  </div>
+                <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => handleSetDefaultTemplate(template)}
-                    className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition-colors"
+                    onClick={() => {
+                      setSelectedTemplate(template);
+                      setShowPreview(true);
+                    }}
+                    className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm font-medium"
                   >
-                    Set Default
+                    <EyeIcon className="h-4 w-4" />
+                    <span>Preview</span>
                   </button>
+                  <button
+                    onClick={() => handleEditTemplate(template)}
+                    className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm font-medium"
+                  >
+                    <Cog6ToothIcon className="h-4 w-4" />
+                    <span>Edit</span>
+                  </button>
+                  {!defaultTemplates.find(t => t.id === template.id) && (
+                    <button
+                      onClick={() => handleDeleteTemplate(template.id)}
+                      className="bg-red-50 hover:bg-red-100 text-red-700 px-3 py-2 rounded-lg transition-colors flex items-center justify-center space-x-1 text-sm font-medium"
+                      title="Hapus Template"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                      <span>Hapus</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -515,10 +421,13 @@ export default function TemplateManagementPage() {
                     </button>
                     <button
                       onClick={() => handleSaveTemplate(editingTemplate)}
-                      disabled={!editingTemplate.name || editingTemplate.columns.length === 0}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      disabled={!editingTemplate.name.trim() || editingTemplate.columns.length === 0}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                     >
-                      Simpan Template
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {editingTemplate.id.startsWith('custom_') && !templates.find(t => t.id === editingTemplate.id) ? 'Simpan Template' : 'Perbarui Template'}
                     </button>
                   </div>
                 </div>
@@ -529,30 +438,28 @@ export default function TemplateManagementPage() {
 
         {/* Preview Modal */}
         {showPreview && selectedTemplate && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
-            <div className="flex min-h-screen items-center justify-center p-4">
-              <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-white">
-                      Preview: {selectedTemplate.name}
-                    </h2>
-                    <button
-                      onClick={() => setShowPreview(false)}
-                      className="text-white hover:text-gray-200 transition-colors"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[95vh] flex flex-col">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-white">
+                    Preview: {selectedTemplate.name}
+                  </h2>
+                  <button
+                    onClick={() => setShowPreview(false)}
+                    className="text-white hover:text-gray-200 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <div className="p-6">
-                  <ReportPreview 
-                    assets={sampleAssets as any} 
-                    template={selectedTemplate}
-                  />
-                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                <ReportPreview 
+                  assets={sampleAssets as any} 
+                  template={selectedTemplate}
+                />
               </div>
             </div>
           </div>
