@@ -139,13 +139,40 @@ class TemplateService {
       const customTemplates = this.getCustomTemplates();
       const defaultTemplateId = this.getDefaultTemplateId();
       
-      const allTemplates = [...defaultTemplates, ...customTemplates];
+      // Start with default templates
+      const allTemplates: ReportTemplate[] = [];
       
-      // Mark default template
-      return allTemplates.map(template => ({
-        ...template,
-        isDefault: template.id === defaultTemplateId
-      }));
+      // Add default templates, but replace with custom version if it exists
+      defaultTemplates.forEach(defaultTemplate => {
+        const customVersion = customTemplates.find(t => t.id === defaultTemplate.id);
+        if (customVersion) {
+          // Use custom version but preserve that it's originally a default template
+          allTemplates.push({
+            ...customVersion,
+            isDefault: defaultTemplate.id === defaultTemplateId
+          });
+        } else {
+          // Use original default template
+          allTemplates.push({
+            ...defaultTemplate,
+            isDefault: defaultTemplate.id === defaultTemplateId
+          });
+        }
+      });
+      
+      // Add purely custom templates (those that don't override defaults)
+      const purelyCustomTemplates = customTemplates.filter(
+        customTemplate => !defaultTemplates.find(defaultTemplate => defaultTemplate.id === customTemplate.id)
+      );
+      
+      purelyCustomTemplates.forEach(customTemplate => {
+        allTemplates.push({
+          ...customTemplate,
+          isDefault: customTemplate.id === defaultTemplateId
+        });
+      });
+      
+      return allTemplates;
     } catch (error) {
       console.error('Error loading templates:', error);
       return defaultTemplates;
@@ -169,6 +196,9 @@ class TemplateService {
       const customTemplates = this.getCustomTemplates();
       const now = new Date().toISOString();
       
+      // Check if this is a default template being modified
+      const isDefaultTemplate = defaultTemplates.find(t => t.id === template.id);
+      
       // Prepare template with metadata
       const templateToSave: ReportTemplate = {
         ...template,
@@ -183,8 +213,8 @@ class TemplateService {
         // Update existing
         customTemplates[existingIndex] = templateToSave;
       } else {
-        // Create new
-        if (!template.id.startsWith('custom_')) {
+        // Create new - only change ID if it's not a default template
+        if (!isDefaultTemplate && !template.id.startsWith('custom_')) {
           templateToSave.id = `custom_${Date.now()}`;
         }
         customTemplates.push(templateToSave);
@@ -323,6 +353,55 @@ class TemplateService {
       isCustom: true,
       createdAt: new Date().toISOString()
     };
+  }
+
+  // Reset template to default values
+  resetToDefault(templateId: string): boolean {
+    try {
+      // Find the original default template
+      const originalTemplate = defaultTemplates.find(t => t.id === templateId);
+      
+      if (!originalTemplate) {
+        console.error('Template is not a default template:', templateId);
+        return false;
+      }
+
+      // Remove any custom version of this template from storage
+      const customTemplates = this.getCustomTemplates();
+      const filteredCustomTemplates = customTemplates.filter(t => t.id !== templateId);
+      
+      localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(filteredCustomTemplates));
+      this.dispatchStorageEvent(STORAGE_KEYS.TEMPLATES, filteredCustomTemplates);
+      
+      // If this was the default template, reset it to the original
+      const currentDefaultId = this.getDefaultTemplateId();
+      if (currentDefaultId === templateId) {
+        localStorage.setItem(STORAGE_KEYS.DEFAULT_TEMPLATE, JSON.stringify(originalTemplate));
+        this.dispatchStorageEvent(STORAGE_KEYS.DEFAULT_TEMPLATE, originalTemplate);
+      }
+      
+      this.notifyListeners();
+      return true;
+    } catch (error) {
+      console.error('Error resetting template to default:', error);
+      return false;
+    }
+  }
+
+  // Check if a default template has been modified
+  isDefaultTemplateModified(templateId: string): boolean {
+    try {
+      const originalTemplate = defaultTemplates.find(t => t.id === templateId);
+      if (!originalTemplate) return false;
+      
+      const customTemplates = this.getCustomTemplates();
+      const modifiedTemplate = customTemplates.find(t => t.id === templateId);
+      
+      return !!modifiedTemplate;
+    } catch (error) {
+      console.error('Error checking if template is modified:', error);
+      return false;
+    }
   }
 }
 
