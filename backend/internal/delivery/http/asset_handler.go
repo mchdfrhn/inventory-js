@@ -689,7 +689,7 @@ func (h *AssetHandler) CreateBulkAsset(c *gin.Context) {
 	// Convert to DTOs
 	var assetDTOs []dto.AssetResponse
 	for _, asset := range assets {
-		assetDTOs = append(assetDTOs, dto.AssetResponse{
+		assetDTO := dto.AssetResponse{
 			ID:                  asset.ID,
 			Kode:                asset.Kode,
 			Nama:                asset.Nama,
@@ -714,7 +714,36 @@ func (h *AssetHandler) CreateBulkAsset(c *gin.Context) {
 			BulkTotalCount:      asset.BulkTotalCount,
 			CreatedAt:           asset.CreatedAt,
 			UpdatedAt:           asset.UpdatedAt,
-		})
+		}
+
+		// Include category information if available
+		if asset.Category.ID != uuid.Nil {
+			assetDTO.Category = &dto.CategoryResponse{
+				ID:          asset.Category.ID,
+				Code:        asset.Category.Code,
+				Name:        asset.Category.Name,
+				Description: asset.Category.Description,
+				CreatedAt:   asset.Category.CreatedAt,
+				UpdatedAt:   asset.Category.UpdatedAt,
+			}
+		}
+
+		// Include location information if available
+		if asset.LocationInfo != nil {
+			assetDTO.LocationInfo = &dto.LocationResponse{
+				ID:          asset.LocationInfo.ID,
+				Name:        asset.LocationInfo.Name,
+				Code:        asset.LocationInfo.Code,
+				Description: asset.LocationInfo.Description,
+				Building:    asset.LocationInfo.Building,
+				Floor:       asset.LocationInfo.Floor,
+				Room:        asset.LocationInfo.Room,
+				CreatedAt:   asset.LocationInfo.CreatedAt,
+				UpdatedAt:   asset.LocationInfo.UpdatedAt,
+			}
+		}
+
+		assetDTOs = append(assetDTOs, assetDTO)
 	}
 
 	c.JSON(http.StatusCreated, dto.SuccessResponse{
@@ -748,7 +777,7 @@ func (h *AssetHandler) GetBulkAssets(c *gin.Context) {
 	// Convert to DTOs
 	var assetDTOs []dto.AssetResponse
 	for _, asset := range assets {
-		assetDTOs = append(assetDTOs, dto.AssetResponse{
+		assetDTO := dto.AssetResponse{
 			ID:                  asset.ID,
 			Kode:                asset.Kode,
 			Nama:                asset.Nama,
@@ -773,7 +802,36 @@ func (h *AssetHandler) GetBulkAssets(c *gin.Context) {
 			BulkTotalCount:      asset.BulkTotalCount,
 			CreatedAt:           asset.CreatedAt,
 			UpdatedAt:           asset.UpdatedAt,
-		})
+		}
+
+		// Include category information if available
+		if asset.Category.ID != uuid.Nil {
+			assetDTO.Category = &dto.CategoryResponse{
+				ID:          asset.Category.ID,
+				Code:        asset.Category.Code,
+				Name:        asset.Category.Name,
+				Description: asset.Category.Description,
+				CreatedAt:   asset.Category.CreatedAt,
+				UpdatedAt:   asset.Category.UpdatedAt,
+			}
+		}
+
+		// Include location information if available
+		if asset.LocationInfo != nil {
+			assetDTO.LocationInfo = &dto.LocationResponse{
+				ID:          asset.LocationInfo.ID,
+				Name:        asset.LocationInfo.Name,
+				Code:        asset.LocationInfo.Code,
+				Description: asset.LocationInfo.Description,
+				Building:    asset.LocationInfo.Building,
+				Floor:       asset.LocationInfo.Floor,
+				Room:        asset.LocationInfo.Room,
+				CreatedAt:   asset.LocationInfo.CreatedAt,
+				UpdatedAt:   asset.LocationInfo.UpdatedAt,
+			}
+		}
+
+		assetDTOs = append(assetDTOs, assetDTO)
 	}
 
 	c.JSON(http.StatusOK, dto.SuccessResponse{
@@ -837,14 +895,33 @@ func (h *AssetHandler) ListAssetsWithBulk(c *gin.Context) {
 			BulkTotalCount:      asset.BulkTotalCount,
 			CreatedAt:           asset.CreatedAt,
 			UpdatedAt:           asset.UpdatedAt,
-		} // Include category information
-		assetDTO.Category = &dto.CategoryResponse{
-			ID:          asset.Category.ID,
-			Code:        asset.Category.Code,
-			Name:        asset.Category.Name,
-			Description: asset.Category.Description,
-			CreatedAt:   asset.Category.CreatedAt,
-			UpdatedAt:   asset.Category.UpdatedAt,
+		}
+
+		// Include category information
+		if asset.Category.ID != uuid.Nil {
+			assetDTO.Category = &dto.CategoryResponse{
+				ID:          asset.Category.ID,
+				Code:        asset.Category.Code,
+				Name:        asset.Category.Name,
+				Description: asset.Category.Description,
+				CreatedAt:   asset.Category.CreatedAt,
+				UpdatedAt:   asset.Category.UpdatedAt,
+			}
+		}
+
+		// Include location information if available
+		if asset.LocationInfo != nil {
+			assetDTO.LocationInfo = &dto.LocationResponse{
+				ID:          asset.LocationInfo.ID,
+				Name:        asset.LocationInfo.Name,
+				Code:        asset.LocationInfo.Code,
+				Description: asset.LocationInfo.Description,
+				Building:    asset.LocationInfo.Building,
+				Floor:       asset.LocationInfo.Floor,
+				Room:        asset.LocationInfo.Room,
+				CreatedAt:   asset.LocationInfo.CreatedAt,
+				UpdatedAt:   asset.LocationInfo.UpdatedAt,
+			}
 		}
 
 		assetDTOs = append(assetDTOs, assetDTO)

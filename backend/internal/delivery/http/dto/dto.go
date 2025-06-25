@@ -122,6 +122,18 @@ type CategoryResponse struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+type LocationResponse struct {
+	ID          uint      `json:"id"`
+	Name        string    `json:"name"`
+	Code        string    `json:"code"`
+	Description string    `json:"description"`
+	Building    string    `json:"building"`
+	Floor       string    `json:"floor"`
+	Room        string    `json:"room"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 type AssetResponse struct {
 	ID                  uuid.UUID         `json:"id"`
 	Kode                string            `json:"kode"`
@@ -138,6 +150,7 @@ type AssetResponse struct {
 	Keterangan          string            `json:"keterangan"`
 	Lokasi              string            `json:"lokasi"`
 	LokasiID            *uint             `json:"lokasi_id"`
+	LocationInfo        *LocationResponse `json:"location_info,omitempty"`
 	AsalPengadaan       string            `json:"asal_pengadaan"`
 	CategoryID          uuid.UUID         `json:"category_id"`
 	Category            *CategoryResponse `json:"category,omitempty"`
