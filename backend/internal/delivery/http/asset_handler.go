@@ -110,6 +110,7 @@ func (h *AssetHandler) CreateAsset(c *gin.Context) {
 }
 
 func (h *AssetHandler) UpdateAsset(c *gin.Context) {
+	fmt.Printf("=== UpdateAsset Handler Called ===\n")
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ValidationError{
@@ -122,6 +123,7 @@ func (h *AssetHandler) UpdateAsset(c *gin.Context) {
 		})
 		return
 	}
+	fmt.Printf("Update request for asset ID: %s\n", id.String())
 
 	var req dto.UpdateAssetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -179,6 +181,35 @@ func (h *AssetHandler) UpdateAsset(c *gin.Context) {
 		})
 		return
 	}
+
+	// IMPORTANT: Preserve bulk information from existing asset
+	// This is crucial for bulk asset updates to work properly
+	existingAsset, err := h.assetUsecase.GetAsset(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, dto.ValidationError{
+				Status:  "error",
+				Message: "Asset not found",
+				Details: []dto.ErrorDetail{{
+					Field:   "id",
+					Message: "Asset with this ID does not exist",
+				}},
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Status:  "error",
+				Message: "Failed to get asset: " + err.Error(),
+			})
+		}
+		return
+	}
+
+	// Preserve bulk fields from existing asset
+	asset.BulkID = existingAsset.BulkID
+	asset.BulkSequence = existingAsset.BulkSequence
+	asset.IsBulkParent = existingAsset.IsBulkParent
+	asset.BulkTotalCount = existingAsset.BulkTotalCount
+
 	if err := h.assetUsecase.UpdateAsset(asset); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, dto.ValidationError{

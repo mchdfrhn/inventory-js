@@ -296,6 +296,13 @@ func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
 		return err
 	}
 
+	fmt.Printf("=== DEBUG UpdateAsset START ===\n")
+	fmt.Printf("Asset ID: %s\n", asset.ID.String())
+	fmt.Printf("Asset Name: %s -> %s\n", existingAsset.Nama, asset.Nama)
+	fmt.Printf("Existing BulkID: %v\n", existingAsset.BulkID)
+	fmt.Printf("Existing IsBulkParent: %t\n", existingAsset.IsBulkParent)
+	fmt.Printf("Existing BulkTotalCount: %d\n", existingAsset.BulkTotalCount)
+
 	// Validate category exists if provided
 	if asset.CategoryID != uuid.Nil {
 		_, err := u.categoryRepo.GetByID(asset.CategoryID)
@@ -333,12 +340,15 @@ func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
 		needsCodeRegeneration = true
 	}
 
+	fmt.Printf("needsCodeRegeneration: %t\n", needsCodeRegeneration)
+
 	// Regenerate code if structural components changed
 	if needsCodeRegeneration {
 		// For bulk assets, only regenerate if this is the bulk parent
 		if existingAsset.BulkID != nil && !existingAsset.IsBulkParent {
 			// For non-parent bulk assets, don't regenerate - they should follow the parent
 			// This prevents breaking the bulk sequence
+			fmt.Printf("Skipping code regeneration for non-parent bulk asset\n")
 		} else {
 			// Extract the current sequence number to preserve it
 			currentSequence := u.extractSequenceFromCode(existingAsset.Kode)
@@ -352,6 +362,7 @@ func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
 
 			// If this is a bulk parent, update all related bulk assets
 			if existingAsset.BulkID != nil && existingAsset.IsBulkParent {
+				fmt.Printf("Calling updateBulkAssetsCodes due to code regeneration\n")
 				err = u.updateBulkAssetsCodes(existingAsset.BulkID, asset, currentSequence)
 				if err != nil {
 					return err
@@ -360,10 +371,33 @@ func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
 		}
 	}
 
-	// Update the asset
+	// Update the asset first
+	fmt.Printf("Updating main asset...\n")
 	err = u.assetRepo.Update(asset)
 	if err != nil {
+		fmt.Printf("Error updating main asset: %v\n", err)
 		return err
+	}
+	fmt.Printf("Main asset updated successfully\n")
+
+	// ALWAYS update bulk assets if this is a bulk parent, regardless of code regeneration
+	if existingAsset.BulkID != nil && existingAsset.IsBulkParent {
+		fmt.Printf("Asset is bulk parent, BulkID=%s, needsCodeRegeneration=%t\n", existingAsset.BulkID.String(), needsCodeRegeneration)
+
+		// If code was regenerated, we already updated all bulk assets above
+		// If not, we need to update them now with the new data
+		if !needsCodeRegeneration {
+			fmt.Printf("Calling updateBulkAssetsData for BulkID=%s\n", existingAsset.BulkID.String())
+			err = u.updateBulkAssetsData(existingAsset.BulkID, asset)
+			if err != nil {
+				fmt.Printf("Error in updateBulkAssetsData: %v\n", err)
+				return err
+			}
+		} else {
+			fmt.Printf("Code regeneration was done, bulk assets already updated\n")
+		}
+	} else {
+		fmt.Printf("Asset is NOT bulk parent, BulkID=%v, IsBulkParent=%t\n", existingAsset.BulkID, existingAsset.IsBulkParent)
 	}
 
 	// Log the update activity
@@ -379,6 +413,7 @@ func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error {
 		)
 	}
 
+	fmt.Printf("=== DEBUG UpdateAsset END ===\n")
 	return nil
 }
 
@@ -593,6 +628,9 @@ func (u *assetUsecase) updateBulkAssetsCodes(bulkID *uuid.UUID, templateAsset *d
 		return err
 	}
 
+	fmt.Printf("DEBUG: updateBulkAssetsCodes called with bulkID=%s, found %d assets\n", bulkID.String(), len(bulkAssets))
+	fmt.Printf("DEBUG: Template asset name: %s, startSequence: %d\n", templateAsset.Nama, startSequence)
+
 	// Update each bulk asset's code
 	for i, bulkAsset := range bulkAssets {
 		newSequence := startSequence + i
@@ -601,19 +639,90 @@ func (u *assetUsecase) updateBulkAssetsCodes(bulkID *uuid.UUID, templateAsset *d
 			return err
 		}
 
-		// Create updated asset with new code
+		fmt.Printf("DEBUG: Updating bulk asset %d: %s -> %s, code: %s -> %s\n", i+1, bulkAsset.Nama, templateAsset.Nama, bulkAsset.Kode, newCode)
+
+		// Create updated asset with new code and apply ALL changes from template
 		updatedAsset := bulkAsset
+
+		// Update code with new sequence
 		updatedAsset.Kode = newCode
-		updatedAsset.LokasiID = templateAsset.LokasiID
-		updatedAsset.CategoryID = templateAsset.CategoryID
-		updatedAsset.AsalPengadaan = templateAsset.AsalPengadaan
+
+		// Apply all field changes from template asset (except ID, bulk info, and auto-calculated fields)
+		updatedAsset.Nama = templateAsset.Nama
+		updatedAsset.Spesifikasi = templateAsset.Spesifikasi
+		updatedAsset.Satuan = templateAsset.Satuan
 		updatedAsset.TanggalPerolehan = templateAsset.TanggalPerolehan
+		updatedAsset.HargaPerolehan = templateAsset.HargaPerolehan
+		updatedAsset.UmurEkonomisTahun = templateAsset.UmurEkonomisTahun
+		updatedAsset.Keterangan = templateAsset.Keterangan
+		updatedAsset.Lokasi = templateAsset.Lokasi
+		updatedAsset.LokasiID = templateAsset.LokasiID
+		updatedAsset.AsalPengadaan = templateAsset.AsalPengadaan
+		updatedAsset.CategoryID = templateAsset.CategoryID
+		updatedAsset.Status = templateAsset.Status
+
+		// Note: Quantity, BulkID, BulkSequence, IsBulkParent, BulkTotalCount
+		// are preserved from the original asset to maintain bulk integrity
+		// Auto-calculated fields (UmurEkonomisBulan, AkumulasiPenyusutan, NilaiSisa)
+		// will be recalculated by the repository Update method
 
 		err = u.assetRepo.Update(&updatedAsset)
 		if err != nil {
+			fmt.Printf("DEBUG: Error updating asset %s: %v\n", updatedAsset.Kode, err)
 			return err
 		}
+		fmt.Printf("DEBUG: Successfully updated asset %s\n", updatedAsset.Kode)
 	}
 
+	fmt.Printf("DEBUG: updateBulkAssetsCodes completed successfully for %d assets\n", len(bulkAssets))
+	return nil
+}
+
+// updateBulkAssetsData updates all assets in a bulk group with new data (without code regeneration)
+func (u *assetUsecase) updateBulkAssetsData(bulkID *uuid.UUID, templateAsset *domain.Asset) error {
+	// Get all bulk assets
+	bulkAssets, err := u.assetRepo.GetBulkAssets(*bulkID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("DEBUG: updateBulkAssetsData called with bulkID=%s, found %d assets\n", bulkID.String(), len(bulkAssets))
+	fmt.Printf("DEBUG: Template asset name: %s\n", templateAsset.Nama)
+
+	// Update each bulk asset's data (preserving codes and bulk structure)
+	for i, bulkAsset := range bulkAssets {
+		fmt.Printf("DEBUG: Updating bulk asset %d: %s -> %s\n", i+1, bulkAsset.Nama, templateAsset.Nama)
+
+		// Create updated asset, preserving codes and bulk info
+		updatedAsset := bulkAsset
+
+		// Apply all field changes from template asset (except ID, codes, and bulk info)
+		updatedAsset.Nama = templateAsset.Nama
+		updatedAsset.Spesifikasi = templateAsset.Spesifikasi
+		updatedAsset.Satuan = templateAsset.Satuan
+		updatedAsset.TanggalPerolehan = templateAsset.TanggalPerolehan
+		updatedAsset.HargaPerolehan = templateAsset.HargaPerolehan
+		updatedAsset.UmurEkonomisTahun = templateAsset.UmurEkonomisTahun
+		updatedAsset.Keterangan = templateAsset.Keterangan
+		updatedAsset.Lokasi = templateAsset.Lokasi
+		updatedAsset.LokasiID = templateAsset.LokasiID
+		updatedAsset.AsalPengadaan = templateAsset.AsalPengadaan
+		updatedAsset.CategoryID = templateAsset.CategoryID
+		updatedAsset.Status = templateAsset.Status
+
+		// Note: Kode, Quantity, BulkID, BulkSequence, IsBulkParent, BulkTotalCount
+		// are preserved from the original asset to maintain bulk integrity
+		// Auto-calculated fields (UmurEkonomisBulan, AkumulasiPenyusutan, NilaiSisa)
+		// will be recalculated by the repository Update method
+
+		err = u.assetRepo.Update(&updatedAsset)
+		if err != nil {
+			fmt.Printf("DEBUG: Error updating asset %s: %v\n", updatedAsset.Kode, err)
+			return err
+		}
+		fmt.Printf("DEBUG: Successfully updated asset %s\n", updatedAsset.Kode)
+	}
+
+	fmt.Printf("DEBUG: updateBulkAssetsData completed successfully for %d assets\n", len(bulkAssets))
 	return nil
 }

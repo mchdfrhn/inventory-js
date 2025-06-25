@@ -172,7 +172,13 @@ export default function AssetForm() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
-      addNotification('success', 'Aset berhasil diperbarui!');
+      // Differentiate success message for bulk vs single asset
+      const isBulkAsset = assetData?.data?.is_bulk_parent;
+      const bulkCount = assetData?.data?.bulk_total_count || 1;
+      const message = isBulkAsset 
+        ? `Bulk aset berhasil diperbarui! ${bulkCount} item telah diupdate.`
+        : 'Aset berhasil diperbarui!';
+      addNotification('success', message);
       navigate('/assets');
     },
     onError: (err: Error) => {
@@ -476,6 +482,19 @@ export default function AssetForm() {
               <InformationCircleIcon className="h-5 w-5 mr-2 text-blue-500 flex-shrink-0" />
               <div>
                 <span className="font-medium">Kode Asset akan dibuat otomatis</span>
+              </div>
+            </div>
+          )}
+
+          {/* Info untuk bulk asset edit mode */}
+          {isEditMode && assetData?.data?.is_bulk_parent && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4 flex items-center">
+              <InformationCircleIcon className="h-5 w-5 mr-2 text-amber-500 flex-shrink-0" />
+              <div>
+                <span className="font-medium">📦 Bulk Asset: Perubahan akan diterapkan ke semua {assetData.data.bulk_total_count || 1} item dalam bulk ini</span>
+                <p className="text-sm text-amber-700 mt-1">
+                  Saat Anda menyimpan perubahan, semua asset dalam grup bulk ini akan diperbarui dengan data yang sama.
+                </p>
               </div>
             </div>
           )}
