@@ -175,6 +175,7 @@ func (u *assetUsecase) CreateBulkAsset(asset *domain.Asset, quantity int) ([]dom
 		assets[i].BulkSequence = i + 1
 		assets[i].BulkTotalCount = quantity
 		assets[i].IsBulkParent = (i == 0) // First asset is the parent
+		assets[i].Quantity = 1            // Each asset in bulk should have quantity 1
 
 		// Use the pre-generated sequential codes
 		assets[i].Kode = codes[i]
