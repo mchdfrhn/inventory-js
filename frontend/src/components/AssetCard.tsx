@@ -13,9 +13,10 @@ const statusGradients = {
 interface AssetCardProps {
   asset: Asset;
   onDelete: (asset: Asset) => void;
+  onDetailClick: (asset: Asset) => void;
 }
 
-const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete }) => {
+const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete, onDetailClick }) => {
   // Calculate depreciation percentage
   const depreciationPercentage = asset.harga_perolehan > 0
     ? Math.round((asset.akumulasi_penyusutan / asset.harga_perolehan) * 100)
@@ -61,12 +62,17 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete }) => {
           </span>
         </div>
         
-        <Link to={`/assets/${asset.id}`} className="block">
-          <h3 className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200 truncate">
-            {asset.nama}
-          </h3>
+        <div className="block">
+          <button 
+            onClick={() => onDetailClick(asset)}
+            className="text-left w-full"
+          >
+            <h3 className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200 truncate cursor-pointer">
+              {asset.nama}
+            </h3>
+          </button>
           <p className="mt-1 text-xs text-gray-500 line-clamp-2">{asset.spesifikasi}</p>
-        </Link>
+        </div>
         
         <div className="mt-3">
           <p className="text-xs text-gray-500">Kategori</p>
@@ -102,17 +108,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete }) => {
             <p className="text-xs text-gray-500">Keterangan</p>
             <p className="text-sm line-clamp-2">{asset.keterangan}</p>
           </div>
-        )}</div>      <div className="grid grid-cols-3 gap-1 mt-2">
-        <Link 
-          to={`/assets/${asset.id}`}
-          className="flex items-center justify-center py-2 px-1 text-xs font-medium text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors group"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 mr-1 group-hover:scale-110">
-            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-            <path fillRule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clipRule="evenodd" />
-          </svg>
-          <span>Detail</span>
-        </Link>
+        )}</div>      <div className="grid grid-cols-2 gap-1 mt-2">
         <Link 
           to={`/assets/edit/${asset.id}`}
           className="flex items-center justify-center py-2 px-1 text-xs font-medium text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors group"

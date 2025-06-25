@@ -24,9 +24,8 @@ import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
 import ExportButton from '../components/ExportButton';
-import AssetCard from '../components/AssetCard';
-import BulkAssetCard from '../components/BulkAssetCard';
-import ViewToggle from '../components/ViewToggle';
+import BulkTableRow from '../components/BulkTableRow';
+import AssetDetailPopup from '../components/AssetDetailPopup';
 import PageSizeSelector from '../components/PageSizeSelector';
 import { useNotification } from '../context/NotificationContext';
 
@@ -99,11 +98,13 @@ export default function AssetsPage() {
   // Loading state for filter button
   const [isApplyingFilter, setIsApplyingFilter] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);  // View type state (table or grid)
-  const [viewType, setViewType] = useState<'table' | 'grid'>(
-    localStorage.getItem('assetViewType') as 'table' | 'grid' || 'table'
-  );
-    // Sorting state
+  const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);  
+  
+  // Detail popup state
+  const [detailPopupOpen, setDetailPopupOpen] = useState(false);
+  const [assetToView, setAssetToView] = useState<Asset | null>(null);
+  
+  // Sorting state
   const [sortField, setSortField] = useState<string>('kode');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
@@ -145,11 +146,6 @@ export default function AssetsPage() {
     }
   };
 
-  // Save view type preference  
-  useEffect(() => {
-    localStorage.setItem('assetViewType', viewType);
-  }, [viewType]);
-  
   // Save pageSize to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('assetPageSize', pageSize.toString());
@@ -224,6 +220,19 @@ export default function AssetsPage() {
     setDeleteModalOpen(true);
     setDeleteError(null);
   };
+  
+  // Open detail popup
+  const openDetailPopup = (asset: Asset) => {
+    setAssetToView(asset);
+    setDetailPopupOpen(true);
+  };
+  
+  // Close detail popup
+  const closeDetailPopup = () => {
+    setDetailPopupOpen(false);
+    setAssetToView(null);
+  };
+  
   // Handle delete confirmation
   const confirmDelete = () => {
     if (assetToDelete) {
@@ -763,8 +772,6 @@ export default function AssetsPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>          {/* Filter toggles and export - moved to right */}          <div className="flex items-center gap-3 flex-wrap ml-auto">
-            <ViewToggle currentView={viewType} onToggle={setViewType} />
-            <div className="hidden sm:block h-6 w-px bg-gray-300"></div>
             <ExportButton assets={filteredAndSortedAssets || []} filename="daftar_aset_sttpu" />
             <button
               type="button"
@@ -1220,53 +1227,7 @@ export default function AssetsPage() {
                 </div>
               </div>
             </div>
-          ) : viewType === 'grid' ? (            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">            {filteredAndSortedAssets?.length ? (
-              filteredAndSortedAssets.map((asset: Asset) => (
-                asset.is_bulk_parent ? (
-                  <BulkAssetCard 
-                    key={asset.id}
-                    asset={asset}
-                    onDelete={openDeleteModal}
-                  />
-                ) : (
-                  <AssetCard 
-                    key={asset.id}
-                    asset={asset}
-                    onDelete={openDeleteModal}
-                  />
-                )
-              ))
-            ) : (<div className="col-span-full flex flex-col items-center justify-center py-20">
-                <div className="rounded-full bg-gray-100/80 p-4">
-                  <ExclamationCircleIcon className="h-8 w-8 text-gray-400" />
-                </div>                        <p className="mt-4 text-lg font-medium text-gray-500">
-                  {searchTerm || filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter 
-                    ? 'Tidak ada aset yang cocok dengan kriteria pencarian Anda' 
-                    : 'Tidak ada aset ditemukan'}
-                </p>
-                <p className="mt-1 text-sm text-gray-400 max-w-md text-center">
-                  {searchTerm || filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter 
-                    ? 'Coba ubah filter atau kriteria pencarian Anda'
-                    : 'Mulai tambahkan aset inventaris Anda untuk mengelola dengan lebih baik'}
-                </p>                {!searchTerm && !filter && depreciationFilter === 'all' && !acquisitionYearFilter && !acquisitionSourceFilter && (
-                  <Link to="/assets/new" className="mt-6">
-                    <GradientButton size="md" variant="primary" className="animate-pulse">
-                      <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-                      Tambah Aset Pertama
-                    </GradientButton>
-                  </Link>
-                )}{(searchTerm || filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter) && (
-                  <button 
-                    onClick={resetAllFilters}
-                    className="mt-4 text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Hapus semua filter
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
+          ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200/50">              <thead className="bg-gray-50/70">                <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1353,97 +1314,118 @@ export default function AssetsPage() {
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>              <tbody className="divide-y divide-gray-300/50">
-                {filteredAndSortedAssets?.length ? (                  filteredAndSortedAssets.map((asset: Asset) => (<tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">                      <td className="whitespace-nowrap py-4 pl-6 pr-3">
-                        <div className="flex flex-col space-y-1">
-                          <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{asset.kode}</span>
-                          {asset.is_bulk_parent && (
-                            <span className="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-1 rounded-md">
-                              📦 Bulk ({asset.bulk_total_count} item)
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4">
-                        <div className="flex items-center">
-                          <div>
-                            <Link to={`/assets/${asset.id}`} className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200">
-                              {asset.nama}
-                            </Link>
-                            <div className="text-sm text-gray-500">{asset.spesifikasi}</div>
+                {filteredAndSortedAssets?.length ? (
+                  filteredAndSortedAssets.map((asset: Asset) => (
+                    asset.is_bulk_parent ? (
+                      <BulkTableRow
+                        key={asset.id}
+                        asset={asset}
+                        onDelete={openDeleteModal}
+                        onDetailClick={openDetailPopup}
+                        formatStatus={formatStatus}
+                        getTotalHargaPerolehan={getTotalHargaPerolehan}
+                        getTotalNilaiSisa={getTotalNilaiSisa}
+                      />
+                    ) : (
+                      <tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">
+                        <td className="whitespace-nowrap py-4 pl-6 pr-3">
+                          <div className="flex flex-col space-y-1">
+                            <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{asset.kode}</span>
                           </div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4">
-                        <div className="text-sm text-gray-900">{asset.category?.name || 'Tidak Terkategori'}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4">
-                        <div className="text-sm text-gray-900">{asset.quantity} {asset.satuan}</div>
-                      </td>                      <td className="whitespace-nowrap px-3 py-4">
-                        <div className="text-sm text-gray-900">
-                          {new Intl.NumberFormat('id-ID', {
-                            style: 'currency',
-                            currency: 'IDR',
-                            minimumFractionDigits: 0
-                          }).format(getTotalHargaPerolehan(asset))}
-                        </div>
-                      </td>                      <td className="whitespace-nowrap px-3 py-4">
-                        <div className="text-sm text-gray-900">
-                          {new Intl.NumberFormat('id-ID', {
-                            style: 'currency',
-                            currency: 'IDR',
-                            minimumFractionDigits: 0
-                          }).format(getTotalNilaiSisa(asset))}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4">
-                        {(() => {
-                          const depreciationPercentage = asset.harga_perolehan > 0
-                            ? Math.round((asset.akumulasi_penyusutan / asset.harga_perolehan) * 100)
-                            : 0;
-                          
-                          // Color based on percentage
-                          let barColor = "bg-green-500";
-                          if (depreciationPercentage > 75) barColor = "bg-red-500";
-                          else if (depreciationPercentage > 50) barColor = "bg-yellow-500";
-                          else if (depreciationPercentage > 25) barColor = "bg-blue-500";
-                          
-                          return (
-                            <div className="flex flex-col">
-                              <div className="text-xs text-gray-900 mb-1">{depreciationPercentage}%</div>
-                              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                <div className={`${barColor} h-1.5 rounded-full`} style={{ width: `${depreciationPercentage}%` }}></div>
-                              </div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4">
+                          <div className="flex items-center">
+                            <div>
+                              <button 
+                                onClick={() => openDetailPopup(asset)}
+                                className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200 text-left"
+                              >
+                                {asset.nama}
+                              </button>
+                              <div className="text-sm text-gray-500">{asset.spesifikasi}</div>
                             </div>
-                          );
-                        })()}                      </td>                      <td className="whitespace-nowrap px-3 py-4">
-                        <div className="text-sm text-gray-900">
-                          {asset.lokasi_id && asset.location_info ? 
-                            `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
-                            : asset.lokasi || ''}
-                        </div>
-                      </td><td className="whitespace-nowrap px-3 py-4">
-                        <span className={`status-badge inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium bg-gradient-to-r ${statusGradients[asset.status] || 'from-gray-50 to-gray-100 border-gray-200'} shadow-sm transition-all duration-300 hover:scale-105 border`}>
-                          {formatStatus(asset.status)}
-                        </span>                      </td>                      <td className="whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-5">
-                          <Link 
-                            to={`/assets/edit/${asset.id}`}
-                            className="text-blue-600 hover:text-blue-900 flex items-center group transition-all duration-200 hover:-translate-y-0.5 px-2"
-                          >
-                            <PencilIcon className="h-4 w-4 mr-1.5 group-hover:scale-110" />
-                            <span>Ubah</span>
-                          </Link>
-                          <button
-                            onClick={() => openDeleteModal(asset)}
-                            className="text-red-600 hover:text-red-900 flex items-center group transition-all duration-200 hover:-translate-y-0.5 px-2"
-                          >
-                            <TrashIcon className="h-4 w-4 mr-1.5 group-hover:scale-110" />
-                            <span>Hapus</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))                ) : (
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4">
+                          <div className="text-sm text-gray-900">{asset.category?.name || 'Tidak Terkategori'}</div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4">
+                          <div className="text-sm text-gray-900">{asset.quantity} {asset.satuan}</div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4">
+                          <div className="text-sm text-gray-900">
+                            {new Intl.NumberFormat('id-ID', {
+                              style: 'currency',
+                              currency: 'IDR',
+                              minimumFractionDigits: 0
+                            }).format(getTotalHargaPerolehan(asset))}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4">
+                          <div className="text-sm text-gray-900">
+                            {new Intl.NumberFormat('id-ID', {
+                              style: 'currency',
+                              currency: 'IDR',
+                              minimumFractionDigits: 0
+                            }).format(getTotalNilaiSisa(asset))}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4">
+                          {(() => {
+                            const depreciationPercentage = asset.harga_perolehan > 0
+                              ? Math.round((asset.akumulasi_penyusutan / asset.harga_perolehan) * 100)
+                              : 0;
+                            
+                            // Color based on percentage
+                            let barColor = "bg-green-500";
+                            if (depreciationPercentage > 75) barColor = "bg-red-500";
+                            else if (depreciationPercentage > 50) barColor = "bg-yellow-500";
+                            else if (depreciationPercentage > 25) barColor = "bg-blue-500";
+                            
+                            return (
+                              <div className="flex flex-col">
+                                <div className="text-xs text-gray-900 mb-1">{depreciationPercentage}%</div>
+                                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                  <div className={`${barColor} h-1.5 rounded-full`} style={{ width: `${depreciationPercentage}%` }}></div>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4">
+                          <div className="text-sm text-gray-900">
+                            {asset.lokasi_id && asset.location_info ? 
+                              `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
+                              : asset.lokasi || ''}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4">
+                          <span className={`status-badge inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium bg-gradient-to-r ${statusGradients[asset.status] || 'from-gray-50 to-gray-100 border-gray-200'} shadow-sm transition-all duration-300 hover:scale-105 border`}>
+                            {formatStatus(asset.status)}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
+                          <div className="flex justify-end space-x-3">
+                            <Link 
+                              to={`/assets/edit/${asset.id}`}
+                              className="text-blue-600 hover:text-blue-900 flex items-center group transition-all duration-200 hover:-translate-y-0.5 px-2"
+                            >
+                              <PencilIcon className="h-4 w-4 mr-1.5 group-hover:scale-110" />
+                              <span>Ubah</span>
+                            </Link>
+                            <button
+                              onClick={() => openDeleteModal(asset)}
+                              className="text-red-600 hover:text-red-900 flex items-center group transition-all duration-200 hover:-translate-y-0.5 px-2"
+                            >
+                              <TrashIcon className="h-4 w-4 mr-1.5 group-hover:scale-110" />
+                              <span>Hapus</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  ))
+                ) : (
                   <tr>
                     <td colSpan={10} className="px-6 py-20">
                       <div className="flex flex-col items-center justify-center">
@@ -1736,6 +1718,13 @@ export default function AssetsPage() {
           </div>
         </Dialog>
       </Transition.Root>
+
+      {/* Asset Detail Popup */}
+      <AssetDetailPopup
+        isOpen={detailPopupOpen}
+        onClose={closeDetailPopup}
+        asset={assetToView}
+      />
     </div>
   );
 }
