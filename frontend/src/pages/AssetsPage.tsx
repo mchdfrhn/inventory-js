@@ -9,7 +9,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ExclamationCircleIcon,
-  ExclamationTriangleIcon,
   XMarkIcon,
   AdjustmentsHorizontalIcon,
   TagIcon,
@@ -24,6 +23,7 @@ import Loader from '../components/Loader';
 import ExportButton from '../components/ExportButton';
 import BulkTableRow from '../components/BulkTableRow';
 import AssetDetailPopup from '../components/AssetDetailPopup';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import PageSizeSelector from '../components/PageSizeSelector';
 import { useNotification } from '../context/NotificationContext';
 
@@ -106,7 +106,6 @@ export default function AssetsPage() {
   const [sortField, setSortField] = useState<string>('kode');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   
@@ -206,7 +205,6 @@ export default function AssetsPage() {
       }
     },
     onError: (err) => {
-      setDeleteError('Gagal menghapus aset. Silakan coba lagi.');
       addNotification('error', 'Gagal menghapus aset. Silakan coba lagi.');
       console.error('Delete error:', err);
     }
@@ -216,7 +214,6 @@ export default function AssetsPage() {
   const openDeleteModal = (asset: Asset) => {
     setAssetToDelete(asset);
     setDeleteModalOpen(true);
-    setDeleteError(null);
   };
   
   // Open detail popup
@@ -1515,89 +1512,15 @@ export default function AssetsPage() {
       </GlassCard>
       
       {/* Delete Confirmation Modal */}
-      <Transition.Root show={deleteModalOpen} as={Fragment}>
-        <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" onClose={setDeleteModalOpen}>
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm transition-opacity" />
-            </Transition.Child>
-
-            {/* This element is to trick the browser into centering the modal contents. */}
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
-              &#8203;
-            </span>
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            >
-              <div className="glass-card inline-block align-bottom rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
-                      Hapus Aset
-                    </Dialog.Title>                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Apakah Anda yakin ingin menghapus{' '}
-                        <span className="font-semibold">{assetToDelete?.nama}</span>
-                        {assetToDelete?.is_bulk_parent && assetToDelete?.bulk_total_count && 
-                          ` dan semua ${assetToDelete.bulk_total_count} item dalam bulk ini`
-                        }? Tindakan ini tidak dapat dibatalkan.
-                      </p>
-                      {assetToDelete?.is_bulk_parent && (
-                        <p className="mt-2 text-sm text-amber-600 bg-amber-50 p-2 rounded">
-                          ⚠️ Menghapus bulk asset akan menghapus semua {assetToDelete.bulk_total_count || 1} item sekaligus!
-                        </p>
-                      )}
-                      {deleteError && (
-                        <p className="mt-2 text-sm text-red-600">{deleteError}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">                  <GradientButton
-                    variant="danger"
-                    className="w-full sm:ml-3 sm:w-auto"
-                    onClick={confirmDelete}
-                    disabled={deleteMutation.isPending}
-                    autoFocus
-                  >
-                    {deleteMutation.isPending && (
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    )}
-                    {deleteMutation.isPending ? 'Menghapus...' : 'Hapus'}
-                  </GradientButton>
-                  <button
-                    type="button"
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm transition-all duration-200 hover:-translate-y-0.5"
-                    onClick={() => setDeleteModalOpen(false)}
-                  >
-                    Batal
-                  </button>
-                </div>
-              </div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition.Root>
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        assetName={assetToDelete?.nama || ''}
+        isBulkAsset={assetToDelete?.is_bulk_parent || false}
+        bulkCount={assetToDelete?.bulk_total_count || 1}
+        isLoading={deleteMutation.isPending}
+      />
 
       {/* Import Modal */}
       <Transition.Root show={importModalOpen} as={Fragment}>

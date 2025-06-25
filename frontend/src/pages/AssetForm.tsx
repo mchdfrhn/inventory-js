@@ -11,6 +11,7 @@ import {   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useNotification } from '../context/NotificationContext';
 import BulkConfirmationModal from '../components/BulkConfirmationModal';
+import BulkUpdateConfirmationModal from '../components/BulkUpdateConfirmationModal';
 
 // Add CSS animation for fade-in effect
 import './animations.css';
@@ -43,6 +44,7 @@ export default function AssetForm() {
   
   // New state for bulk asset confirmation
   const [showBulkConfirmation, setShowBulkConfirmation] = useState(false);
+  const [showBulkUpdateConfirmation, setShowBulkUpdateConfirmation] = useState(false);
   const [bulkQuantity, setBulkQuantity] = useState(1);
   
   const { addNotification } = useNotification();
@@ -289,6 +291,13 @@ export default function AssetForm() {
     if (!isEditMode && quantity > 1) {
       setBulkQuantity(quantity);
       setShowBulkConfirmation(true);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Check if this is bulk asset edit and show confirmation
+    if (isEditMode && assetData?.data?.is_bulk_parent) {
+      setShowBulkUpdateConfirmation(true);
       setIsSubmitting(false);
       return;
     }
@@ -879,6 +888,23 @@ export default function AssetForm() {
         }}
         quantity={bulkQuantity}
         assetName={formData.nama}
+        isLoading={isSubmitting}
+      />
+
+      {/* Bulk Update Confirmation Modal */}
+      <BulkUpdateConfirmationModal
+        isOpen={showBulkUpdateConfirmation}
+        onClose={() => {
+          setShowBulkUpdateConfirmation(false);
+          setIsSubmitting(false);
+        }}
+        onConfirm={() => {
+          setShowBulkUpdateConfirmation(false);
+          const quantity = Number(formData.quantity);
+          submitAsset(quantity);
+        }}
+        assetName={formData.nama}
+        bulkCount={assetData?.data?.bulk_total_count || 1}
         isLoading={isSubmitting}
       />
     </div>
