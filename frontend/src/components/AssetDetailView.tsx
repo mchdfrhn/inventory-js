@@ -1,5 +1,12 @@
 import type { Asset } from '../services/api';
 
+// Status styling with gradient backgrounds
+const statusGradients = {
+  baik: 'from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-800',
+  rusak: 'from-rose-50 to-rose-100 border-rose-200 text-rose-800',
+  tidak_memadai: 'from-amber-50 to-amber-100 border-amber-200 text-amber-800',
+};
+
 interface AssetDetailViewProps {
   asset: Asset;
 }
@@ -42,7 +49,7 @@ export default function AssetDetailView({ asset }: AssetDetailViewProps) {
     switch (status) {
       case 'baik': return 'Baik';
       case 'rusak': return 'Rusak';
-      case 'tidak_memadai': return 'Tidak Memadai';
+      case 'tidak_memadai': return 'Kurang Baik';
       default: return 'Baik';
     }
   };
@@ -172,11 +179,7 @@ export default function AssetDetailView({ asset }: AssetDetailViewProps) {
               <div className="grid grid-cols-3">
                 <dt className="text-sm font-medium text-gray-500">Status</dt>
                 <dd className="text-sm text-gray-900 col-span-2">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
-                    ${normalizedStatus === 'baik' ? 'bg-green-100 text-green-800' : 
-                      normalizedStatus === 'rusak' ? 'bg-red-100 text-red-800' :
-                      normalizedStatus === 'tidak_memadai' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-gray-100 text-gray-800'}`}>
+                  <span className={`inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium bg-gradient-to-r ${statusGradients[normalizedStatus] || 'from-gray-50 to-gray-100 border-gray-200'} shadow-sm transition-all duration-300 hover:scale-105 border`}>
                     {formatStatusLabel(normalizedStatus)}
                   </span>
                 </dd>

@@ -1,6 +1,17 @@
 import React from 'react';
 import type { Asset } from '../services/api';
 
+// Status styling with gradient backgrounds
+const statusGradients: Record<string, string> = {
+  baik: 'from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-800',
+  rusak: 'from-rose-50 to-rose-100 border-rose-200 text-rose-800',
+  tidak_memadai: 'from-amber-50 to-amber-100 border-amber-200 text-amber-800',
+  available: 'from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-800',
+  in_use: 'from-blue-50 to-blue-100 border-blue-200 text-blue-800',
+  maintenance: 'from-amber-50 to-amber-100 border-amber-200 text-amber-800',
+  disposed: 'from-rose-50 to-rose-100 border-rose-200 text-rose-800',
+};
+
 interface AssetPreviewProps {
   asset: Partial<Asset>;
   className?: string;
@@ -29,21 +40,8 @@ const AssetPreview: React.FC<AssetPreviewProps> = ({ asset, className = '' }) =>
   
   // Map status to badge styling
   const getStatusBadgeClass = (status?: string): string => {
-    switch(status) {
-      case 'baik': 
-      case 'available':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'rusak': 
-      case 'disposed':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'tidak_memadai':
-      case 'maintenance': 
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'in_use':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+    if (!status) return 'from-gray-50 to-gray-100 border-gray-200 text-gray-800';
+    return statusGradients[status] || 'from-gray-50 to-gray-100 border-gray-200 text-gray-800';
   };
     // Format status label
   const formatStatusLabel = (status?: string): string => {
@@ -78,7 +76,7 @@ const AssetPreview: React.FC<AssetPreviewProps> = ({ asset, className = '' }) =>
             <span className="text-sm bg-gray-100 px-2 py-0.5 rounded font-mono">
               {asset.kode || 'AS-XXX'}
             </span>            {asset.status && (
-              <span className={`inline-flex text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap ${getStatusBadgeClass(asset.status)}`}>
+              <span className={`inline-flex text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap bg-gradient-to-r ${getStatusBadgeClass(asset.status)} shadow-sm transition-all duration-300 hover:scale-105 border`}>
                 {formatStatusLabel(asset.status)}
               </span>
             )}
