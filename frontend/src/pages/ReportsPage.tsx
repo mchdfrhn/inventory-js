@@ -25,6 +25,7 @@ const ReportsPage = () => {
   const [mounted, setMounted] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,13 +76,22 @@ const ReportsPage = () => {
     setMounted(true);
     loadData();
   }, []);
+  
+  // Pastikan ada template yang terpilih ketika data templates berubah
+  useEffect(() => {
+    if (templates.length > 0 && !selectedTemplate) {
+      const defaultTemplate = templates.find(t => t.isDefault) || templates[0];
+      setSelectedTemplate(defaultTemplate.id);
+      console.log(`[ReportsPage] 🎯 Auto-select template: ${defaultTemplate.name}`);
+    }
+  }, [templates, selectedTemplate]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('[ReportsPage] 🔄 Memuat data aset dari backend...');
+      console.log('[ReportsPage] 🔄 Memuat data aset...');
       
       // Try different possible backend URLs
       const possibleUrls = [
@@ -210,16 +220,42 @@ const ReportsPage = () => {
       console.log(`[ReportsPage] 🔄 Data setelah transform (${transformedAssets.length} aset):`, transformedAssets.slice(0, 2));
       console.log(`[ReportsPage] 📈 Data source: ${successfulUrl}`);
       
+      // Validasi data
+      if (transformedAssets.length > 0) {
+        console.log(`[ReportsPage] ✅ Data berhasil dimuat: ${transformedAssets.length} aset`);
+        console.log(`[ReportsPage] 🏷️ Sample aset pertama:`, {
+          id: transformedAssets[0].id,
+          kode: transformedAssets[0].kode,
+          nama: transformedAssets[0].nama,
+          lokasi: transformedAssets[0].lokasi,
+          harga_perolehan: transformedAssets[0].harga_perolehan
+        });
+      }
+      
       const templatesData = [...defaultTemplates, ...templateService.getCustomTemplates()];
       
-      setAssets(transformedAssets);
-      setTemplates(templatesData);
+      // Urutkan template agar default template berada di posisi pertama
+      const sortedTemplates = templatesData.sort((a, b) => {
+        if (a.isDefault && !b.isDefault) return -1;
+        if (!a.isDefault && b.isDefault) return 1;
+        return 0;
+      });
       
-      console.log(`[ReportsPage] ✅ State berhasil diupdate: ${transformedAssets.length} aset, ${templatesData.length} template`);
+      setAssets(transformedAssets);
+      setTemplates(sortedTemplates);
+      
+      // Set default template atau template pertama jika belum ada yang dipilih
+      if (!selectedTemplate && sortedTemplates.length > 0) {
+        const defaultTemplate = sortedTemplates.find(t => t.isDefault) || sortedTemplates[0];
+        setSelectedTemplate(defaultTemplate.id);
+        console.log(`[ReportsPage] 🎯 Template default dipilih: ${defaultTemplate.name}`);
+      }
+      
+      console.log(`[ReportsPage] ✅ State berhasil diupdate: ${transformedAssets.length} aset, ${sortedTemplates.length} template`);
       // Removed success notification to reduce noise for users
       
     } catch (error) {
-      console.error('[ReportsPage] ❌ Error loading real data:', error);
+      console.error('[ReportsPage] ❌ Error loading data:', error);
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       setError(`Backend server tidak dapat diakses: ${errorMsg}`);
       addNotification('error', 'Gagal mengakses backend server. Pastikan backend berjalan dengan benar.');
@@ -275,11 +311,12 @@ const ReportsPage = () => {
       console.log(`[ReportsPage] 📄 Memulai pembuatan laporan PDF: "${template.name}"`);
       addNotification('info', 'Sedang menyiapkan laporan PDF...');
       
-      // Always use filtered assets (when no filters are active, filteredAssets equals assets)
+      // Ensure we're using real data from database
       const assetsToExport = filteredAssets;
       
       console.log(`[ReportsPage] 🔢 Data untuk export: ${assetsToExport.length} aset`);
       console.log(`[ReportsPage] 🎯 Filter status: ${hasActiveFilters() ? 'AKTIF' : 'TIDAK AKTIF'}`);
+      console.log(`[ReportsPage] 📊 Sample data:`, assetsToExport.slice(0, 2));
       
       if (assetsToExport.length === 0) {
         console.log(`[ReportsPage] ⚠️ Tidak ada data untuk dicetak`);
@@ -287,9 +324,13 @@ const ReportsPage = () => {
         return;
       }
       
-      // Calculate stats based on filtered data
+      // Validasi data
+      const validDataCount = assetsToExport.filter(asset => asset.id && asset.kode).length;
+      console.log(`[ReportsPage] ✅ Data valid: ${validDataCount}/${assetsToExport.length} aset`);
+      
+      // Calculate stats based on data
       const filteredStats = calculateStats(assetsToExport);
-      console.log(`[ReportsPage] 📊 Statistik untuk laporan:`, filteredStats);
+      console.log(`[ReportsPage] 📊 Statistik:`, filteredStats);
       
       // Create HTML content for the report
       const reportContent = generateReportHTML(template, assetsToExport, filteredStats);
@@ -316,7 +357,7 @@ const ReportsPage = () => {
           const filterInfo = hasActiveFilters() 
             ? ` dengan filter aktif (${filteredCount} dari ${totalAssets} aset)` 
             : ` (${totalAssets} aset)`;
-          console.log(`[ReportsPage] ✅ Print dialog triggered. Filter info: ${filterInfo}`);
+          console.log(`[ReportsPage] ✅ Print dialog triggered: ${filterInfo}`);
           addNotification('success', `Laporan "${template.name}" berhasil dibuat${filterInfo}`);
         }, 500);
       };
@@ -337,14 +378,29 @@ const ReportsPage = () => {
         return;
       }
 
-      // Update templates
-      const updatedTemplates = templates.map(t => ({
+      // Update templates - hapus isDefault dari semua template
+      const templatesWithoutDefault = templates.map(t => ({
         ...t,
-        isDefault: t.id === templateId
+        isDefault: false
       }));
       
-      setTemplates(updatedTemplates);
-      addNotification('success', `Template "${template.name}" berhasil dijadikan default!`);
+      // Buat template yang dipilih menjadi default
+      const newDefaultTemplate = {
+        ...template,
+        isDefault: true
+      };
+      
+      // Hapus template yang dipilih dari array dan letakkan di awal
+      const otherTemplates = templatesWithoutDefault.filter(t => t.id !== templateId);
+      const reorderedTemplates = [newDefaultTemplate, ...otherTemplates];
+      
+      setTemplates(reorderedTemplates);
+      
+      // Juga pilih template yang dijadikan default
+      setSelectedTemplate(templateId);
+      
+      console.log(`[ReportsPage] 🔄 Template "${template.name}" dipindahkan ke posisi pertama dan dijadikan default`);
+      addNotification('success', `Template "${template.name}" berhasil dijadikan default dan dipindahkan ke posisi pertama!`);
     } catch (error) {
       console.error('Error setting default template:', error);
       addNotification('error', 'Gagal mengatur template default');
@@ -389,28 +445,30 @@ const ReportsPage = () => {
     }).join('</th><th style="border: 1px solid #ddd; padding: 8px; background-color: #f5f5f5;">');
 
     // Generate table rows
-    const tableRows = assets.map(asset => {
+    const tableRows = assets.map((asset, index) => {
       const row = template.columns.map(col => {
         switch (col) {
           case 'kode': return asset.kode || '-';
           case 'nama': return asset.nama || '-';
           case 'spesifikasi': return asset.spesifikasi || '-';
-          case 'quantity': return asset.quantity || 0;
-          case 'satuan': return asset.satuan || '-';
-          case 'kategori': return asset.category?.name || '-';
-          case 'lokasi': return asset.lokasi || '-';
-          case 'status': return asset.status || '-';
+          case 'quantity': return asset.quantity || 1;
+          case 'satuan': return asset.satuan || 'unit';
+          case 'kategori': return asset.category?.name || 'Tidak Berkategori';
+          case 'lokasi': return asset.lokasi || asset.location_info?.name || 'Tidak Diketahui';
+          case 'status': return asset.status || 'baik';
           case 'harga_perolehan': return formatCurrency(asset.harga_perolehan || 0);
           case 'nilai_sisa': return formatCurrency(asset.nilai_sisa || 0);
           case 'akumulasi_penyusutan': return formatCurrency(asset.akumulasi_penyusutan || 0);
-          case 'umur_ekonomis_tahun': return asset.umur_ekonomis_tahun || '-';
-          case 'tanggal_perolehan': return asset.tanggal_perolehan || '-';
-          case 'asal_pengadaan': return asset.asal_pengadaan || '-';
+          case 'umur_ekonomis_tahun': return asset.umur_ekonomis_tahun || 0;
+          case 'tanggal_perolehan': return asset.tanggal_perolehan ? 
+            new Date(asset.tanggal_perolehan).toLocaleDateString('id-ID') : '-';
+          case 'asal_pengadaan': return asset.asal_pengadaan || 'Tidak Diketahui';
+          case 'keterangan': return asset.keterangan || '-';
           default: return '-';
         }
       }).join('</td><td style="border: 1px solid #ddd; padding: 8px;">');
       
-      return `<tr><td style="border: 1px solid #ddd; padding: 8px;">${row}</td></tr>`;
+      return `<tr style="${index % 2 === 0 ? 'background-color: #f9f9f9;' : ''}"><td style="border: 1px solid #ddd; padding: 8px;">${row}</td></tr>`;
     }).join('');
 
     return `
@@ -446,7 +504,7 @@ const ReportsPage = () => {
           }
           .summary {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
             margin-bottom: 30px;
           }
@@ -455,14 +513,16 @@ const ReportsPage = () => {
             padding: 15px;
             border-radius: 8px;
             border-left: 4px solid #2563eb;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           }
           .summary-item .label {
             font-size: 12px;
             color: #666;
             margin-bottom: 5px;
+            font-weight: 500;
           }
           .summary-item .value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #333;
           }
@@ -470,15 +530,21 @@ const ReportsPage = () => {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
+            font-size: 11px;
           }
           th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            vertical-align: top;
           }
           th {
             background-color: #f5f5f5;
             font-weight: bold;
+            font-size: 12px;
+          }
+          tr:nth-child(even) {
+            background-color: #f9f9f9;
           }
           .footer {
             margin-top: 40px;
@@ -487,6 +553,16 @@ const ReportsPage = () => {
             text-align: right;
             font-size: 12px;
             color: #666;
+          }
+          .report-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #1976d2;
+            text-align: center;
           }
           .filter-info {
             background: #f8f9fa;
@@ -514,8 +590,8 @@ const ReportsPage = () => {
       <body>
         <div class="header">
           <h1>${template.name}</h1>
-          <p>Sistem Inventaris Aset</p>
-          <p>Tanggal: ${formatDate(now)}</p>
+          <p><strong>Sistem Inventaris Aset</strong></p>
+          <p>Tanggal Cetak: ${formatDate(now)}</p>
         </div>
 
         ${filterSection}
@@ -537,6 +613,28 @@ const ReportsPage = () => {
             <div class="label">Total Penyusutan</div>
             <div class="value">${formatCurrency(stats.totalDepreciation)}</div>
           </div>
+          <div class="summary-item">
+            <div class="label">Status Baik</div>
+            <div class="value">${stats.statusCounts.baik || 0}</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">Status Rusak</div>
+            <div class="value">${stats.statusCounts.rusak || 0}</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">Status Hilang</div>
+            <div class="value">${stats.statusCounts.hilang || 0}</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">Tidak Memadai</div>
+            <div class="value">${stats.statusCounts.tidak_memadai || 0}</div>
+          </div>
+        </div>
+
+        <div class="report-info">
+          📅 <strong>Waktu Generate:</strong> ${now.toLocaleString('id-ID')} | 
+          📋 <strong>Template:</strong> ${template.name}
+          ${hasActiveFilters() ? ` | 🔍 <strong>Filter Aktif</strong>` : ''}
         </div>
 
         <table>
@@ -551,6 +649,7 @@ const ReportsPage = () => {
         </table>
 
         <div class="footer">
+          <p><strong>Total Aset:</strong> ${assets.length}</p>
           <p>Dicetak pada: ${now.toLocaleString('id-ID')}</p>
           <p>Sistem Inventaris Aset - ${template.name}</p>
         </div>
@@ -611,14 +710,8 @@ const ReportsPage = () => {
                 Laporan Aset
               </h2>
               <p className="mt-1 text-sm text-gray-500">
-                Generate laporan PDF dengan data asli dari database
+                Generate laporan PDF dengan berbagai template yang tersedia
               </p>
-              <div className="mt-2 flex items-center text-xs">
-                <div className="flex items-center text-green-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <span>Data Real Database</span>
-                </div>
-              </div>
             </div>
             <div className="text-right">
               <div className="text-sm text-gray-500">
@@ -630,6 +723,14 @@ const ReportsPage = () => {
               <div className="text-xs text-gray-500 mt-1">
                 Data dari server
               </div>
+              {selectedTemplate && (
+                <div className="mt-2 text-xs">
+                  <span className="text-gray-500">Template dipilih: </span>
+                  <span className="text-blue-600 font-medium">
+                    {templates.find(t => t.id === selectedTemplate)?.name}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1121,24 +1222,49 @@ const ReportsPage = () => {
 
             {/* Available Templates */}
             <div className="lg:col-span-2">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Template Tersedia</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Template Tersedia</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Klik pada template untuk memilihnya, lalu gunakan tombol "Cetak Laporan"
+                  </p>
+                </div>
+                {selectedTemplate && (
+                  <div className="text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                    <span className="font-medium">Template dipilih:</span> {templates.find(t => t.id === selectedTemplate)?.name}
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {availableTemplates.map((template) => (
                   <div
                     key={template.id}
-                    className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border flex flex-col min-h-[200px]"
+                    className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border-2 flex flex-col min-h-[200px] cursor-pointer ${
+                      selectedTemplate === template.id 
+                        ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50/30' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedTemplate(template.id)}
                   >
                     <div className="p-6 flex flex-col h-full">
                       <div className="flex items-start justify-between mb-4 flex-grow">
                         <div className="flex-1">
-                          <h4 className="text-lg font-medium text-gray-900 mb-2">
-                            {template.name}
-                            {template.isDefault && (
+                          <div className="flex items-center mb-2">
+                            <h4 className="text-lg font-medium text-gray-900">
+                              {template.name}
+                            </h4>
+                            {selectedTemplate === template.id && (
                               <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <CheckCircleIcon className="h-3 w-3 mr-1" />
+                                Dipilih
+                              </span>
+                            )}
+                            {template.isDefault && (
+                              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 Default
                               </span>
                             )}
-                          </h4>
+                          </div>
                           <p className="text-sm text-gray-500 line-clamp-2 mb-3">
                             {template.description}
                           </p>
@@ -1150,18 +1276,39 @@ const ReportsPage = () => {
                       
                       <div className="flex items-center justify-between mt-auto">
                         <div className="flex space-x-2">
-                          <button
-                            onClick={() => generatePDF(template)}
-                            disabled={isGenerating}
-                            className="flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50"
-                          >
-                            Cetak Laporan
-                          </button>
+                          {selectedTemplate === template.id && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                generatePDF(template);
+                              }}
+                              disabled={isGenerating}
+                              className="flex items-center px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 font-medium shadow-md hover:shadow-lg"
+                              title="Cetak laporan PDF"
+                            >
+                              {isGenerating ? (
+                                <>
+                                  <Loader size="sm" className="mr-2" />
+                                  Membuat PDF...
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                  </svg>
+                                  Cetak Laporan
+                                </>
+                              )}
+                            </button>
+                          )}
                         </div>
                         
                         {!template.isDefault && (
                           <button
-                            onClick={() => setAsDefault(template.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAsDefault(template.id);
+                            }}
                             className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 hover:bg-gray-100 rounded transition-colors"
                           >
                             Set Default
