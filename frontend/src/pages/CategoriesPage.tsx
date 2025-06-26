@@ -50,12 +50,10 @@ export default function CategoriesPage() {
   useEffect(() => {
     localStorage.setItem('categoryPageSize', pageSize.toString());
   }, [pageSize]);
-  // Updated to use new API function that includes asset counts with server pagination
+  // Updated to use client-side search like AssetsPage
   const { data, isLoading, error } = useQuery({
-    queryKey: ['categoriesWithCounts', currentPage, pageSize, searchTerm],
-    queryFn: () => searchTerm ? 
-      categoryApi.search(searchTerm, currentPage, pageSize) :
-      categoryApi.listWithAssetCounts(currentPage, pageSize),
+    queryKey: ['categoriesWithCounts', currentPage, pageSize],
+    queryFn: () => categoryApi.listWithAssetCounts(currentPage, pageSize),
   });
   // Delete mutation
   const [deleteError, setDeleteError] = useState<string | null>(null);  
@@ -76,9 +74,16 @@ export default function CategoriesPage() {
       addNotification('error', errorMessage);
       console.error('Delete error:', err);
     }
-  });  // Use the data directly from the API, as searching is now done server-side
-  // filteredCategories is kept for backward compatibility
-  const filteredCategories = data?.data;
+  });  // Use the data directly from the API, then apply client-side filtering like AssetsPage
+  const filteredCategories = data?.data?.filter((category: Category) => {
+    // Text search - check if searchTerm matches any relevant fields
+    const matchesSearch = searchTerm === '' || 
+      category.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      category.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+    return matchesSearch;
+  });
 
     // Open delete confirmation modal
   const openDeleteModal = (category: Category) => {
@@ -276,9 +281,10 @@ export default function CategoriesPage() {
               type="search"
               name="search"
               id="search-categories"
-              className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"              placeholder="Cari kategori..."
+              className="block w-full rounded-md border-0 py-2 pl-10 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"
+              placeholder="Cari kategori..."
               value={searchTerm}
-        onChange={(e) => {
+              onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1); // Reset to page 1 on search
               }}

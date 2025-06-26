@@ -52,11 +52,10 @@ export default function LocationsPage() {
   // Save pageSize to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('locationPageSize', pageSize.toString());
-  }, [pageSize]);  const { data, isLoading, error } = useQuery({
-    queryKey: ['locationsWithCounts', page, pageSize, searchTerm],
-    queryFn: () => searchTerm ? 
-      locationApi.search(searchTerm, page, pageSize) : 
-      locationApi.listWithAssetCounts(page, pageSize),
+  }, [pageSize]);  // Updated to use client-side search like AssetsPage  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['locationsWithCounts', page, pageSize],
+    queryFn: () => locationApi.listWithAssetCounts(page, pageSize),
   });
     // Delete mutation
   const deleteMutation = useMutation({
@@ -207,9 +206,19 @@ export default function LocationsPage() {
       addNotification('success', 'Template berhasil didownload');
   };
 
-// Use the data directly from the API, as searching is now done server-side
-  // filteredLocations is kept for backward compatibility
-  const filteredLocations = data?.data;
+// Use the data directly from the API, then apply client-side filtering like AssetsPage
+  const filteredLocations = data?.data?.filter((location: Location) => {
+    // Text search - check if searchTerm matches any relevant fields
+    const matchesSearch = searchTerm === '' || 
+      location.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      location.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (location.description && location.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (location.building && location.building.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (location.floor && location.floor.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (location.room && location.room.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+    return matchesSearch;
+  });
 
   if (isLoading) {
     return (
@@ -285,9 +294,10 @@ export default function LocationsPage() {
               type="search"
               name="search"
               id="search-locations"
-              className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"
+              className="block w-full rounded-md border-0 py-2 pl-10 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"
               placeholder="Cari lokasi..."
-              value={searchTerm}              onChange={(e) => {
+              value={searchTerm}
+              onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setPage(1); // Reset to page 1 on search
               }}
