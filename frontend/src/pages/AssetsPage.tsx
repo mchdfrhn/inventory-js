@@ -124,13 +124,11 @@ export default function AssetsPage() {
     const file = event.target.files?.[0];
     if (file) {
       const allowedTypes = [
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-        'application/vnd.ms-excel', // .xls
         'text/csv' // .csv
       ];
       
       if (!allowedTypes.includes(file.type)) {
-        setImportError('File harus berformat .xlsx, .xls, atau .csv');
+        setImportError('File harus berformat .csv');
         setImportFile(null);
         event.target.value = '';
         return;
@@ -276,7 +274,13 @@ export default function AssetsPage() {
         throw new Error('Server returned invalid response format');
       }
 
-      setImportSuccess(`Berhasil mengimport ${result.imported_count || 0} aset`);
+      setImportSuccess(`Berhasil mengimport ${result.imported_count || 0} aset dari ${result.total_rows || 0} baris`);
+      
+      // Show additional info if there were partial errors
+      if (result.errors && result.errors.length > 0) {
+        console.warn('Import warnings:', result.errors);
+        setImportSuccess(`Berhasil mengimport ${result.imported_count || 0} aset dari ${result.total_rows || 0} baris. ${result.errors.length} baris tidak dapat diimport.`);
+      }
       
       // Refresh the assets list
       queryClient.invalidateQueries({ queryKey: ['assets'] });
@@ -299,12 +303,18 @@ export default function AssetsPage() {
   };  // Download template CSV file for assets
   const downloadTemplate = () => {    // Template data dengan format baru sesuai spesifikasi
     // Tanda * menunjukkan kolom yang wajib diisi (required)
+    // Format: Nama Aset*, Kode Kategori*, Spesifikasi, Tanggal Perolehan*, Jumlah*, Satuan, Harga Perolehan*, Umur Ekonomis, Kode Lokasi*, ID Asal Pengadaan*, Status
+    // Kode Kategori: 10=Peralatan Komputer, 20=Furniture Kantor, 30=Kendaraan, 40=Audio Visual, 50=Laboratorium
+    // Kode Lokasi: 001-999 (gunakan kode yang sesuai dengan lokasi di sistem)
+    // ID Asal Pengadaan: 1=Pembelian, 2=Bantuan, 3=Hibah, 4=Sumbangan, 5=Produksi Sendiri
     const templateData = [
       ['Nama Aset*', 'Kode Kategori*', 'Spesifikasi', 'Tanggal Perolehan*', 'Jumlah*', 'Satuan', 'Harga Perolehan*', 'Umur Ekonomis', 'Kode Lokasi*', 'ID Asal Pengadaan*', 'Status'],
-      ['Laptop Dell Inspiron 15', '10', 'Core i5 8GB RAM 256GB SSD', '2025-01-15', '1', 'Unit', '8000000', '5', '001', '1', 'Baik'],
-      ['Meja Kerja Kayu', '10', 'Meja kayu solid ukuran 120x60cm', '2024-12-10', '2', 'Unit', '1500000', '10', '002', '2', 'Baik'],
-      ['Printer Canon Pixma', '10', 'Printer inkjet multifungsi A4', '2024-11-20', '1', 'Unit', '2500000', '3', '001', '1', 'Baik'],
-      ['Proyektor', '10', '', '2024-10-15', '1', 'Unit', '5000000', '5', '002', '3', 'Baik']
+      ['Laptop Dell Inspiron 15', '10', 'Core i5 Gen 12 RAM 8GB SSD 256GB', '2024-01-15', '1', 'Unit', '8500000', '5', '001', 'Pembelian', 'Baik'],
+      ['Meja Kantor Kayu Jati', '20', 'Meja kerja kayu jati ukuran 120x60x75 cm dengan laci', '2024-02-10', '5', 'Unit', '1200000', '10', '002', 'Pembelian', 'Baik'],
+      ['Printer HP LaserJet Pro', '10', 'Printer laser monochrome A4 duplex network', '2024-03-05', '2', 'Unit', '3200000', '7', '001', 'Bantuan', 'Baik'],
+      ['Proyektor Epson EB-X41', '40', 'Proyektor XGA 3600 lumens HDMI VGA', '2023-12-20', '3', 'Unit', '4800000', '8', '003', 'Hibah', 'Baik'],
+      ['Kursi Kantor Ergonomis', '20', 'Kursi putar dengan sandaran tinggi bahan mesh', '2024-01-25', '10', 'Unit', '750000', '8', '002', 'Pembelian', 'Baik'],
+      ['Mikroskop Digital', '50', 'Mikroskop digital 1000x dengan kamera USB', '2023-11-15', '1', 'Unit', '12000000', '10', '004', 'Bantuan', 'Baik']
     ];
 
     // Create CSV content with proper escaping
@@ -1559,10 +1569,25 @@ export default function AssetsPage() {
                     <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
                       Import Aset
                     </Dialog.Title>                    <div className="mt-2">                      <p className="text-sm text-gray-500 mb-4">
-                        Upload file Excel atau CSV untuk mengimport data aset secara bulk. Kolom dengan tanda (*) wajib diisi. Gunakan Kode Kategori dan Kode Lokasi, bukan ID.
+                        Upload file CSV untuk mengimport data aset secara bulk. Kolom dengan tanda (*) wajib diisi.
                         <br />
                         <strong>Format tanggal yang didukung:</strong> YYYY-MM-DD, DD/MM/YYYY, atau DD-MM-YYYY
+                        <br />
+                        <strong>Kode Kategori:</strong> Gunakan kode kategori yang sudah ada (contoh: 10, 20, 30, 40, 50)
+                        <br />
+                        <strong>Kode Lokasi:</strong> Gunakan kode lokasi yang sudah ada (contoh: 001, 002, 003)
+                        <br />
+                        <strong>Asal Pengadaan:</strong> Pembelian, Bantuan, Hibah, Sumbangan, atau Produksi Sendiri
+                        <br />
+                        <strong>Kode Aset:</strong> Akan dibuat otomatis berdasarkan lokasi, kategori, dan urutan
                       </p>
+                      
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <p className="text-xs text-blue-700">
+                          💡 <strong>Tips:</strong> Pastikan kode kategori dan lokasi sudah ada di sistem. 
+                          Lihat daftar di halaman <a href="/categories" className="underline">Kategori</a> dan <a href="/locations" className="underline">Lokasi</a>.
+                        </p>
+                      </div>
                       
                       {/* Download Template Button */}
                       <div className="mb-4">
@@ -1583,7 +1608,7 @@ export default function AssetsPage() {
                         </label>
                         <input
                           type="file"
-                          accept=".xlsx,.xls,.csv"
+                          accept=".csv"
                           onChange={handleFileSelect}
                           className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
