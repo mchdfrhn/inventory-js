@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import type { Asset } from '../services/api';
+import { assetApi } from '../services/api';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 
 interface ExportButtonProps {
@@ -17,7 +18,7 @@ export default function ExportButton({ assets, filename = 'assets' }: ExportButt
     return new Date(dateStr).toLocaleDateString('id-ID');
   };
   
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     setIsExporting(true);
     
     try {
@@ -41,8 +42,46 @@ export default function ExportButton({ assets, filename = 'assets' }: ExportButt
         'Keterangan',
       ];
       
+      // Process assets to expand bulk assets
+      const expandedAssets: Asset[] = [];
+      
+      for (const asset of assets) {
+        if (asset.is_bulk_parent && asset.bulk_id) {
+          // Fetch all individual assets in the bulk group
+          try {
+            const bulkResponse = await assetApi.getBulkAssets(asset.bulk_id);
+            
+            if (bulkResponse.data && bulkResponse.data.length > 0) {
+              // Sort bulk assets by sequence number (ascending order)
+              const sortedBulkAssets = bulkResponse.data.sort((a, b) => {
+                // Use natural string comparison for proper sorting
+                const keyA = createSortableKey(a.kode);
+                const keyB = createSortableKey(b.kode);
+                return keyA.localeCompare(keyB, undefined, { numeric: true });
+              });
+              
+              expandedAssets.push(...sortedBulkAssets);
+            }
+          } catch (error) {
+            console.error('Error fetching bulk assets for', asset.bulk_id, error);
+            // Fallback to using the parent asset if bulk fetch fails
+            expandedAssets.push(asset);
+          }
+        } else {
+          // Regular asset, add as-is
+          expandedAssets.push(asset);
+        }
+      }
+      
+      // Sort all expanded assets by their codes (final sorting)
+      expandedAssets.sort((a, b) => {
+        const keyA = createSortableKey(a.kode);
+        const keyB = createSortableKey(b.kode);
+        return keyA.localeCompare(keyB);
+      });
+      
       // Map assets to rows
-      const rows = assets.map(asset => {
+      const rows = expandedAssets.map(asset => {
         const status = 
           asset.status === 'baik' ? 'Baik' :
           asset.status === 'rusak' ? 'Rusak' :
@@ -57,7 +96,10 @@ export default function ExportButton({ assets, filename = 'assets' }: ExportButt
           asset.kode,
           asset.nama,
           asset.spesifikasi,
-          asset.quantity,          asset.satuan,          asset.category?.name || '',          asset.lokasi_id && asset.location_info ? 
+          asset.quantity, // This will now be 1 for each individual bulk asset
+          asset.satuan,
+          asset.category?.name || '',
+          asset.lokasi_id && asset.location_info ? 
             `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
             : asset.lokasi || '',
           status,
@@ -140,14 +182,34 @@ export default function ExportButton({ assets, filename = 'assets' }: ExportButt
           }
         }
       }
-        // Generate the Excel file
-      const date = new Date().toISOString().split('T')[0];      XLSX.writeFile(wb, `${filename}_${date}.xlsx`);
+      
+      // Generate the Excel file
+      const date = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `${filename}_${date}.xlsx`);
       
     } catch (error) {
       console.error('Export error:', error);
     } finally {
       setIsExporting(false);
     }
+  };
+  
+  // Helper function to create sortable key from asset code
+  const createSortableKey = (kode: string): string => {
+    // Split the code by periods to handle each segment properly
+    const parts = kode.split('.');
+    
+    // If it has suffix (bulk asset like "009.20.4.25.002-003")
+    if (kode.includes('-')) {
+      const [mainCode, suffix] = kode.split('-');
+      const mainParts = mainCode.split('.');
+      // Pad each segment to ensure proper sorting
+      const paddedMain = mainParts.map(part => part.padStart(3, '0')).join('.');
+      return `${paddedMain}-${suffix.padStart(3, '0')}`;
+    }
+    
+    // For regular assets, pad each segment
+    return parts.map(part => part.padStart(3, '0')).join('.');
   };    return (
     <button
       onClick={exportToExcel}
