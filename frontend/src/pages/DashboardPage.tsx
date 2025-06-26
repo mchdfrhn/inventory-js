@@ -658,8 +658,6 @@ export default function DashboardPage() {
           value={stats?.estimatedCurrentValue || 0}
           icon={ArrowTrendingUpIcon}
           color="green"
-          change={Math.round(-1 * Math.max(0, 100 - (stats?.depreciationPercentage || 0)))}
-          trend="down"
           formatter={(value) => `Rp ${formatToMillion(value)}`}
         />
         <StatCard
