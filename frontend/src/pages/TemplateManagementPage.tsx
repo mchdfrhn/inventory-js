@@ -1,6 +1,5 @@
 import { useState, useEffect, Fragment } from 'react';
-import { Cog6ToothIcon, PlusIcon, TrashIcon, EyeIcon, ArrowLeftIcon, ExclamationCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { useNavigate } from 'react-router-dom';
+import { Cog6ToothIcon, PlusIcon, TrashIcon, EyeIcon, ExclamationCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Dialog, Transition } from '@headlessui/react';
 import ReportPreview from '../components/ReportPreview';
 import { templateService, columnOptions, defaultTemplates, type ReportTemplate } from '../services/templateService';
@@ -49,7 +48,6 @@ const sampleAssets = [
 ];
 
 export default function TemplateManagementPage() {
-  const navigate = useNavigate();
   const { addNotification } = useNotification();
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
@@ -180,20 +178,11 @@ export default function TemplateManagementPage() {
       <GlassCard className="overflow-hidden">
         {/* Header section */}
         <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">
-          <div className="flex items-center">
-            <button
-              onClick={() => navigate('/reports')}
-              className="mr-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Kembali ke Laporan"
-            >
-              <ArrowLeftIcon className="h-6 w-6" />
-            </button>
-            <div>
-              <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Manajemen Template Laporan</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Kelola template laporan PDF untuk berbagai kebutuhan
-              </p>
-            </div>
+          <div>
+            <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Manajemen Template Laporan</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Kelola template laporan PDF untuk berbagai kebutuhan
+            </p>
           </div>
           <GradientButton 
             variant="primary" 
