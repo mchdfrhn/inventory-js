@@ -677,6 +677,25 @@ func (h *AssetHandler) CreateBulkAsset(c *gin.Context) {
 		return
 	}
 
+	// Check if satuan is eligible for bulk creation
+	// Only allow bulk creation for discrete units, not measurement units
+	bulkEligibleUnits := []string{"unit", "pcs", "set", "buah"}
+	isEligible := false
+	for _, eligible := range bulkEligibleUnits {
+		if req.Asset.Satuan == eligible {
+			isEligible = true
+			break
+		}
+	}
+
+	if !isEligible {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Status:  "error",
+			Message: fmt.Sprintf("Bulk asset creation is not allowed for satuan '%s'. Only allowed for: unit, pcs, set, buah", req.Asset.Satuan),
+		})
+		return
+	}
+
 	// Validate asset data
 	if err := validator.New().Struct(req.Asset); err != nil {
 		var validationErrors []string

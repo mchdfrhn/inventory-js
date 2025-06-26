@@ -258,8 +258,13 @@ export default function AssetForm() {
     }
 
     // Check if quantity > 1 and show bulk confirmation for new assets
+    // Only create bulk assets for discrete units (unit, pcs, set, buah)
+    // Not for continuous/measurement units (meter, kg, liter)
     const quantity = Number(formData.quantity);
-    if (!isEditMode && quantity > 1) {
+    const bulkEligibleUnits = ['unit', 'pcs', 'set', 'buah'];
+    const shouldCreateBulk = !isEditMode && quantity > 1 && bulkEligibleUnits.includes(formData.satuan);
+    
+    if (shouldCreateBulk) {
       setBulkQuantity(quantity);
       setShowBulkConfirmation(true);
       setIsSubmitting(false);
@@ -316,7 +321,11 @@ export default function AssetForm() {
     if (isEditMode) {
       updateMutation.mutate({ id: id as string, asset: finalDataToSubmit });
     } else {
-      if (quantity > 1) {
+      // Only create bulk for eligible units
+      const bulkEligibleUnits = ['unit', 'pcs', 'set', 'buah'];
+      const shouldCreateBulk = quantity > 1 && bulkEligibleUnits.includes(finalDataToSubmit.satuan);
+      
+      if (shouldCreateBulk) {
         createBulkMutation.mutate({ asset: finalDataToSubmit, quantity });
       } else {
         createMutation.mutate(finalDataToSubmit);
@@ -520,9 +529,14 @@ export default function AssetForm() {
                   value={formData.quantity}
                   onChange={handleChange}
                 />
-                {Number(formData.quantity) > 1 && !isEditMode && (
+                {Number(formData.quantity) > 1 && !isEditMode && ['unit', 'pcs', 'set', 'buah'].includes(formData.satuan) && (
                   <p className="mt-1 text-xs text-amber-600">
                     ⚠️ Jumlah lebih dari 1 akan membuat bulk asset dengan kode unik untuk setiap item
+                  </p>
+                )}
+                {Number(formData.quantity) > 1 && !isEditMode && ['meter', 'kg', 'liter'].includes(formData.satuan) && (
+                  <p className="mt-1 text-xs text-blue-600">
+                    ℹ️ Untuk satuan {formData.satuan}, tidak akan dibuat bulk asset terpisah
                   </p>
                 )}
               </div>              <div className="col-span-full">
