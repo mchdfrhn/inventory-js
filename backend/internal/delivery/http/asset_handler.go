@@ -435,10 +435,41 @@ func (h *AssetHandler) Import(c *gin.Context) {
 	successCount := 0
 	var errors []string
 	for _, asset := range assets {
-		if err := h.assetUsecase.CreateAsset(&asset); err != nil {
-			errors = append(errors, fmt.Sprintf("Failed to import asset '%s': %s", asset.Nama, err.Error()))
+		// Check if quantity > 1 and satuan is eligible for bulk creation
+		if asset.Quantity > 1 {
+			// Check if satuan is eligible for bulk creation
+			bulkEligibleUnits := []string{"unit", "pcs", "set", "buah"}
+			isEligible := false
+			for _, eligible := range bulkEligibleUnits {
+				if strings.ToLower(asset.Satuan) == strings.ToLower(eligible) {
+					isEligible = true
+					break
+				}
+			}
+
+			if isEligible {
+				// Create bulk assets
+				bulkAssets, err := h.assetUsecase.CreateBulkAsset(&asset, asset.Quantity)
+				if err != nil {
+					errors = append(errors, fmt.Sprintf("Failed to import bulk asset '%s': %s", asset.Nama, err.Error()))
+				} else {
+					successCount += len(bulkAssets)
+				}
+			} else {
+				// Create single asset even if quantity > 1 for non-bulk eligible units
+				if err := h.assetUsecase.CreateAsset(&asset); err != nil {
+					errors = append(errors, fmt.Sprintf("Failed to import asset '%s': %s", asset.Nama, err.Error()))
+				} else {
+					successCount++
+				}
+			}
 		} else {
-			successCount++
+			// Create single asset for quantity = 1
+			if err := h.assetUsecase.CreateAsset(&asset); err != nil {
+				errors = append(errors, fmt.Sprintf("Failed to import asset '%s': %s", asset.Nama, err.Error()))
+			} else {
+				successCount++
+			}
 		}
 	}
 

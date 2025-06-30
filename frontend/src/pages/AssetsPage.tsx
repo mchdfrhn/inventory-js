@@ -309,12 +309,12 @@ export default function AssetsPage() {
     // ID Asal Pengadaan: 1=Pembelian, 2=Bantuan, 3=Hibah, 4=Sumbangan, 5=Produksi Sendiri
     const templateData = [
       ['Nama Aset*', 'Kode Kategori*', 'Spesifikasi', 'Tanggal Perolehan*', 'Jumlah*', 'Satuan', 'Harga Perolehan*', 'Umur Ekonomis', 'Kode Lokasi*', 'ID Asal Pengadaan*', 'Status'],
-      ['Laptop Dell Inspiron 15', '10', 'Core i5 Gen 12 RAM 8GB SSD 256GB', '2024-01-15', '1', 'Unit', '8500000', '5', '001', 'Pembelian', 'Baik'],
-      ['Meja Kantor Kayu Jati', '20', 'Meja kerja kayu jati ukuran 120x60x75 cm dengan laci', '2024-02-10', '5', 'Unit', '1200000', '10', '002', 'Pembelian', 'Baik'],
-      ['Printer HP LaserJet Pro', '10', 'Printer laser monochrome A4 duplex network', '2024-03-05', '2', 'Unit', '3200000', '7', '001', 'Bantuan', 'Baik'],
-      ['Proyektor Epson EB-X41', '40', 'Proyektor XGA 3600 lumens HDMI VGA', '2023-12-20', '3', 'Unit', '4800000', '8', '003', 'Hibah', 'Baik'],
-      ['Kursi Kantor Ergonomis', '20', 'Kursi putar dengan sandaran tinggi bahan mesh', '2024-01-25', '10', 'Unit', '750000', '8', '002', 'Pembelian', 'Baik'],
-      ['Mikroskop Digital', '50', 'Mikroskop digital 1000x dengan kamera USB', '2023-11-15', '1', 'Unit', '12000000', '10', '004', 'Bantuan', 'Baik']
+      ['Laptop Dell Inspiron 15', '10', 'Core i5 Gen 12 RAM 8GB SSD 256GB', '2024-01-15', '1', 'unit', '8500000', '5', '001', 'Pembelian', 'Baik'],
+      ['Kursi Kantor Ergonomis', '20', 'Kursi putar dengan sandaran tinggi bahan mesh', '2024-01-25', '10', 'unit', '750000', '8', '002', 'Pembelian', 'Baik'],
+      ['Printer HP LaserJet Pro', '10', 'Printer laser monochrome A4 duplex network', '2024-03-05', '2', 'unit', '3200000', '7', '001', 'Bantuan', 'Baik'],
+      ['Proyektor Epson EB-X41', '40', 'Proyektor XGA 3600 lumens HDMI VGA', '2023-12-20', '3', 'unit', '4800000', '8', '003', 'Hibah', 'Baik'],
+      ['Meja Kantor Kayu Jati', '20', 'Meja kerja kayu jati ukuran 120x60x75 cm dengan laci', '2024-02-10', '5', 'unit', '1200000', '10', '002', 'Pembelian', 'Baik'],
+      ['Mikroskop Digital', '50', 'Mikroskop digital 1000x dengan kamera USB', '2023-11-15', '1', 'unit', '12000000', '10', '004', 'Bantuan', 'Baik']
     ];
 
     // Create CSV content with proper escaping
@@ -1580,12 +1580,16 @@ export default function AssetsPage() {
                         <strong>Asal Pengadaan:</strong> Pembelian, Bantuan, Hibah, Sumbangan, atau Produksi Sendiri
                         <br />
                         <strong>Kode Aset:</strong> Akan dibuat otomatis berdasarkan lokasi, kategori, dan urutan
+                        <br />
+                        <strong>Bulk Asset:</strong> Jika jumlah &gt; 1 dan satuan adalah "unit", "pcs", "set", atau "buah", sistem akan membuat bulk asset secara otomatis
                       </p>
                       
                       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
                         <p className="text-xs text-blue-700">
                           💡 <strong>Tips:</strong> Pastikan kode kategori dan lokasi sudah ada di sistem. 
                           Lihat daftar di halaman <a href="/categories" className="underline">Kategori</a> dan <a href="/locations" className="underline">Lokasi</a>.
+                          <br />
+                          🔢 <strong>Bulk Asset:</strong> Untuk aset dengan jumlah &gt; 1 dan satuan "unit", "pcs", "set", atau "buah", sistem akan otomatis membuat bulk asset dengan kode unik untuk setiap item.
                         </p>
                       </div>
                       
