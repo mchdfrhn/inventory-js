@@ -76,7 +76,9 @@ type AssetCategoryRepository interface {
 
 type AssetUsecase interface {
 	CreateAsset(asset *Asset) error
+	CreateAssetWithSequence(asset *Asset, sequence int) error
 	CreateBulkAsset(asset *Asset, quantity int) ([]Asset, error)
+	GetNextAvailableSequenceRange(count int) (int, error)
 	UpdateAsset(asset *Asset) error
 	DeleteAsset(id uuid.UUID) error
 	DeleteBulkAssets(bulkID uuid.UUID) error // Tambahkan method baru untuk delete bulk
