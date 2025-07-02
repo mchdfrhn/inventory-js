@@ -108,12 +108,12 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
                       <p className="text-sm text-gray-500 mb-4">
                         Apakah Anda yakin ingin menghapus{' '}
                         <span className="font-semibold">"{assetName}"</span>
-                        {` dan semua ${bulkCount} item dalam bulk ini`}?
+                        {` dan semua ${bulkCount} unit dalam bulk ini`}?
                       </p>
                       
                       <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                         <p className="text-sm text-red-800">
-                          <strong>⚠️ PERINGATAN:</strong> Menghapus bulk asset akan menghapus semua {bulkCount} item sekaligus! 
+                          <strong>⚠️ PERINGATAN:</strong> Menghapus bulk asset akan menghapus semua {bulkCount} unit sekaligus! 
                           Tindakan ini tidak dapat dibatalkan.
                         </p>
                       </div>

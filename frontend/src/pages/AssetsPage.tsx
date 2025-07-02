@@ -197,7 +197,7 @@ export default function AssetsPage() {
       
       // Tampilkan notifikasi sesuai jenis penghapusan
       if (asset.is_bulk_parent) {
-        addNotification('success', `Bulk asset berhasil dihapus (${asset.bulk_total_count || 1} item)`);
+        addNotification('success', `Bulk asset berhasil dihapus (${asset.bulk_total_count || 1} unit)`);
       } else {
         addNotification('success', 'Aset berhasil dihapus');
       }
@@ -1264,15 +1264,6 @@ export default function AssetsPage() {
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button 
-                      onClick={() => handleSort('quantity')}
-                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
-                    >
-                      Jumlah
-                      {renderSortIcon('quantity')}
-                    </button>
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <button 
                       onClick={() => handleSort('harga_perolehan')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
                     >
@@ -1353,9 +1344,6 @@ export default function AssetsPage() {
                         </td>
                         <td className="whitespace-nowrap px-3 py-4">
                           <div className="text-sm text-gray-900">{asset.category?.name || 'Tidak Terkategori'}</div>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4">
-                          <div className="text-sm text-gray-900">{asset.quantity} {asset.satuan}</div>
                         </td>
                         <td className="whitespace-nowrap px-3 py-4">
                           <div className="text-sm text-gray-900">
@@ -1589,7 +1577,7 @@ export default function AssetsPage() {
                           💡 <strong>Tips:</strong> Pastikan kode kategori dan lokasi sudah ada di sistem. 
                           Lihat daftar di halaman <a href="/categories" className="underline">Kategori</a> dan <a href="/locations" className="underline">Lokasi</a>.
                           <br />
-                          🔢 <strong>Bulk Asset:</strong> Untuk aset dengan jumlah &gt; 1 dan satuan "unit", "pcs", "set", atau "buah", sistem akan otomatis membuat bulk asset dengan kode unik untuk setiap item.
+                          🔢 <strong>Bulk Asset:</strong> Untuk aset dengan jumlah &gt; 1 dan satuan "unit", "pcs", "set", atau "buah", sistem akan otomatis membuat bulk asset dengan kode unik untuk setiap unit.
                         </p>
                       </div>
                       

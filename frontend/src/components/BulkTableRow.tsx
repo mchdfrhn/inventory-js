@@ -91,7 +91,7 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
             )}
             {isBulkAsset && (
               <span className="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-1 rounded-md">
-                📦 Bulk ({asset.bulk_total_count} item)
+                📦 Bulk ({asset.bulk_total_count} unit)
               </span>
             )}
           </div>
@@ -111,9 +111,6 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
         </td>
         <td className="whitespace-nowrap px-3 py-4">
           <div className="text-sm text-gray-900">{asset.category?.name || 'Tidak Terkategori'}</div>
-        </td>
-        <td className="whitespace-nowrap px-3 py-4">
-          <div className="text-sm text-gray-900">{asset.quantity} {asset.satuan}</div>
         </td>
         <td className="whitespace-nowrap px-3 py-4">
           <div className="text-sm text-gray-900">
@@ -180,7 +177,7 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
       {/* Expanded bulk assets rows */}
       {isExpanded && isBulkAsset && (
         <tr>
-          <td colSpan={10} className="px-6 py-4 bg-gray-50">
+          <td colSpan={9} className="px-6 py-4 bg-gray-50">
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Asset dalam Bulk ini:</h4>
               {isLoading ? (

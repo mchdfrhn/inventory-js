@@ -178,7 +178,7 @@ export default function AssetForm() {
       const isBulkAsset = assetData?.data?.is_bulk_parent;
       const bulkCount = assetData?.data?.bulk_total_count || 1;
       const message = isBulkAsset 
-        ? `Bulk aset berhasil diperbarui! ${bulkCount} item telah diupdate.`
+        ? `Bulk aset berhasil diperbarui! ${bulkCount} unit telah diupdate.`
         : 'Aset berhasil diperbarui!';
       addNotification('success', message);
       navigate('/assets');
@@ -509,7 +509,7 @@ export default function AssetForm() {
             <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4 flex items-center">
               <InformationCircleIcon className="h-5 w-5 mr-2 text-amber-500 flex-shrink-0" />
               <div>
-                <span className="font-medium">📦 Bulk Asset: Perubahan akan diterapkan ke semua {assetData.data.bulk_total_count || 1} item dalam bulk ini</span>
+                <span className="font-medium">📦 Bulk Asset: Perubahan akan diterapkan ke semua {assetData.data.bulk_total_count || 1} unit dalam bulk ini</span>
                 <p className="text-sm text-amber-700 mt-1">
                   Saat Anda menyimpan perubahan, semua asset dalam grup bulk ini akan diperbarui dengan data yang sama.
                 </p>
@@ -691,7 +691,7 @@ export default function AssetForm() {
                     />
                     {Number(formData.quantity) > 1 && ['unit', 'pcs', 'set', 'buah'].includes(formData.satuan) && (
                       <p className="mt-1 text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                        ⚠️ Jumlah lebih dari 1 akan membuat bulk asset dengan kode unik untuk setiap item
+                        ⚠️ Jumlah lebih dari 1 akan membuat bulk asset dengan kode unik untuk setiap unit
                       </p>
                     )}
                     {Number(formData.quantity) > 1 && ['meter', 'kg', 'liter'].includes(formData.satuan) && (

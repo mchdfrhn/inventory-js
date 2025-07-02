@@ -68,7 +68,7 @@ const BulkAssetCard: React.FC<BulkAssetCardProps> = ({ asset, onDelete, onDetail
             <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{asset.kode}</span>
             {isBulkAsset && (
               <span className="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-1 rounded-md">
-                Bulk ({asset.bulk_total_count})
+                Bulk ({asset.bulk_total_count} unit)
               </span>
             )}
           </div>
@@ -138,12 +138,12 @@ const BulkAssetCard: React.FC<BulkAssetCardProps> = ({ asset, onDelete, onDetail
               {isExpanded ? (
                 <>
                   <ChevronDownIcon className="h-4 w-4 mr-1" />
-                  Sembunyikan Detail ({asset.bulk_total_count} item)
+                  Sembunyikan Detail ({asset.bulk_total_count} unit)
                 </>
               ) : (
                 <>
                   <ChevronRightIcon className="h-4 w-4 mr-1" />
-                  Lihat Detail ({asset.bulk_total_count} item)
+                  Lihat Detail ({asset.bulk_total_count} unit)
                 </>
               )}
             </button>

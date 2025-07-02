@@ -224,7 +224,7 @@ export default function ReportPreview({ assets, template }: ReportPreviewProps) 
           className="text-white px-4 py-2 rounded-t-lg font-semibold"
           style={{ backgroundColor: template.headerColor }}
         >
-          DAFTAR ASET ({assets.length} item)
+          DAFTAR ASET ({assets.length} unit)
         </div>
         <div className="border border-gray-200 rounded-b-lg overflow-hidden">
           <div className="overflow-x-auto">
