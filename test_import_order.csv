@@ -1,0 +1,6 @@
+Nama Aset*,Kode Kategori*,Spesifikasi,Tanggal Perolehan*,Jumlah*,Satuan,Harga Perolehan*,Umur Ekonomis,Kode Lokasi*,ID Asal Pengadaan*,Status
+Single Asset 1,10,Laptop Dell pertama,2024-01-15,1,Unit,8500000,5,001,Pembelian,Baik
+Bulk Kursi Kantor,30,Kursi kantor ergonomis dengan sandaran,2024-01-16,10,Unit,750000,8,002,Pembelian,Baik
+Single Asset 2,20,Printer HP LaserJet,2024-01-17,1,Unit,3200000,7,003,Bantuan,Baik
+Bulk Laptop Dell,20,Laptop Dell Inspiron 15 Core i5,2024-01-18,10,Unit,8500000,5,001,Pembelian,Baik
+Single Asset 3,40,Proyektor Epson,2024-01-19,1,Unit,4800000,8,003,Hibah,Baik

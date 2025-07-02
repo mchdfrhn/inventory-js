@@ -431,15 +431,46 @@ func (h *AssetHandler) Import(c *gin.Context) {
 		return
 	}
 
-	// Import assets to database with proper sequence management
+	// Import assets to database following CSV order
 	successCount := 0
 	var errors []string
 
-	// Separate assets into bulk and single
-	var bulkAssets []domain.Asset
-	var singleAssets []domain.Asset
-	var bulkQuantities []int
+	// Get the starting sequence for the entire import batch
+	totalAssetCount := 0
+	for _, asset := range assets {
+		if asset.Quantity > 1 {
+			// Check if satuan is eligible for bulk creation
+			bulkEligibleUnits := []string{"unit", "pcs", "set", "buah"}
+			isEligible := false
+			for _, eligible := range bulkEligibleUnits {
+				if strings.EqualFold(asset.Satuan, eligible) {
+					isEligible = true
+					break
+				}
+			}
+			if isEligible {
+				totalAssetCount += asset.Quantity // Bulk assets count as quantity
+			} else {
+				totalAssetCount += 1 // Non-bulk eligible, treat as single
+			}
+		} else {
+			totalAssetCount += 1 // Single asset
+		}
+	}
 
+	// Reserve sequence range for the entire batch
+	startSequence, err := h.assetUsecase.GetNextAvailableSequenceRange(totalAssetCount)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Failed to allocate sequence range: " + err.Error(),
+		})
+		return
+	}
+
+	currentSequence := startSequence
+
+	// Process assets in CSV order (one by one) with sequential numbering
 	for _, asset := range assets {
 		if asset.Quantity > 1 {
 			// Check if satuan is eligible for bulk creation
@@ -453,41 +484,30 @@ func (h *AssetHandler) Import(c *gin.Context) {
 			}
 
 			if isEligible {
-				bulkAssets = append(bulkAssets, asset)
-				bulkQuantities = append(bulkQuantities, asset.Quantity)
+				// Create bulk asset with sequential sequence
+				bulkResult, err := h.assetUsecase.CreateBulkAssetWithSequence(&asset, asset.Quantity, currentSequence)
+				if err != nil {
+					errors = append(errors, fmt.Sprintf("Failed to import bulk asset '%s': %s", asset.Nama, err.Error()))
+				} else {
+					successCount += len(bulkResult)
+					currentSequence += asset.Quantity // Move sequence forward by quantity
+				}
 			} else {
 				// Treat as single asset even if quantity > 1 for non-bulk eligible units
-				singleAssets = append(singleAssets, asset)
-			}
-		} else {
-			singleAssets = append(singleAssets, asset)
-		}
-	}
-
-	// Process bulk assets first
-	for i, asset := range bulkAssets {
-		bulkResult, err := h.assetUsecase.CreateBulkAsset(&asset, bulkQuantities[i])
-		if err != nil {
-			errors = append(errors, fmt.Sprintf("Failed to import bulk asset '%s': %s", asset.Nama, err.Error()))
-		} else {
-			successCount += len(bulkResult)
-		}
-	}
-
-	// Process single assets with sequential numbering
-	if len(singleAssets) > 0 {
-		// Get starting sequence for all single assets
-		startSequence, err := h.assetUsecase.GetNextAvailableSequenceRange(len(singleAssets))
-		if err != nil {
-			errors = append(errors, fmt.Sprintf("Failed to get sequence range for single assets: %s", err.Error()))
-		} else {
-			// Create single assets with sequential sequences
-			for i, asset := range singleAssets {
-				if err := h.assetUsecase.CreateAssetWithSequence(&asset, startSequence+i); err != nil {
+				if err := h.assetUsecase.CreateAssetWithSequence(&asset, currentSequence); err != nil {
 					errors = append(errors, fmt.Sprintf("Failed to import asset '%s': %s", asset.Nama, err.Error()))
 				} else {
 					successCount++
+					currentSequence++ // Move sequence forward by 1
 				}
+			}
+		} else {
+			// Create single asset with sequential sequence
+			if err := h.assetUsecase.CreateAssetWithSequence(&asset, currentSequence); err != nil {
+				errors = append(errors, fmt.Sprintf("Failed to import asset '%s': %s", asset.Nama, err.Error()))
+			} else {
+				successCount++
+				currentSequence++ // Move sequence forward by 1
 			}
 		}
 	}

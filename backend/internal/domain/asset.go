@@ -78,6 +78,7 @@ type AssetUsecase interface {
 	CreateAsset(asset *Asset) error
 	CreateAssetWithSequence(asset *Asset, sequence int) error
 	CreateBulkAsset(asset *Asset, quantity int) ([]Asset, error)
+	CreateBulkAssetWithSequence(asset *Asset, quantity int, startSequence int) ([]Asset, error)
 	GetNextAvailableSequenceRange(count int) (int, error)
 	UpdateAsset(asset *Asset) error
 	DeleteAsset(id uuid.UUID) error
