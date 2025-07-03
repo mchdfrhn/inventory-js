@@ -251,20 +251,20 @@ export default function CategoriesPage() {
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">        {/* Header section */}
-        <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">          <div>
-            <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Kategori</h2>
-            <p className="mt-1 text-sm text-gray-500">
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">          <div>
+            <h2 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Kategori</h2>
+            <p className="mt-0.5 text-xs text-gray-500">
               Kelola kategori aset untuk organisasi yang lebih baik
             </p>
           </div>
-          <div className="flex space-x-3">
-            <GradientButton variant="secondary" onClick={() => setImportModalOpen(true)}>
-              <DocumentArrowUpIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
+          <div className="flex space-x-2">
+            <GradientButton variant="secondary" onClick={() => setImportModalOpen(true)} className="text-xs px-3 py-1.5">
+              <DocumentArrowUpIcon className="-ml-0.5 mr-1 h-4 w-4" />
               Import
             </GradientButton>
             <Link to="/categories/new">
-              <GradientButton variant="primary" className="flex items-center">
-                <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+              <GradientButton variant="primary" className="flex items-center text-xs px-3 py-1.5">
+                <PlusIcon className="-ml-0.5 mr-1 h-4 w-4" aria-hidden="true" />
                 Tambah Kategori
               </GradientButton>
             </Link>
@@ -272,16 +272,16 @@ export default function CategoriesPage() {
         </div>
 
         {/* Search bar */}
-        <div className="px-6 py-4 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30">
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30">
           <div className="relative rounded-md shadow-sm max-w-md">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
             </div>
             <input
               type="search"
               name="search"
               id="search-categories"
-              className="block w-full rounded-md border-0 py-2 pl-10 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"
+              className="block w-full rounded-md border-0 py-1.5 pl-9 pr-9 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 text-xs transition-all duration-300"
               placeholder="Cari kategori..."
               value={searchTerm}
               onChange={(e) => {
@@ -297,19 +297,19 @@ export default function CategoriesPage() {
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-300/50">
               <thead className="bg-gray-50/70">                <tr>
-                  <th scope="col" className="py-3.5 pl-6 pr-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="py-2 pl-4 pr-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Kode
                   </th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nama
                   </th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Deskripsi
                   </th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Jumlah Aset
                   </th>
-                  <th scope="col" className="relative py-3.5 pl-3 pr-6">
+                  <th scope="col" className="relative py-2 pl-2 pr-4">
                     <span className="sr-only">Actions</span>
                   </th>
                 </tr>
@@ -317,42 +317,42 @@ export default function CategoriesPage() {
               <tbody className="divide-y divide-gray-200/50">                {filteredCategories && filteredCategories.length > 0 ? (
                   filteredCategories.map((category: Category) => (
                     <tr key={category.id} className="table-row-hover hover:bg-blue-50/30 transition-all">
-                      <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-mono text-gray-700">
+                      <td className="whitespace-nowrap py-3 pl-4 pr-2 text-xs font-mono text-gray-700">
                         {category.code}
-                      </td>                      <td className="whitespace-nowrap py-4 pl-3 pr-3">
+                      </td>                      <td className="whitespace-nowrap py-3 pl-2 pr-2">
                         <div className="flex items-center">
-                          <div className="flex items-center justify-center h-8 w-8 rounded-md bg-blue-100/80 mr-3">
-                            <TagIcon className="h-5 w-5 text-blue-600" />
+                          <div className="flex items-center justify-center h-6 w-6 rounded-md bg-blue-100/80 mr-2">
+                            <TagIcon className="h-3.5 w-3.5 text-blue-600" />
                           </div>
-                          <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors duration-200">{category.name}</div>
+                          <div className="text-xs font-medium text-gray-900 group-hover:text-blue-700 transition-colors duration-200">{category.name}</div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 max-w-xs truncate">
+                      <td className="whitespace-nowrap px-2 py-3 text-xs text-gray-500 max-w-xs truncate">
                         {category.description}
-                      </td>                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                      </td>                      <td className="whitespace-nowrap px-2 py-3 text-xs">
                         <Link
                           to={`/assets?category=${category.id}`}
-                          className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 border border-blue-200 shadow-sm transition-all duration-300 hover:scale-105 hover:from-blue-100 hover:to-blue-200 hover:border-blue-300 cursor-pointer"
+                          className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 border border-blue-200 shadow-sm transition-all duration-300 hover:scale-105 hover:from-blue-100 hover:to-blue-200 hover:border-blue-300 cursor-pointer"
                           title={`Lihat ${category.asset_count || 0} aset dalam kategori ${category.name}`}
                         >
                           {category.asset_count || 0} aset
                         </Link>
-                      </td>                      <td className="whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-5">
+                      </td>                      <td className="whitespace-nowrap py-3 pl-2 pr-4 text-right text-xs font-medium">
+                        <div className="flex justify-end space-x-3">
                           <Link
                             to={`/categories/edit/${category.id}`}
-                            className="text-blue-600 hover:text-blue-900 flex items-center justify-center group transition-all duration-200 hover:-translate-y-0.5 px-2"
+                            className="text-blue-600 hover:text-blue-900 flex items-center justify-center group transition-all duration-200 hover:-translate-y-0.5 px-1"
                           >
-                            <svg className="h-4 w-4 mr-1.5 group-hover:scale-110 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="h-3.5 w-3.5 mr-1 group-hover:scale-110 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                             </svg>
                             <span className="leading-none">Ubah</span>
                           </Link>
                           <button
-                            className="text-red-600 hover:text-red-900 flex items-center justify-center group transition-all duration-200 hover:-translate-y-0.5 px-2"
+                            className="text-red-600 hover:text-red-900 flex items-center justify-center group transition-all duration-200 hover:-translate-y-0.5 px-1"
                             onClick={() => openDeleteModal(category)}
                           >
-                            <svg className="h-4 w-4 mr-1.5 group-hover:scale-110 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="h-3.5 w-3.5 mr-1 group-hover:scale-110 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                             </svg>
                             <span className="leading-none">Hapus</span>
@@ -362,18 +362,18 @@ export default function CategoriesPage() {
                     </tr>
                   ))
                 ) : (
-                  <tr>                    <td colSpan={5} className="py-10 text-center">                      <div className="flex flex-col items-center justify-center">
-                        <div className="rounded-full bg-gray-100/80 p-4">
-                          <TagIcon className="h-8 w-8 text-gray-400" />
+                  <tr>                    <td colSpan={5} className="py-8 text-center">                      <div className="flex flex-col items-center justify-center">
+                        <div className="rounded-full bg-gray-100/80 p-3">
+                          <TagIcon className="h-6 w-6 text-gray-400" />
                         </div>
-                        <p className="mt-4 text-lg font-medium text-gray-500">{searchTerm ? 'Tidak ada kategori yang cocok dengan pencarian Anda' : 'Tidak ada kategori ditemukan'}</p>
-                        <p className="mt-1 text-sm text-gray-400 max-w-md text-center">
+                        <p className="mt-3 text-sm font-medium text-gray-500">{searchTerm ? 'Tidak ada kategori yang cocok dengan pencarian Anda' : 'Tidak ada kategori ditemukan'}</p>
+                        <p className="mt-1 text-xs text-gray-400 max-w-md text-center">
                           {searchTerm ? 'Coba ubah kriteria pencarian Anda' : 'Mulai tambahkan kategori untuk mengelola aset dengan lebih baik'}
                         </p>
                         {!searchTerm && (
-                          <Link to="/categories/new" className="mt-6">
-                            <GradientButton size="md" variant="primary" className="animate-pulse">
-                              <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+                          <Link to="/categories/new" className="mt-4">
+                            <GradientButton size="sm" variant="primary" className="animate-pulse">
+                              <PlusIcon className="-ml-1 mr-1.5 h-4 w-4" />
                               Tambah Kategori Pertama
                             </GradientButton>
                           </Link>
@@ -387,10 +387,10 @@ export default function CategoriesPage() {
           </div>
         </div>        {/* Pagination controls */}
         {data?.pagination && filteredCategories && (
-          <div className="bg-white/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 sm:px-6">
-            <div className="flex items-center space-x-4">
+          <div className="bg-white/50 px-3 py-2 flex items-center justify-between border-t border-gray-200/50 sm:px-4">
+            <div className="flex items-center space-x-3">
               <div className="hidden sm:block">
-                <p className="text-sm text-gray-700">
+                <p className="text-xs text-gray-700">
                   Menampilkan <span className="font-medium">{data.pagination.total_items > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> sampai{' '}
                   <span className="font-medium">
                     {Math.min(currentPage * pageSize, data.pagination.total_items)}
@@ -407,27 +407,27 @@ export default function CategoriesPage() {
                 options={[10, 25, 50, 100]}
               />
             </div>
-            <div className="flex-1 flex justify-between sm:justify-end space-x-3">              <button
+            <div className="flex-1 flex justify-between sm:justify-end space-x-2">              <button
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
+                className={`relative inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md
                   ${currentPage === 1 
                     ? 'text-gray-300 cursor-not-allowed bg-white/50' 
                     : 'text-gray-700 bg-white/70 shadow-sm'}`}
               >
-                <ChevronLeftIcon className="h-5 w-5 mr-1" />
+                <ChevronLeftIcon className="h-4 w-4 mr-0.5" />
                 Sebelumnya
               </button>
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === data.pagination.total_pages}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
+                className={`relative inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md
                   ${currentPage === data.pagination.total_pages 
                     ? 'text-gray-300 cursor-not-allowed bg-white/50' 
                     : 'text-gray-700 bg-white/70 shadow-sm'}`}
               >
                 Berikutnya
-                <ChevronRightIcon className="h-5 w-5 ml-1" />
+                <ChevronRightIcon className="h-4 w-4 ml-0.5" />
               </button>
             </div>
           </div>

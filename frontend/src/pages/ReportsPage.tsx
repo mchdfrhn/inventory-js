@@ -703,29 +703,29 @@ const ReportsPage = () => {
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
+              <h2 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
                 Laporan Aset
               </h2>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-0.5 text-xs text-gray-500">
                 Generate laporan PDF dengan berbagai template yang tersedia
               </p>
             </div>
             <div className="text-right">
-              <div className="text-sm text-gray-500">
+              <div className="text-xs text-gray-500">
                 {hasActiveFilters() ? 'Aset Terfilter' : 'Total Aset'}
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-lg font-bold text-gray-900">
                 {hasActiveFilters() ? `${filteredCount} dari ${totalAssets}` : totalAssets}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 mt-0.5">
                 Data dari server
               </div>
               {selectedTemplate && (
-                <div className="mt-2 text-xs">
-                  <span className="text-gray-500">Template dipilih: </span>
+                <div className="mt-1 text-xs">
+                  <span className="text-gray-500">Template: </span>
                   <span className="text-blue-600 font-medium">
                     {templates.find(t => t.id === selectedTemplate)?.name}
                   </span>
@@ -736,17 +736,17 @@ const ReportsPage = () => {
         </div>
 
         {/* Search and Filter Controls */}
-        <div className="px-6 py-4 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-4">
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-3">
           {/* Left side - Search */}
           <div className="relative rounded-md shadow-sm max-w-md flex-grow">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
             </div>
             <input
               type="search"
               name="search"
               id="search-reports"
-              className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"
+              className="block w-full rounded-md border-0 py-1.5 pl-9 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 text-xs transition-all duration-300"
               placeholder="Cari template atau aset..."
               value={filters.searchText}
               onChange={(e) => updateFilters({ ...filters, searchText: e.target.value })}
@@ -754,30 +754,30 @@ const ReportsPage = () => {
           </div>
 
           {/* Right side - Controls */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => navigate('/template-management')}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm font-medium bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:-translate-y-0.5 transition-all duration-300"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:-translate-y-0.5 transition-all duration-300"
             >
-              <DocumentTextIcon className="h-4 w-4" />
+              <DocumentTextIcon className="h-3.5 w-3.5" />
               <span>Kelola Template</span>
             </button>
-            <div className="hidden sm:block h-6 w-px bg-gray-300"></div>
+            <div className="hidden sm:block h-4 w-px bg-gray-300"></div>
             <button
               type="button"
               onClick={() => setFilterPanelOpen(true)}
               className={`
-                flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm
+                flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs
                 ${hasActiveFilters()
                   ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
                   : 'bg-white/80 border-gray-200 text-gray-600 hover:bg-gray-50'}
                 transition-all duration-300
               `}
             >
-              <FunnelIcon className="h-4 w-4" />
+              <FunnelIcon className="h-3.5 w-3.5" />
               <span>Filter</span>
               {hasActiveFilters() && (
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
+                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
                   {Object.values(filters).filter(v => v && (Array.isArray(v) ? v.length > 0 : true)).length}
                 </span>
               )}

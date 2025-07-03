@@ -678,24 +678,24 @@ export default function AssetsPage() {
   }  return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">        {/* Header section */}
-        <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Aset</h2>
-            <p className="mt-1 text-sm text-gray-500">
+            <h2 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Aset</h2>
+            <p className="mt-0.5 text-xs text-gray-500">
               Kelola semua aset inventaris STTPU dengan mudah dan efisien
             </p>
-          </div>          <div className="flex space-x-3">
+          </div>          <div className="flex space-x-2">
             <GradientButton 
               variant="secondary" 
               onClick={() => setImportModalOpen(true)}
-              className="flex items-center"
+              className="flex items-center text-xs px-3 py-1.5"
             >
-              <DocumentArrowUpIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
+              <DocumentArrowUpIcon className="-ml-0.5 mr-1 h-4 w-4" />
               Import
             </GradientButton>
             <Link to="/assets/new">
-              <GradientButton variant="primary" className="flex items-center">
-                <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+              <GradientButton variant="primary" className="flex items-center text-xs px-3 py-1.5">
+                <PlusIcon className="-ml-0.5 mr-1 h-4 w-4" aria-hidden="true" />
                 Tambah Aset
               </GradientButton>
             </Link>
@@ -704,11 +704,11 @@ export default function AssetsPage() {
 
         {/* Category Filter Notification */}
         {categoryFilter && categoriesData?.data && (
-          <div className="px-6 py-3 bg-blue-50 border-b border-blue-200">
+          <div className="px-4 py-2 bg-blue-50 border-b border-blue-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <TagIcon className="h-5 w-5 text-blue-600 mr-2" />
-                <span className="text-sm text-blue-800">
+                <TagIcon className="h-4 w-4 text-blue-600 mr-2" />
+                <span className="text-xs text-blue-800">
                   Menampilkan aset dalam kategori: 
                   <span className="font-semibold ml-1">
                     {categoriesData.data.find((c: Category) => c.id === categoryFilter)?.name || 'Kategori Dipilih'}
@@ -724,7 +724,7 @@ export default function AssetsPage() {
                     return params;
                   });
                 }}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                className="text-blue-600 hover:text-blue-800 text-xs font-medium hover:underline"
               >                Hapus Filter              </button>
             </div>
           </div>
@@ -732,11 +732,11 @@ export default function AssetsPage() {
 
         {/* Location Filter Notification */}
         {locationFilter && locationsData?.data && (
-          <div className="px-6 py-3 bg-green-50 border-b border-green-200">
+          <div className="px-4 py-2 bg-green-50 border-b border-green-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <MapPinIcon className="h-5 w-5 text-green-600 mr-2" />
-                <span className="text-sm text-green-800">
+                <MapPinIcon className="h-4 w-4 text-green-600 mr-2" />
+                <span className="text-xs text-green-800">
                   Menampilkan aset dalam lokasi: 
                   <span className="font-semibold ml-1">
                     {locationsData.data.find((l: Location) => l.id.toString() === locationFilter)?.name || 'Lokasi Dipilih'}
@@ -752,7 +752,7 @@ export default function AssetsPage() {
                     return params;
                   });
                 }}
-                className="text-green-600 hover:text-green-800 text-sm font-medium hover:underline"
+                className="text-green-600 hover:text-green-800 text-xs font-medium hover:underline"
               >
                 Hapus Filter
               </button>
@@ -761,35 +761,35 @@ export default function AssetsPage() {
         )}
 
         {/* Search and filters */}
-        <div className="px-6 py-4 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-4">
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-3">
           {/* Search input */}
           <div className="relative rounded-md shadow-sm max-w-md flex-grow">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
             </div>
             <input
               type="search"
               name="search"
               id="search-assets"
-              className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm transition-all duration-300"
+              className="block w-full rounded-md border-0 py-1.5 pl-9 text-gray-900 ring-1 ring-inset ring-gray-300 bg-white/70 backdrop-blur-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 text-xs transition-all duration-300"
               placeholder="Cari aset..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </div>          {/* Filter toggles and export - moved to right */}          <div className="flex items-center gap-3 flex-wrap ml-auto">
+          </div>          {/* Filter toggles and export - moved to right */}          <div className="flex items-center gap-2 flex-wrap ml-auto">
             <ExportButton assets={filteredAndSortedAssets || []} filename="daftar_aset_sttpu" />
             <button
               type="button"
               onClick={() => setFilterPanelOpen(true)}              className={`
-                flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm
+                flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs
                 ${filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter
                   ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
                   : 'bg-white/80 border-gray-200 text-gray-600 hover:bg-gray-50'}
                 transition-all duration-300
               `}
             >
-              <AdjustmentsHorizontalIcon className="h-4 w-4" />              <span>{filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter ? 'Filter Aktif' : 'Filter'}</span>
-              {(filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter) && (                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
+              <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />              <span>{filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter ? 'Filter Aktif' : 'Filter'}</span>
+              {(filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter) && (                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
                   {(filter ? 1 : 0) + 
                    (depreciationFilter !== 'all' ? 1 : 0) + 
                    (acquisitionYearFilter ? 1 : 0) + 
@@ -1235,7 +1235,7 @@ export default function AssetsPage() {
           ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200/50">              <thead className="bg-gray-50/70">                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button 
                       onClick={() => handleSort('kode')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
@@ -1244,7 +1244,7 @@ export default function AssetsPage() {
                       {renderSortIcon('kode')}
                     </button>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button 
                       onClick={() => handleSort('nama')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
@@ -1253,7 +1253,7 @@ export default function AssetsPage() {
                       {renderSortIcon('nama')}
                     </button>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button 
                       onClick={() => handleSort('kategori')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
@@ -1262,7 +1262,7 @@ export default function AssetsPage() {
                       {renderSortIcon('kategori')}
                     </button>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button 
                       onClick={() => handleSort('harga_perolehan')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
@@ -1271,7 +1271,7 @@ export default function AssetsPage() {
                       {renderSortIcon('harga_perolehan')}
                     </button>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button 
                       onClick={() => handleSort('nilai_sisa')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
@@ -1280,7 +1280,7 @@ export default function AssetsPage() {
                       {renderSortIcon('nilai_sisa')}
                     </button>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button 
                       onClick={() => handleSort('penyusutan')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
@@ -1289,7 +1289,7 @@ export default function AssetsPage() {
                       {renderSortIcon('penyusutan')}
                     </button>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button 
                       onClick={() => handleSort('lokasi')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
@@ -1298,7 +1298,7 @@ export default function AssetsPage() {
                       {renderSortIcon('lokasi')}
                     </button>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button 
                       onClick={() => handleSort('status')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
@@ -1307,7 +1307,7 @@ export default function AssetsPage() {
                       {renderSortIcon('status')}
                     </button>
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                  <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>              <tbody className="divide-y divide-gray-300/50">
                 {filteredAndSortedAssets?.length ? (
@@ -1324,29 +1324,29 @@ export default function AssetsPage() {
                       />
                     ) : (
                       <tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">
-                        <td className="whitespace-nowrap py-4 pl-6 pr-3">
+                        <td className="whitespace-nowrap py-3 pl-4 pr-2">
                           <div className="flex flex-col space-y-1">
-                            <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{asset.kode}</span>
+                            <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md">{asset.kode}</span>
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4">
+                        <td className="whitespace-nowrap px-2 py-3">
                           <div className="flex items-center">
                             <div>
                               <button 
                                 onClick={() => openDetailPopup(asset)}
-                                className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200 text-left"
+                                className="text-xs font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200 text-left"
                               >
                                 {asset.nama}
                               </button>
-                              <div className="text-sm text-gray-500">{asset.spesifikasi}</div>
+                              <div className="text-xs text-gray-500">{asset.spesifikasi}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4">
-                          <div className="text-sm text-gray-900">{asset.category?.name || 'Tidak Terkategori'}</div>
+                        <td className="whitespace-nowrap px-2 py-3">
+                          <div className="text-xs text-gray-900">{asset.category?.name || 'Tidak Terkategori'}</div>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4">
-                          <div className="text-sm text-gray-900">
+                        <td className="whitespace-nowrap px-2 py-3">
+                          <div className="text-xs text-gray-900">
                             {new Intl.NumberFormat('id-ID', {
                               style: 'currency',
                               currency: 'IDR',
@@ -1354,8 +1354,8 @@ export default function AssetsPage() {
                             }).format(getTotalHargaPerolehan(asset))}
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4">
-                          <div className="text-sm text-gray-900">
+                        <td className="whitespace-nowrap px-2 py-3">
+                          <div className="text-xs text-gray-900">
                             {new Intl.NumberFormat('id-ID', {
                               style: 'currency',
                               currency: 'IDR',
@@ -1363,7 +1363,7 @@ export default function AssetsPage() {
                             }).format(getTotalNilaiSisa(asset))}
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4">
+                        <td className="whitespace-nowrap px-2 py-3">
                           {(() => {
                             const depreciationPercentage = asset.harga_perolehan > 0
                               ? Math.round((asset.akumulasi_penyusutan / asset.harga_perolehan) * 100)
@@ -1378,41 +1378,41 @@ export default function AssetsPage() {
                             return (
                               <div className="flex flex-col">
                                 <div className="text-xs text-gray-900 mb-1">{depreciationPercentage}%</div>
-                                <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                  <div className={`${barColor} h-1.5 rounded-full`} style={{ width: `${depreciationPercentage}%` }}></div>
+                                <div className="w-full bg-gray-200 rounded-full h-1">
+                                  <div className={`${barColor} h-1 rounded-full`} style={{ width: `${depreciationPercentage}%` }}></div>
                                 </div>
                               </div>
                             );
                           })()}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4">
-                          <div className="text-sm text-gray-900">
+                        <td className="whitespace-nowrap px-2 py-3">
+                          <div className="text-xs text-gray-900">
                             {asset.lokasi_id && asset.location_info ? 
                               `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
                               : asset.lokasi || ''}
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4">
-                          <span className={`status-badge inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium bg-gradient-to-r ${statusGradients[asset.status] || 'from-gray-50 to-gray-100 border-gray-200'} shadow-sm transition-all duration-300 hover:scale-105 border`}>
+                        <td className="whitespace-nowrap px-2 py-3">
+                          <span className={`status-badge inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gradient-to-r ${statusGradients[asset.status] || 'from-gray-50 to-gray-100 border-gray-200'} shadow-sm transition-all duration-300 hover:scale-105 border`}>
                             {formatStatus(asset.status)}
                           </span>
                         </td>
-                        <td className="whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-3">
+                        <td className="whitespace-nowrap py-3 pl-2 pr-4 text-right text-xs font-medium">
+                          <div className="flex justify-end space-x-2">
                             <Link 
                               to={`/assets/edit/${asset.id}`}
-                              className="text-blue-600 hover:text-blue-900 flex items-center justify-center group transition-all duration-200 hover:-translate-y-0.5 px-2"
+                              className="text-blue-600 hover:text-blue-900 flex items-center justify-center group transition-all duration-200 hover:-translate-y-0.5 px-1"
                             >
-                              <svg className="h-4 w-4 mr-1.5 group-hover:scale-110 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="h-3.5 w-3.5 mr-1 group-hover:scale-110 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                               </svg>
                               <span className="leading-none">Ubah</span>
                             </Link>
                             <button
                               onClick={() => openDeleteModal(asset)}
-                              className="text-red-600 hover:text-red-900 flex items-center justify-center group transition-all duration-200 hover:-translate-y-0.5 px-2"
+                              className="text-red-600 hover:text-red-900 flex items-center justify-center group transition-all duration-200 hover:-translate-y-0.5 px-1"
                             >
-                              <svg className="h-4 w-4 mr-1.5 group-hover:scale-110 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="h-3.5 w-3.5 mr-1 group-hover:scale-110 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                               </svg>
                               <span className="leading-none">Hapus</span>
@@ -1424,31 +1424,31 @@ export default function AssetsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={10} className="px-6 py-20">
+                    <td colSpan={10} className="px-4 py-12">
                       <div className="flex flex-col items-center justify-center">
-                        <div className="rounded-full bg-gray-100/80 p-4">
-                          <ExclamationCircleIcon className="h-8 w-8 text-gray-400" />
-                        </div>                        <p className="mt-4 text-lg font-medium text-gray-500">
+                        <div className="rounded-full bg-gray-100/80 p-3">
+                          <ExclamationCircleIcon className="h-6 w-6 text-gray-400" />
+                        </div>                        <p className="mt-3 text-sm font-medium text-gray-500">
                           {searchTerm || filter || depreciationFilter !== 'all' 
                             ? 'Tidak ada aset yang cocok dengan kriteria pencarian Anda' 
                             : 'Tidak ada aset ditemukan'}
                         </p>
-                        <p className="mt-1 text-sm text-gray-400 max-w-md text-center">
+                        <p className="mt-1 text-xs text-gray-400 max-w-md text-center">
                           {searchTerm || filter || depreciationFilter !== 'all' 
                             ? 'Coba ubah filter atau kriteria pencarian Anda' 
                             : 'Mulai tambahkan aset inventaris Anda untuk mengelola dengan lebih baik'}
                         </p>
                         {!searchTerm && !filter && depreciationFilter === 'all' && (
-                          <Link to="/assets/new" className="mt-6">
-                            <GradientButton size="md" variant="primary" className="animate-pulse">
-                              <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+                          <Link to="/assets/new" className="mt-4">
+                            <GradientButton size="sm" variant="primary" className="animate-pulse">
+                              <PlusIcon className="-ml-1 mr-1.5 h-4 w-4" />
                               Tambah Aset Pertama
                             </GradientButton>
                           </Link>
                         )}                        {(searchTerm || filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter) && (                          
                           <button 
                             onClick={resetAllFilters}
-                            className="mt-4 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                            className="mt-3 text-xs text-blue-600 hover:text-blue-800 hover:underline"
                           >
                             Hapus semua filter
                           </button>
@@ -1462,10 +1462,10 @@ export default function AssetsPage() {
           </div>
         )}          {/* Pagination */}
         {data?.pagination && filteredAndSortedAssets && (
-          <div className="bg-white/50 px-4 py-3 flex items-center justify-between border-t border-gray-200/50 sm:px-6">
-            <div className="flex items-center space-x-4">
+          <div className="bg-white/50 px-3 py-2 flex items-center justify-between border-t border-gray-200/50 sm:px-4">
+            <div className="flex items-center space-x-3">
               <div className="hidden sm:block">
-                <p className="text-sm text-gray-700">
+                <p className="text-xs text-gray-700">
                   Menampilkan <span className="font-medium">{data.pagination.total_items > 0 ? (page - 1) * pageSize + 1 : 0}</span> sampai{' '}
                   <span className="font-medium">
                     {Math.min(page * pageSize, data.pagination.total_items)}
@@ -1481,27 +1481,27 @@ export default function AssetsPage() {
                 }}
                 options={[10, 25, 50, 100]}
               />
-            </div>            <div className="flex-1 flex justify-between sm:justify-end space-x-3">              <button
+            </div>            <div className="flex-1 flex justify-between sm:justify-end space-x-2">              <button
                 onClick={() => setPage(page - 1)}
                 disabled={page === 1}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors
+                className={`relative inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors
                   ${page === 1 
                     ? 'text-gray-300 cursor-not-allowed bg-white/50' 
                     : 'text-gray-700 bg-white/70 shadow-sm'}`}
               >
-                <ChevronLeftIcon className="h-5 w-5 mr-1" />
+                <ChevronLeftIcon className="h-4 w-4 mr-0.5" />
                 Sebelumnya
               </button>
               <button
                 onClick={() => setPage(page + 1)}
                 disabled={page === data.pagination.total_pages}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors
+                className={`relative inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors
                   ${page === data.pagination.total_pages 
                     ? 'text-gray-300 cursor-not-allowed bg-white/50' 
                     : 'text-gray-700 bg-white/70 shadow-sm'}`}
               >
                 Berikutnya
-                <ChevronRightIcon className="h-5 w-5 ml-1" />
+                <ChevronRightIcon className="h-4 w-4 ml-0.5" />
               </button>
             </div>
           </div>        

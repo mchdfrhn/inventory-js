@@ -238,33 +238,33 @@ export default function AuditLogPage() {
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800 flex items-center">
-                <ClockIcon className="h-6 w-6 mr-2 text-blue-600" />
+              <h2 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800 flex items-center">
+                <ClockIcon className="h-5 w-5 mr-2 text-blue-600" />
                 Riwayat Aktivitas
               </h2>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-0.5 text-xs text-gray-500">
                 Log aktivitas yang mencatat semua perubahan data aset dalam sistem
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setFilterPanelOpen(true)}
                 className={`
-                  flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm
+                  flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs
                   ${filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date
                     ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
                     : 'bg-white/80 border-gray-200 text-gray-600 hover:bg-gray-50'}
                   transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md
                 `}
               >
-                <AdjustmentsHorizontalIcon className="h-4 w-4" />
+                <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
                 <span>{filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date ? 'Filter Aktif' : 'Filter'}</span>
                 {(filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date) && (
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
                     {(filters.entity_type ? 1 : 0) + 
                      (filters.entity_id ? 1 : 0) + 
                      (filters.action ? 1 : 0) + 
@@ -302,51 +302,51 @@ export default function AuditLogPage() {
                 leaveFrom="translate-x-0"
                 leaveTo="translate-x-full"
               >
-                <div className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white pt-5 pb-4 shadow-xl">
-                  <div className="px-6 flex items-center justify-between border-b border-gray-200 pb-4">
-                    <Dialog.Title className="text-lg font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Filter Log Aktivitas</Dialog.Title>
+                <div className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white pt-4 pb-3 shadow-xl">
+                  <div className="px-5 flex items-center justify-between border-b border-gray-200 pb-3">
+                    <Dialog.Title className="text-base font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Filter Log Aktivitas</Dialog.Title>
                     <button
                       type="button"
                       className="rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 p-1 transition-colors"
                       onClick={() => setFilterPanelOpen(false)}
                     >
                       <span className="sr-only">Tutup Panel</span>
-                      <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                      <XMarkIcon className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
                   
-                  <div className="mt-4 flex flex-col px-6 space-y-5 overflow-y-auto">
+                  <div className="mt-3 flex flex-col px-5 space-y-4 overflow-y-auto">
                     {/* Entity Type Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full mr-1.5"></span>
                         Jenis Entitas
                       </h3>
-                      <div className="space-y-2">
-                        <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                      <div className="space-y-1.5">
+                        <label className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                           <input
                             type="radio"
-                            className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
                             name="entity_type"
                             value=""
                             checked={tempFilters.entity_type === ''}
                             onChange={(e) => handleFilterChange('entity_type', e.target.value)}
                           />
-                          <span className="ml-2 text-sm">Semua</span>
+                          <span className="ml-1.5 text-xs">Semua</span>
                         </label>
                         
-                        <div className="grid grid-cols-1 gap-2">
+                        <div className="grid grid-cols-1 gap-1.5">
                           {["asset", "category", "location"].map((type) => (
-                            <label key={type} className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                            <label key={type} className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                               <input
                                 type="radio"
-                                className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
                                 name="entity_type"
                                 value={type}
                                 checked={tempFilters.entity_type === type}
                                 onChange={(e) => handleFilterChange('entity_type', e.target.value)}
                               />
-                              <span className="ml-2 text-sm capitalize">{type === 'asset' ? 'Asset' : type === 'category' ? 'Kategori' : 'Lokasi'}</span>
+                              <span className="ml-1.5 text-xs capitalize">{type === 'asset' ? 'Asset' : type === 'category' ? 'Kategori' : 'Lokasi'}</span>
                             </label>
                           ))}
                         </div>
@@ -354,41 +354,41 @@ export default function AuditLogPage() {
                     </div>
 
                     {/* Action Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-purple-500 rounded-full mr-1.5"></span>
                         Aksi
                       </h3>
-                      <div className="space-y-2">
-                        <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                      <div className="space-y-1.5">
+                        <label className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                           <input
                             type="radio"
-                            className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
                             name="action"
                             value=""
                             checked={tempFilters.action === ''}
                             onChange={(e) => handleFilterChange('action', e.target.value)}
                           />
-                          <span className="ml-2 text-sm">Semua</span>
+                          <span className="ml-1.5 text-xs">Semua</span>
                         </label>
                         
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-1.5">
                           {[
                             { value: "create", label: "Dibuat" },
                             { value: "update", label: "Diperbarui" },
                             { value: "delete", label: "Dihapus" },
                             { value: "bulk_delete", label: "Hapus Bulk" }
                           ].map((action) => (
-                            <label key={action.value} className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                            <label key={action.value} className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                               <input
                                 type="radio"
-                                className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
                                 name="action"
                                 value={action.value}
                                 checked={tempFilters.action === action.value}
                                 onChange={(e) => handleFilterChange('action', e.target.value)}
                               />
-                              <span className="ml-2 text-sm">{action.label}</span>
+                              <span className="ml-1.5 text-xs">{action.label}</span>
                             </label>
                           ))}
                         </div>
@@ -396,41 +396,41 @@ export default function AuditLogPage() {
                     </div>
 
                     {/* Date Range Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-green-500 rounded-full mr-1.5"></span>
                         Rentang Tanggal
                       </h3>
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
                             Dari Tanggal
                           </label>
                           <input
                             type="date"
                             value={tempFilters.from_date}
                             onChange={(e) => handleFilterChange('from_date', e.target.value)}
-                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-1.5"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
                             Sampai Tanggal
                           </label>
                           <input
                             type="date"
                             value={tempFilters.to_date}
                             onChange={(e) => handleFilterChange('to_date', e.target.value)}
-                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-1.5"
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* Entity ID Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-orange-500 rounded-full mr-1.5"></span>
                         ID Entitas
                       </h3>
                       <input
@@ -438,34 +438,34 @@ export default function AuditLogPage() {
                         value={tempFilters.entity_id}
                         onChange={(e) => handleFilterChange('entity_id', e.target.value)}
                         placeholder="UUID entitas"
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-1.5"
                       />
                     </div>
 
                     {/* Active Filters */}
                     {(tempFilters.entity_type || tempFilters.entity_id || tempFilters.action || tempFilters.from_date || tempFilters.to_date) && (
-                      <div className="mt-4 mb-2 flex flex-wrap gap-2">
-                        <h3 className="w-full text-xs font-medium text-gray-500 mb-1">Filter Aktif:</h3>
+                      <div className="mt-3 mb-1.5 flex flex-wrap gap-1.5">
+                        <h3 className="w-full text-xs font-medium text-gray-500 mb-0.5">Filter Aktif:</h3>
                         
                         {tempFilters.entity_type && (
-                          <div className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                          <div className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs font-medium text-blue-800">
                             <span>Entitas: </span>
                             <span className="ml-1 font-semibold capitalize">
                               {tempFilters.entity_type === 'asset' ? 'Asset' : tempFilters.entity_type === 'category' ? 'Kategori' : 'Lokasi'}
                             </span>
                             <button
                               type="button"
-                              className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none"
+                              className="ml-1 inline-flex h-3 w-3 flex-shrink-0 items-center justify-center rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none"
                               onClick={() => handleFilterChange('entity_type', '')}
                             >
                               <span className="sr-only">Hapus filter entitas</span>
-                              <XMarkIcon className="h-3 w-3" />
+                              <XMarkIcon className="h-2.5 w-2.5" />
                             </button>
                           </div>
                         )}
                         
                         {tempFilters.action && (
-                          <div className="inline-flex items-center rounded-full bg-purple-50 border border-purple-200 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+                          <div className="inline-flex items-center rounded-full bg-purple-50 border border-purple-200 px-2 py-0.5 text-xs font-medium text-purple-800">
                             <span>Aksi: </span>
                             <span className="ml-1 font-semibold">
                               {tempFilters.action === 'create' ? 'Dibuat' : 
@@ -475,11 +475,11 @@ export default function AuditLogPage() {
                             </span>
                             <button
                               type="button"
-                              className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-purple-600 hover:bg-purple-200 hover:text-purple-800 focus:outline-none"
+                              className="ml-1 inline-flex h-3 w-3 flex-shrink-0 items-center justify-center rounded-full text-purple-600 hover:bg-purple-200 hover:text-purple-800 focus:outline-none"
                               onClick={() => handleFilterChange('action', '')}
                             >
                               <span className="sr-only">Hapus filter aksi</span>
-                              <XMarkIcon className="h-3 w-3" />
+                              <XMarkIcon className="h-2.5 w-2.5" />
                             </button>
                           </div>
                         )}
@@ -487,17 +487,17 @@ export default function AuditLogPage() {
                     )}
 
                     {/* Filter Actions */}
-                    <div className="mt-6 px-1">
-                      <div className="flex flex-col space-y-3">
+                    <div className="mt-5 px-1">
+                      <div className="flex flex-col space-y-2.5">
                         <button
                           type="button"
-                          className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                          className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
                           onClick={applyFilters}
                           disabled={isApplyingFilter}
                         >
                           {isApplyingFilter ? (
                             <>
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <svg className="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
@@ -505,7 +505,7 @@ export default function AuditLogPage() {
                             </>
                           ) : (
                             <>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
                               Terapkan Filter
@@ -515,17 +515,17 @@ export default function AuditLogPage() {
                         
                         <button
                           type="button"
-                          className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                          className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                           onClick={resetTempFiltersToDefaults}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                           </svg>
                           Reset Filter
                         </button>
                       </div>
                       
-                      <div className="mt-6 pt-4 border-t border-gray-200 text-xs text-center text-gray-500">
+                      <div className="mt-5 pt-3 border-t border-gray-200 text-xs text-center text-gray-500">
                         Klik di luar panel untuk menutup
                       </div>
                     </div>
@@ -537,7 +537,7 @@ export default function AuditLogPage() {
         </Transition.Root>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-5">
           {/* Active Filters Display */}
           <Transition
             show={!!(filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date)}
@@ -548,24 +548,24 @@ export default function AuditLogPage() {
             leaveFrom="opacity-100 translate-y-0"
             leaveTo="opacity-0 -translate-y-2"
           >
-            <div className="mb-6 bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50 shadow-sm">
+            <div className="mb-5 bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200/50 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700 flex items-center">
-                    <svg className="w-4 h-4 mr-1.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs font-medium text-gray-700 flex items-center">
+                    <svg className="w-3.5 h-3.5 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
                     </svg>
                     Filter aktif:
                   </span>
                   
                   {filters.entity_type && (
-                    <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800 transition-all duration-200 hover:bg-blue-100">
+                    <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs font-medium text-blue-800 transition-all duration-200 hover:bg-blue-100">
                       Entitas: {filters.entity_type === 'asset' ? 'Asset' : filters.entity_type === 'category' ? 'Kategori' : 'Lokasi'}
                     </span>
                   )}
                   
                   {filters.action && (
-                    <span className="inline-flex items-center rounded-full bg-purple-50 border border-purple-200 px-2.5 py-0.5 text-xs font-medium text-purple-800 transition-all duration-200 hover:bg-purple-100">
+                    <span className="inline-flex items-center rounded-full bg-purple-50 border border-purple-200 px-2 py-0.5 text-xs font-medium text-purple-800 transition-all duration-200 hover:bg-purple-100">
                       Aksi: {filters.action === 'create' ? 'Dibuat' : 
                              filters.action === 'update' ? 'Diperbarui' : 
                              filters.action === 'delete' ? 'Dihapus' : 
@@ -574,19 +574,19 @@ export default function AuditLogPage() {
                   )}
                   
                   {filters.from_date && (
-                    <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-0.5 text-xs font-medium text-green-800 transition-all duration-200 hover:bg-green-100">
+                    <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-xs font-medium text-green-800 transition-all duration-200 hover:bg-green-100">
                       Dari: {filters.from_date}
                     </span>
                   )}
                   
                   {filters.to_date && (
-                    <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-0.5 text-xs font-medium text-green-800 transition-all duration-200 hover:bg-green-100">
+                    <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-xs font-medium text-green-800 transition-all duration-200 hover:bg-green-100">
                       Sampai: {filters.to_date}
                     </span>
                   )}
                   
                   {filters.entity_id && (
-                    <span className="inline-flex items-center rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-xs font-medium text-orange-800 transition-all duration-200 hover:bg-orange-100">
+                    <span className="inline-flex items-center rounded-full bg-orange-50 border border-orange-200 px-2 py-0.5 text-xs font-medium text-orange-800 transition-all duration-200 hover:bg-orange-100">
                       ID: {filters.entity_id.substring(0, 8)}...
                     </span>
                   )}
@@ -594,9 +594,9 @@ export default function AuditLogPage() {
                 
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-600 transition-colors duration-200 hover:bg-red-50 px-2 py-1 rounded-md"
+                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-600 transition-colors duration-200 hover:bg-red-50 px-1.5 py-0.5 rounded-md"
                 >
-                  <XMarkIcon className="h-4 w-4" />
+                  <XMarkIcon className="h-3.5 w-3.5" />
                   Bersihkan
                 </button>
               </div>
@@ -609,25 +609,25 @@ export default function AuditLogPage() {
             {data?.data && data.data.length > 0 ? (
               <div className="divide-y divide-gray-200/50">
               {data.data.map((log: AuditLog) => (
-                <div key={log.id} className="p-6">
-                  <div className="flex items-start space-x-4">
+                <div key={log.id} className="p-5">
+                  <div className="flex items-start space-x-3.5">
                     {/* Action indicator */}
-                    <div className="flex-shrink-0 mt-1.5">
+                    <div className="flex-shrink-0 mt-1">
                       {getActionIcon(log.action)}
                     </div>
 
                     {/* Main content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getActionColor(log.action)}`}>
+                        <div className="flex items-center space-x-2.5">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getActionColor(log.action)}`}>
                             {getActionLabel(log.action)}
                           </span>
-                          <span className="text-sm font-medium text-gray-900 uppercase">
+                          <span className="text-xs font-medium text-gray-900 uppercase">
                             {log.entity_type}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1.5">
                           <ClockIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-500">
                             {formatDate(log.created_at)}

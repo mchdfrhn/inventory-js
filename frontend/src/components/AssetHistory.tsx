@@ -100,13 +100,13 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
       const changes = typeof log.changes === 'string' ? JSON.parse(log.changes) : log.changes;
       
       return (
-        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">Perubahan:</h4>
-          <div className="space-y-2">
+        <div className="mt-1 p-1.5 bg-gray-50 rounded-lg">
+          <h4 className="text-xs font-medium text-gray-900 mb-0.5">Perubahan:</h4>
+          <div className="space-y-0.5">
             {Object.entries(changes).map(([field, change]: [string, any]) => (
               <div key={field} className="text-xs">
                 <span className="font-medium text-gray-700">{field}:</span>
-                <div className="ml-2 text-gray-600">
+                <div className="ml-1 text-gray-600">
                   {change.from !== null && (
                     <div>Dari: <span className="text-red-600">{JSON.stringify(change.from)}</span></div>
                   )}
@@ -121,7 +121,7 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
       );
     } catch (error) {
       return (
-        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+        <div className="mt-1 p-1.5 bg-gray-50 rounded-lg">
           <p className="text-xs text-gray-500">Data perubahan tidak dapat ditampilkan</p>
         </div>
       );
@@ -131,13 +131,13 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <ClockIcon className="h-5 w-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Riwayat Aktivitas</h3>
+        <div className="p-2">
+          <div className="flex items-center space-x-1.5 mb-1.5">
+            <ClockIcon className="h-3 w-3 text-gray-600" />
+            <h3 className="text-xs font-semibold text-gray-900">Riwayat Aktivitas</h3>
           </div>
-          <div className="flex items-center justify-center h-24">
-            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-blue-500 border-r-2 border-b-2 border-gray-200"></div>
+          <div className="flex items-center justify-center h-8">
+            <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-blue-500 border-r-2 border-b-2 border-gray-200"></div>
           </div>
         </div>
       </div>
@@ -147,13 +147,13 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <ClockIcon className="h-5 w-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Riwayat Aktivitas</h3>
+        <div className="p-2">
+          <div className="flex items-center space-x-1.5 mb-1.5">
+            <ClockIcon className="h-3 w-3 text-gray-600" />
+            <h3 className="text-xs font-semibold text-gray-900">Riwayat Aktivitas</h3>
           </div>
           <div className="text-center text-red-600">
-            <p className="text-sm">Error loading history: {error instanceof Error ? error.message : 'Unknown error'}</p>
+            <p className="text-xs">Error loading history: {error instanceof Error ? error.message : 'Unknown error'}</p>
           </div>
         </div>
       </div>
@@ -164,23 +164,23 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <ClockIcon className="h-5 w-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Riwayat Aktivitas</h3>
-            <span className="text-sm text-gray-500">({logs.length} aktivitas)</span>
+      <div className="p-2">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center space-x-1.5">
+            <ClockIcon className="h-3 w-3 text-gray-600" />
+            <h3 className="text-xs font-semibold text-gray-900">Riwayat Aktivitas</h3>
+            <span className="text-xs text-gray-500">({logs.length} aktivitas)</span>
           </div>
           {logs.length > 0 && (
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-800"
+              className="flex items-center space-x-0.5 text-xs text-gray-600 hover:text-gray-800"
             >
               <span>{isCollapsed ? 'Expand' : 'Collapse'}</span>
               {isCollapsed ? (
-                <ChevronDownIcon className="h-4 w-4" />
+                <ChevronDownIcon className="h-2.5 w-2.5" />
               ) : (
-                <ChevronUpIcon className="h-4 w-4" />
+                <ChevronUpIcon className="h-2.5 w-2.5" />
               )}
             </button>
           )}
@@ -189,40 +189,40 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
         {!isCollapsed && (
           <>
             {logs.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-1.5">
                 {logs.map((log: AuditLog) => (
-                  <div key={log.id} className="border-l-2 border-gray-200 pl-4 relative">
+                  <div key={log.id} className="border-l-2 border-gray-200 pl-1.5 relative">
                     {/* Timeline dot */}
-                    <div className="absolute -left-1.5 top-2">
+                    <div className="absolute -left-1 top-0.5">
                       {getActionIcon(log.action)}
                     </div>
 
-                    <div className="pb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getActionColor(log.action)}`}>
+                    <div className="pb-1.5">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <div className="flex items-center space-x-1">
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium border ${getActionColor(log.action)}`}>
                             {getActionLabel(log.action)}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-1 text-xs text-gray-500">
-                          <ClockIcon className="h-3 w-3" />
+                        <div className="flex items-center space-x-0.5 text-xs text-gray-500">
+                          <ClockIcon className="h-2.5 w-2.5" />
                           <span>{formatDate(log.created_at)}</span>
                         </div>
                       </div>
 
-                      <p className="text-sm text-gray-700 mb-2">{log.description}</p>
+                      <p className="text-xs text-gray-700 mb-0.5">{log.description}</p>
 
                       {/* Metadata */}
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-2">
+                      <div className="flex flex-wrap items-center gap-1 text-xs text-gray-500 mb-0.5">
                         {log.ip_address && (
-                          <div className="flex items-center space-x-1">
-                            <ComputerDesktopIcon className="h-3 w-3" />
+                          <div className="flex items-center space-x-0.5">
+                            <ComputerDesktopIcon className="h-2.5 w-2.5" />
                             <span>IP: {log.ip_address}</span>
                           </div>
                         )}
                         {log.user_id && (
-                          <div className="flex items-center space-x-1">
-                            <UserIcon className="h-3 w-3" />
+                          <div className="flex items-center space-x-0.5">
+                            <UserIcon className="h-2.5 w-2.5" />
                             <span>User: {log.user_id}</span>
                           </div>
                         )}
@@ -233,9 +233,9 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
                         <>
                           <button
                             onClick={() => toggleLogExpansion(log.id)}
-                            className="flex items-center space-x-1 text-xs text-indigo-600 hover:text-indigo-800"
+                            className="flex items-center space-x-0.5 text-xs text-indigo-600 hover:text-indigo-800"
                           >
-                            <EyeIcon className="h-3 w-3" />
+                            <EyeIcon className="h-2.5 w-2.5" />
                             <span>
                               {expandedLogs.has(log.id) ? 'Sembunyikan' : 'Lihat'} Perubahan
                             </span>
@@ -249,9 +249,9 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <ClockIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-500">Belum ada riwayat aktivitas untuk aset ini.</p>
+              <div className="text-center py-2">
+                <ClockIcon className="mx-auto h-4 w-4 text-gray-400 mb-0.5" />
+                <p className="text-xs text-gray-500">Belum ada riwayat aktivitas untuk aset ini.</p>
               </div>
             )}
           </>
