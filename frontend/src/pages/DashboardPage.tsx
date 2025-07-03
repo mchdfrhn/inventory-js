@@ -645,22 +645,6 @@ export default function DashboardPage() {
 
   return (
     <div className={`space-y-3 transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
-            Dashboard
-          </h1>
-          <p className="mt-0.5 text-xs text-gray-500">Gambaran umum sistem inventaris</p>
-        </div>
-        <div className="text-xs text-gray-400">
-          {new Date().toLocaleDateString('id-ID', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </div>
-      </div>
     
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
