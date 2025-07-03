@@ -58,11 +58,10 @@ export default function AssetDetailsPage() {
         <div>
           <Link
             to="/assets"
-            className="text-blue-600 hover:text-blue-800 flex items-center text-sm mb-2"
+            className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
           >
             ← Kembali ke Daftar Aset
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Detail Aset</h1>
         </div>
         <div className="flex gap-3">
           <Link

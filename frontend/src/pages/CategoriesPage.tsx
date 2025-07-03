@@ -250,13 +250,8 @@ export default function CategoriesPage() {
 
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <GlassCard className="overflow-hidden">        {/* Header section */}
-        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">          <div>
-            <h2 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Kategori</h2>
-            <p className="mt-0.5 text-xs text-gray-500">
-              Kelola kategori aset untuk organisasi yang lebih baik
-            </p>
-          </div>
+      <GlassCard className="overflow-hidden">        {/* Action buttons section */}
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-end">
           <div className="flex space-x-2">
             <GradientButton variant="secondary" onClick={() => setImportModalOpen(true)} className="text-xs px-3 py-1.5">
               <DocumentArrowUpIcon className="-ml-0.5 mr-1 h-4 w-4" />

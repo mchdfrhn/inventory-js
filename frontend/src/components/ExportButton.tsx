@@ -215,17 +215,17 @@ export default function ExportButton({ assets, filename = 'assets' }: ExportButt
       onClick={exportToExcel}
       disabled={isExporting || assets.length === 0}
       className={`
-        flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm text-sm
+        flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs
         ${isExporting || assets.length === 0 
           ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
           : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:-translate-y-0.5'}
         transition-all duration-300
       `}
     >
-      <DocumentArrowDownIcon className="h-4 w-4" />
+      <DocumentArrowDownIcon className="h-3.5 w-3.5" />
       <span>{isExporting ? 'Mengekspor...' : 'Export Excel'}</span>
       {assets.length > 0 && (
-        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-xs font-medium text-emerald-800">
+        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 text-xs font-medium text-emerald-800">
           {assets.length}
         </span>
       )}

@@ -237,18 +237,9 @@ export default function AuditLogPage() {
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">
-        {/* Header */}
+        {/* Action buttons section */}
         <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800 flex items-center">
-                <ClockIcon className="h-5 w-5 mr-2 text-blue-600" />
-                Riwayat Aktivitas
-              </h2>
-              <p className="mt-0.5 text-xs text-gray-500">
-                Log aktivitas yang mencatat semua perubahan data aset dalam sistem
-              </p>
-            </div>
+          <div className="flex items-center justify-end">
             <div className="flex items-center gap-2">
               <button
                 type="button"

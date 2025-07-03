@@ -30,6 +30,103 @@ const navigation = [
   { name: 'Analitik', href: '#', icon: ArrowTrendingUpIcon, soon: true },
 ]
 
+// Function to get dynamic header content based on current pathname
+function getHeaderContent(pathname: string) {
+  if (pathname === '/') {
+    return {
+      title: 'Dashboard',
+      description: 'Gambaran umum sistem inventaris'
+    }
+  } else if (pathname.startsWith('/assets')) {
+    if (pathname.includes('/new')) {
+      return {
+        title: 'Tambah Aset',
+        description: 'Tambahkan aset baru ke dalam sistem'
+      }
+    } else if (pathname.includes('/edit/')) {
+      return {
+        title: 'Edit Aset',
+        description: 'Ubah informasi aset yang ada'
+      }
+    } else if (pathname.match(/\/assets\/\d+$/)) {
+      return {
+        title: 'Detail Aset',
+        description: 'Informasi lengkap aset'
+      }
+    } else {
+      return {
+        title: 'Aset',
+        description: 'Kelola semua aset inventaris STTPU dengan mudah dan efisien'
+      }
+    }
+  } else if (pathname.startsWith('/categories')) {
+    if (pathname.includes('/new')) {
+      return {
+        title: 'Tambah Kategori',
+        description: 'Tambahkan kategori baru untuk mengorganisir aset'
+      }
+    } else if (pathname.includes('/edit/')) {
+      return {
+        title: 'Edit Kategori',
+        description: 'Ubah informasi kategori yang ada'
+      }
+    } else {
+      return {
+        title: 'Kategori',
+        description: 'Kelola kategori untuk mengorganisir aset inventaris'
+      }
+    }
+  } else if (pathname.startsWith('/locations')) {
+    if (pathname.includes('/new')) {
+      return {
+        title: 'Tambah Lokasi',
+        description: 'Tambahkan lokasi baru untuk penempatan aset'
+      }
+    } else if (pathname.includes('/edit/')) {
+      return {
+        title: 'Edit Lokasi',
+        description: 'Ubah informasi lokasi yang ada'
+      }
+    } else {
+      return {
+        title: 'Lokasi',
+        description: 'Kelola lokasi penempatan aset inventaris'
+      }
+    }
+  } else if (pathname === '/reports') {
+    return {
+      title: 'Laporan',
+      description: 'Generate dan kelola laporan inventaris'
+    }
+  } else if (pathname === '/template-management') {
+    return {
+      title: 'Template Laporan',
+      description: 'Kelola template untuk laporan inventaris'
+    }
+  } else if (pathname === '/audit-logs') {
+    return {
+      title: 'Riwayat Aktivitas',
+      description: 'Pantau semua aktivitas dan perubahan dalam sistem'
+    }
+  } else if (pathname === '/debug') {
+    return {
+      title: 'Debug',
+      description: 'Halaman debug untuk pengembangan'
+    }
+  } else if (pathname === '/test') {
+    return {
+      title: 'Test Page',
+      description: 'Halaman test untuk pengembangan'
+    }
+  }
+  
+  // Default fallback
+  return {
+    title: 'Manajemen Inventaris',
+    description: 'Sistem manajemen inventaris STTPU'
+  }
+}
+
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
@@ -43,6 +140,9 @@ export default function Layout() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Get dynamic header content based on current route
+  const headerContent = getHeaderContent(location.pathname);
 
   return (
     <>
@@ -337,9 +437,9 @@ export default function Layout() {
             <div className="mb-3 flex justify-between items-start px-4 sm:px-6 lg:px-8 pt-6">
               <div>
                 <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
-                  Dashboard
+                  {headerContent.title}
                 </h1>
-                <p className="mt-0.5 text-xs text-gray-500">Gambaran umum sistem inventaris</p>
+                <p className="mt-0.5 text-xs text-gray-500">{headerContent.description}</p>
               </div>
               <div className="flex items-center gap-2">
                 <div className="text-center">

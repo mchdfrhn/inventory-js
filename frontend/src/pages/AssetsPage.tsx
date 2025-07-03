@@ -677,30 +677,7 @@ export default function AssetsPage() {
     );
   }  return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <GlassCard className="overflow-hidden">        {/* Header section */}
-        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Aset</h2>
-            <p className="mt-0.5 text-xs text-gray-500">
-              Kelola semua aset inventaris STTPU dengan mudah dan efisien
-            </p>
-          </div>          <div className="flex space-x-2">
-            <GradientButton 
-              variant="secondary" 
-              onClick={() => setImportModalOpen(true)}
-              className="flex items-center text-xs px-3 py-1.5"
-            >
-              <DocumentArrowUpIcon className="-ml-0.5 mr-1 h-4 w-4" />
-              Import
-            </GradientButton>
-            <Link to="/assets/new">
-              <GradientButton variant="primary" className="flex items-center text-xs px-3 py-1.5">
-                <PlusIcon className="-ml-0.5 mr-1 h-4 w-4" aria-hidden="true" />
-                Tambah Aset
-              </GradientButton>
-            </Link>
-          </div>
-        </div>
+      <GlassCard className="overflow-hidden">
 
         {/* Category Filter Notification */}
         {categoryFilter && categoriesData?.data && (
@@ -776,8 +753,21 @@ export default function AssetsPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </div>          {/* Filter toggles and export - moved to right */}          <div className="flex items-center gap-2 flex-wrap ml-auto">
+          </div>          {/* Filter toggles, export, import, and add buttons */}          <div className="flex items-center gap-2 flex-wrap ml-auto">
             <ExportButton assets={filteredAndSortedAssets || []} filename="daftar_aset_sttpu" />
+            <button 
+              onClick={() => setImportModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white/80 text-gray-600 hover:bg-gray-50 shadow-sm text-xs transition-all duration-300"
+            >
+              <DocumentArrowUpIcon className="h-3.5 w-3.5" />
+              Import
+            </button>
+            <Link to="/assets/new">
+              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 shadow-sm text-xs transition-all duration-300">
+                <PlusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                Tambah Aset
+              </button>
+            </Link>
             <button
               type="button"
               onClick={() => setFilterPanelOpen(true)}              className={`
