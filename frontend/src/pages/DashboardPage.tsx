@@ -227,19 +227,20 @@ function StatusChart({ statusCounts }: { statusCounts: Record<string, number> })
   segments.sort((a, b) => b.count - a.count);
   
   return (
-    <div className="relative mt-2">
-      <div className="grid grid-cols-3 gap-2">
-        <div className="col-span-1">
+    <div className="h-full flex items-center">
+      <div className="flex items-center gap-3 w-full">
+        {/* Chart container */}
+        <div className="relative flex-shrink-0">
           <svg 
             viewBox="0 0 120 120" 
-            width="120" 
-            height="120" 
+            width="140" 
+            height="140" 
             className="transform -rotate-90"
             style={{ filter: 'drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.1))' }}
           >
             {segments.map((segment, i) => {
               // Calculate stroke-dasharray and stroke-dashoffset for each segment
-              const radius = 50; // Slightly smaller than viewBox to fit
+              const radius = 40; // Slightly smaller than viewBox to fit
               const circumference = 2 * Math.PI * radius;
               const dash = (segment.percentage / 100) * circumference;
               
@@ -258,7 +259,7 @@ function StatusChart({ statusCounts }: { statusCounts: Record<string, number> })
                   r={radius}
                   fill="transparent"
                   stroke={`url(#${segment.status}Gradient)`}
-                  strokeWidth="15" 
+                  strokeWidth="10" 
                   strokeDasharray={circumference}
                   strokeDashoffset={circumference - dash}
                   strokeLinecap="round"
@@ -273,7 +274,7 @@ function StatusChart({ statusCounts }: { statusCounts: Record<string, number> })
             })}
             
             {/* Center */}
-            <circle cx="60" cy="60" r="42" fill="white" />
+            <circle cx="60" cy="60" r="32" fill="white" />
             {/* Gradient definitions */}
             <defs>
               <linearGradient id="baikGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -296,32 +297,43 @@ function StatusChart({ statusCounts }: { statusCounts: Record<string, number> })
           </svg>
           
           {/* Center text */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ width: '120px', height: '120px', top: '0', left: '0' }}>
-            <span className="text-xs text-gray-500 font-medium">Total</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-sm text-gray-500 font-medium">Total</span>
             <span className="text-lg font-bold text-gray-800">{totalCount}</span>
           </div>
         </div>
         
-        {/* Legend - Compact format with 2 columns */}
-        <div className="col-span-2 flex flex-col justify-center">
-          <div className="space-y-2 bg-white/70 rounded-lg p-2">
+        {/* Legend - Compact vertical list */}
+        <div className="flex-1 min-w-0">
+          <div className="space-y-1.5">
             {segments.map((segment, idx) => {
               const statusKey = segment.status as keyof typeof statusColors;
               return (
                 <div 
                   key={segment.status} 
-                  className="flex items-center p-1 rounded-lg hover:bg-gray-50" 
+                  className="flex items-center justify-between py-0.5 px-1 rounded hover:bg-gray-50/50 transition-colors" 
                   style={{
                     animation: 'fadeIn 0.5s ease-out forwards',
                     animationDelay: `${idx * 0.15 + 0.5}s`,
                     opacity: 0
                   }}
                 >
-                  <div className={`h-3 w-3 rounded-full bg-gradient-to-r ${statusColors[statusKey]}`}></div>
-                  <span className="ml-2 text-sm font-medium">{statusLabels[statusKey] || segment.status.replace('_', ' ')}</span>
-                  <div className="ml-auto flex items-center space-x-2">
-                    <span className="font-bold text-sm">{segment.count}</span>
-                    <span className="text-xs text-gray-500">({segment.percentage}%)</span>
+                  <div className="flex items-center min-w-0 flex-1">
+                    <div 
+                      className="h-1.5 w-1.5 rounded-full mr-1.5 flex-shrink-0"
+                      style={{
+                        background: statusKey === 'baik' ? '#10b981' : 
+                                   statusKey === 'rusak' ? '#ef4444' : 
+                                   statusKey === 'tidak_memadai' ? '#d97706' : '#3b82f6'
+                      }}
+                    ></div>
+                    <span className="text-[11px] font-medium text-gray-700 truncate">
+                      {statusLabels[statusKey] || segment.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
+                    <span className="font-semibold text-[11px] text-gray-800">{segment.count}</span>
+                    <span className="text-[9px] text-gray-500">({segment.percentage}%)</span>
                   </div>
                 </div>
               );
@@ -632,16 +644,26 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className={`space-y-6 transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <div>
-        <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
-          Dashboard
-        </h1>
+    <div className={`space-y-3 transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
+            Dashboard
+          </h1>
+          <p className="mt-0.5 text-xs text-gray-500">Gambaran umum sistem inventaris</p>
+        </div>
+        <div className="text-xs text-gray-400">
+          {new Date().toLocaleDateString('id-ID', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </div>
       </div>
-      <p className="mt-1 text-sm text-gray-500">Gambaran umum sistem inventaris</p>
     
       {/* Stats grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <StatCard
           title="Total Aset"
           value={stats?.totalAssets || 0}
@@ -670,356 +692,154 @@ export default function DashboardPage() {
           suffix={`(${stats?.baikAssetsPercent || 0}%)`}
         />      </div>
 
-      {/* Main content grid - Restructured to 2 columns top, 1 column bottom */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Analisis Nominal Aset - More compact version */}
-        <GlassCard className="p-4 h-full">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-medium text-gray-900">
-              Analisis Nominal Aset
-            </h2>
-            <div className="text-sm text-gray-500">Perolehan vs Saat ini</div>
-          </div>
-          <div className="bg-white/80 rounded-lg p-3">
-            <div className="flex flex-col space-y-3">
-              <div>                <div className="flex justify-between items-center mb-1">
-                  <div className="text-sm font-medium text-gray-700">Total Perolehan</div>
-                  <div className="font-bold text-gray-800">Rp {formatToMillion(stats?.totalValue || 0)}</div>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-2 shadow-inner overflow-hidden">
-                  <div 
-                    className="h-full rounded-full bg-blue-600" 
-                    style={{ 
-                      width: '100%',
-                      animation: 'growWidth 1.5s ease-out forwards',
-                    }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div>                <div className="flex justify-between items-center mb-1">
-                  <div className="text-sm font-medium text-gray-700">Estimasi Saat Ini</div>
-                  <div className="font-bold text-gray-800">
-                    Rp {formatToMillion(stats?.estimatedCurrentValue || 0)}
-                  </div>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-2 shadow-inner overflow-hidden">
-                  <div 
-                    className="h-full rounded-full bg-blue-600" 
-                    style={{ 
-                      width: `${stats?.depreciationPercentage || 0}%`,
-                      animation: 'growWidth 1.5s ease-out forwards',
-                      animationDelay: '0.3s',
-                    }}
-                  ></div>
-                </div>                <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                  <span className="text-red-600">Penyusutan {Math.max(0, 100 - (stats?.depreciationPercentage || 0))}%</span>
-                  <span className="text-blue-600">Nilai tersisa {Math.max(0, stats?.depreciationPercentage || 0)}%</span>
-                </div>
-              </div>
-
-              <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-700">Selisih nilai:</span>
-                  <span className="text-red-600 font-semibold">
-                    - Rp {formatToMillion((stats?.totalValue || 0) - (stats?.estimatedCurrentValue || 0))}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-          {/* Status Chart Card */}
-        <GlassCard className="p-4 h-full">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-medium text-gray-900">
-              Status Aset
-            </h2>
-            <div className="text-sm text-gray-500">Distribusi saat ini</div>
-          </div>
-          
-          <StatusChart statusCounts={stats?.statusCounts || { baik: 0, rusak: 0, tidak_memadai: 0 }} />
-        </GlassCard>
-
-        {/* Monthly statistics and Asal Perolehan Aset */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:col-span-2">
-          {/* Monthly Asset Statistics */}
-          <GlassCard className="p-4">
+      {/* Main content grid - Compact layout like reference */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        {/* Top row - Analysis cards */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Analisis Nominal Aset */}
+          <GlassCard className="p-3">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-medium text-gray-900">
-                Statistik Bulanan Aset
+              <h2 className="text-sm font-semibold text-gray-900">
+                Analisis Nominal Aset
               </h2>
-              <div className="text-sm text-gray-500">6 bulan terakhir</div>
+              <div className="text-xs text-gray-500">Perolehan vs Saat ini</div>
             </div>
-              <div className="bg-white/80 rounded-lg p-3">
-              <div className="flex justify-between items-center mb-2">
-                <div className="text-sm font-medium">Perolehan aset per bulan</div>
-                {stats?.monthlyGrowth && (
-                  <div className="text-xs bg-blue-100 text-blue-800 font-medium px-2 py-1 rounded-full">
-                    Total: {stats.monthlyGrowth.reduce((sum, item) => sum + item.count, 0)} aset
+            <div className="bg-white/80 rounded-lg p-2">
+              <div className="flex flex-col space-y-2">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="text-xs font-medium text-gray-700">Total Perolehan</div>
+                    <div className="font-bold text-gray-800 text-sm">Rp {formatToMillion(stats?.totalValue || 0)}</div>
                   </div>
-                )}
-              </div>              {stats?.monthlyGrowth && stats.monthlyGrowth.some(item => item.count > 0) ? (
-                <BarChart data={stats.monthlyGrowth} />
-              ) : (
-                <div className="h-40 flex flex-col items-center justify-center text-gray-500 bg-gray-50/50 rounded-lg border border-gray-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <p>Tidak ada perolehan aset dalam 6 bulan terakhir</p>
-                </div>
-              )}<div className="mt-2">
-                <h3 className="text-xs font-medium text-gray-700 mb-1">3 bulan terakhir:</h3>                <div className="grid grid-cols-3 gap-2">
-                  {(stats?.monthlyGrowth || []).slice(-3).map((item) => (
-                    <div 
-                      key={`${item.month}-${item.year}`} 
-                      className={`${item.count > 0 ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'} 
-                        border p-2 rounded-lg transition-colors`}
-                    >
-                      <div className="text-xs text-gray-500">{item.month} {item.year}</div>
-                      <div className="font-medium flex items-center">
-                        <span className={`${item.count > 0 ? 'text-blue-600' : 'text-gray-500'}`}>
-                          {item.count}
-                        </span>
-                        <span className="text-xs ml-1 text-gray-500">aset</span>
-                        
-                        {item.growthPercentage !== 0 && (
-                          <span className={`text-xs ml-auto px-1 py-0.5 rounded
-                            ${item.growthPercentage > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-                          >
-                            {item.growthPercentage > 0 ? '+' : ''}{item.growthPercentage}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="w-full bg-gray-100 rounded-full h-2 shadow-inner overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-blue-600" 
+                  style={{ 
+                    width: '100%',
+                    animation: 'growWidth 1.5s ease-out forwards',
+                  }}
+                ></div>
               </div>
             </div>
-          </GlassCard>
-            {/* Asal Perolehan Aset - More compact visualization without table */}
-          <GlassCard className="p-4 h-full">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-lg font-medium text-gray-900">
-                Asal Perolehan Aset
-              </h2>
-              <div className="text-sm text-gray-500">Berdasarkan sumber perolehan</div>
-            </div>
-          
-            <div className="bg-white/80 rounded-lg p-3 shadow-sm border border-gray-100/50">
-              {(!stats?.asalPengadaanData || stats.asalPengadaanData.length === 0) ? (
-                <div className="text-center text-gray-500 py-4 bg-gray-50 rounded-lg">
-                  <MapPinIcon className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm">Tidak ada data asal perolehan</p>
+            
+            <div>              <div className="flex justify-between items-center mb-1">
+                <div className="text-sm font-medium text-gray-700">Estimasi Saat Ini</div>
+                <div className="font-bold text-gray-800">
+                  Rp {formatToMillion(stats?.estimatedCurrentValue || 0)}
                 </div>
-              ) : (
-                (() => {
-                  // Limit to 6 sources for display, combine others if needed
-                  let chartData = [...stats.asalPengadaanData];
-                  if (chartData.length > 6) {
-                    const topSources = chartData.slice(0, 5);
-                    const otherSources = chartData.slice(5);
-                    const otherCount = otherSources.reduce((sum, item) => sum + item.count, 0);
-                    const otherValue = otherSources.reduce((sum, item) => sum + item.value, 0);
-                    
-                    chartData = [
-                      ...topSources,
-                      {
-                        source: 'Lainnya',
-                        count: otherCount,
-                        value: otherValue,
-                        percentage: Math.round((otherCount / (stats?.totalAssets || 1)) * 100)
-                      }
-                    ];
-                  }
-                    // Define consistent, professional color palette
-                  const barColors = [
-                    'bg-blue-600',
-                    'bg-emerald-600',
-                    'bg-violet-600',
-                    'bg-amber-600',
-                    'bg-rose-600',
-                    'bg-slate-600'
-                  ];
-                    // Function to convert Tailwind color classes to gradient pairs
-                  const getGradientColors = (colorClass: string) => {
-                    const colorMap: Record<string, string> = {
-                      'bg-blue-600': '#2563eb, #3b82f6',
-                      'bg-emerald-600': '#059669, #10b981',
-                      'bg-violet-600': '#7c3aed, #8b5cf6',
-                      'bg-amber-600': '#d97706, #f59e0b',
-                      'bg-rose-600': '#e11d48, #f43f5e',
-                      'bg-slate-600': '#475569, #64748b'
-                    };
-                    return colorMap[colorClass] || '#3b82f6, #93c5fd';
-                  };
-                  
-                  return (
-                    <div className="flex flex-col">                      {/* Bar chart visualization - more compact */}
-                      <div className="bg-blue-50/50 rounded-lg p-2 mb-3 text-center">
-                        <p className="text-sm text-blue-700 font-medium">Total Perolehan: {chartData.length} sumber</p>
-                        <p className="text-xs text-blue-600">Nilai total: Rp {formatToMillion(chartData.reduce((sum, item) => sum + item.value, 0))}</p>
-                      </div>
-                      <div className="flex h-22 mb-2">
-                        {chartData.map((item, index) => {
-                          const maxValue = Math.max(...chartData.map(d => d.count));
-                          const heightPercent = maxValue > 0 ? Math.max(5, Math.round((item.count / maxValue) * 100)) : 0;
-                          
-                          return (
-                            <div 
-                              key={item.source} 
-                              className="flex-1 flex flex-col items-center"
-                              style={{
-                                animation: 'fadeIn 0.5s ease-out forwards',
-                                animationDelay: `${index * 0.1}s`,
-                                opacity: 0
-                              }}
-                            >
-                              <div className="text-center mb-1">
-                                <span className="font-semibold text-xs">{item.count}</span>
-                              </div>
-                              <div className="w-full flex-1 flex items-end justify-center px-1">
-                                <div 
-                                  className={`w-6 rounded-t-md shadow-sm overflow-hidden`}
-                                  style={{ 
-                                    height: `${heightPercent}%`,
-                                    animation: 'growHeight 1.5s ease-out forwards',
-                                    animationDelay: `${index * 0.15}s`,
-                                    background: `linear-gradient(to top, ${getGradientColors(barColors[index % barColors.length])})`
-                                  }}
-                                >
-                                  {/* Pattern overlay for texture */}
-                                  <div className="absolute inset-0 opacity-30 mix-blend-overlay">
-                                    <div className="absolute inset-0" style={{ 
-                                      backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.5' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E\")",
-                                    }}></div>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="pt-1 px-1 text-center w-full">
-                                <div className="text-xs font-medium text-gray-700 truncate" title={item.source}>
-                                  {item.source}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>                      {/* Enhanced visual legend - compact grid layout */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 mt-1 bg-gray-50/50 p-2 rounded-lg">
-                        {chartData.map((item, index) => (
-                          <div 
-                            key={item.source}
-                            className="flex items-center p-1.5 rounded bg-white/90 shadow-sm border border-gray-100/80 hover:bg-blue-50/30 transition-colors"
-                            style={{
-                              animation: 'fadeIn 0.5s ease-out forwards',
-                              animationDelay: `${index * 0.05 + 0.3}s`,
-                              opacity: 0
-                            }}
-                          >
-                            <div 
-                              className="w-3 h-3 rounded-sm shadow-sm" 
-                              style={{
-                                background: `linear-gradient(to right, ${getGradientColors(barColors[index % barColors.length])})`
-                              }}
-                            ></div>
-                            <div className="ml-2 flex-1 min-w-0">
-                              <div className="text-xs font-medium text-gray-900 truncate">{item.source}</div>
-                              <div className="text-[10px] font-semibold text-gray-600 truncate">Rp {formatToMillion(item.value)}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()
-              )}
-            </div>
-          </GlassCard>
-        </div>        {/* Assets by category */}
-        <GlassCard className="p-5 lg:col-span-2">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium text-gray-900">
-              Kategori Teratas
-            </h2>
-            <Link to="/categories">
-              <GradientButton size="sm" variant="secondary" className="flex items-center">
-                Lihat Semua
-                <ArrowRightIcon className="ml-1 h-4 w-4" />
-              </GradientButton>
-            </Link>
-          </div>
-            <div className="overflow-hidden bg-white/80 rounded-lg shadow-sm border border-gray-100/50">            <table className="min-w-full divide-y divide-gray-200/50">
-            <thead className="bg-gradient-to-r from-blue-50/80 via-blue-100/50 to-blue-50/80">
-              <tr>
-                <th scope="col" className="px-6 py-2.5 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
-                  Kategori
-                </th>
-                <th scope="col" className="px-6 py-2.5 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
-                  Jumlah
-                </th>                <th scope="col" className="px-6 py-2.5 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
-                  Nominal
-                </th>
-                <th scope="col" className="px-6 py-2.5 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
-                  Persentase
-                </th>
-                <th scope="col" className="relative px-6 py-2.5">
-                  <span className="sr-only">Lihat</span>
-                </th>
-              </tr>
-            </thead><tbody className="bg-white/50 divide-y divide-gray-200/50">
-              {(stats?.assetsByCategory || []).map((category, index) => (                <tr 
-                  key={category.id} 
-                  className="table-row-hover hover:bg-blue-50/30 transition-all"
-                  style={{
-                    animation: 'fadeIn 0.5s ease-out forwards',
-                    animationDelay: `${index * 0.1}s`,
-                    opacity: 0
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-2 shadow-inner overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-blue-600" 
+                  style={{ 
+                    width: `${stats?.depreciationPercentage || 0}%`,
+                    animation: 'growWidth 1.5s ease-out forwards',
+                    animationDelay: '0.3s',
                   }}
-                >                  <td className="px-6 py-2.5 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-9 w-9 rounded bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center shadow">
-                        <div className="text-xs font-medium text-blue-800">{category.code}</div>
-                      </div>
-                      <div className="ml-3">
-                        <div className="text-sm font-medium text-gray-900">{category.name}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-2.5 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-gray-900">{category.count}</div>
-                  </td>
-                  <td className="px-6 py-2.5 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-gray-900">Rp {formatRupiah(category.value)}</div>
-                  </td>                  <td className="px-6 py-2.5 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-24 md:w-32 lg:w-40 h-2.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-                        <div 
-                          className="h-full rounded-full bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"
-                          style={{ 
-                            width: `${Math.round((category.count / (stats?.totalAssets || 1)) * 100)}%`,
-                            animation: 'growWidth 1.5s ease-out forwards',
-                            animationDelay: `${index * 0.1}s`,
-                          }}
-                        ></div>
-                      </div>
-                      <span className="ml-2 text-xs font-semibold text-gray-700">
-                        {Math.round((category.count / (stats?.totalAssets || 1)) * 100)}%
-                      </span>
-                    </div>
-                  </td>                  <td className="px-6 py-2.5 whitespace-nowrap text-right text-sm font-medium">
-                    <Link 
-                      to={`/assets?category=${category.id}`} 
-                      className="text-blue-600 hover:text-blue-900 hover:underline"
-                    >
-                      Lihat
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                ></div>
+              </div>              <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+                <span className="text-red-600">Penyusutan {Math.max(0, 100 - (stats?.depreciationPercentage || 0))}%</span>
+                <span className="text-blue-600">Nilai tersisa {Math.max(0, stats?.depreciationPercentage || 0)}%</span>
+              </div>
+            </div>
+
+            <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Selisih nilai:</span>
+                <span className="text-red-600 font-semibold">
+                  - Rp {formatToMillion((stats?.totalValue || 0) - (stats?.estimatedCurrentValue || 0))}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </GlassCard>
+          {/* Status Chart Card */}
+          <GlassCard className="p-3 flex flex-col">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-sm font-semibold text-gray-900">
+                Status Aset
+              </h2>
+              <div className="text-xs text-gray-500">Distribusi saat ini</div>
+            </div>
+            
+            <div className="flex-1 flex items-center">
+              <StatusChart statusCounts={stats?.statusCounts || { baik: 0, rusak: 0, tidak_memadai: 0 }} />
+            </div>
+          </GlassCard>
+        </div>
+
+        {/* Right sidebar - Quick stats */}
+        <div className="space-y-3">
+          {/* Quick summary */}
+          <GlassCard className="p-3">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Ringkasan Cepat</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-600">Total Kategori</span>
+                <span className="text-xs font-semibold text-gray-900">{stats?.categoryCount || 0}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-600">Total Lokasi</span>
+                <span className="text-xs font-semibold text-gray-900">{stats?.locationCount || 0}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-600">Penyusutan</span>
+                <span className="text-xs font-semibold text-red-600">
+                  {Math.max(0, 100 - (stats?.depreciationPercentage || 0))}%
+                </span>
+              </div>
+            </div>
+          </GlassCard>
+
+          {/* Top categories compact */}
+          <GlassCard className="p-3">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Kategori Teratas</h3>
+            <div className="space-y-2">
+              {(stats?.assetsByCategory || []).slice(0, 4).map((category) => (
+                <div key={category.id} className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="h-6 w-6 rounded bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center mr-2">
+                      <span className="text-xs font-medium text-blue-800">{category.code}</span>
+                    </div>
+                    <span className="text-xs text-gray-900 truncate">{category.name}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700">{category.count}</span>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        </div>
       </div>
+
+      {/* Monthly statistics - Full width */}
+      <GlassCard className="p-3">
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-sm font-semibold text-gray-900">
+            Statistik Bulanan Aset
+          </h2>
+          <div className="text-xs text-gray-500">6 bulan terakhir</div>
+        </div>
+        <div className="bg-white/80 rounded-lg p-2">
+          <div className="flex justify-between items-center mb-2">
+            <div className="text-xs font-medium">Perolehan aset per bulan</div>
+            {stats?.monthlyGrowth && (
+              <div className="text-xs bg-blue-100 text-blue-800 font-medium px-1.5 py-0.5 rounded-full">
+                Total: {stats.monthlyGrowth.reduce((sum, item) => sum + item.count, 0)} aset
+              </div>
+            )}
+          </div>
+          {stats?.monthlyGrowth && stats.monthlyGrowth.some(item => item.count > 0) ? (
+            <BarChart data={stats.monthlyGrowth} />
+          ) : (
+            <div className="h-24 flex flex-col items-center justify-center text-gray-500 bg-gray-50/50 rounded-lg border border-gray-100">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <p className="text-xs">Tidak ada perolehan aset dalam 6 bulan terakhir</p>
+            </div>
+          )}
+        </div>
+      </GlassCard>
     </div>
   );
 }
