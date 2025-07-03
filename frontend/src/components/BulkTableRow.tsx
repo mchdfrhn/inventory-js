@@ -133,8 +133,8 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
         <td className="whitespace-nowrap px-2 py-3">
           <div className="flex flex-col">
             <div className="text-xs text-gray-900 mb-1">{depreciationPercentage}%</div>
-            <div className="w-full bg-gray-200 rounded-full h-1.5">
-              <div className={`${barColor} h-1.5 rounded-full`} style={{ width: `${depreciationPercentage}%` }}></div>
+            <div className="w-full bg-gray-200 rounded-full h-1">
+              <div className={`${barColor} h-1 rounded-full`} style={{ width: `${depreciationPercentage}%` }}></div>
             </div>
           </div>
         </td>
