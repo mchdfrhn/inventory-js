@@ -177,39 +177,39 @@ export default function TemplateManagementPage() {
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">
         {/* Header section */}
-        <div className="px-6 py-5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">
+        <div className="px-4 py-2.5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Manajemen Template Laporan</h2>
-            <p className="mt-1 text-sm text-gray-500">
+            <h2 className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Manajemen Template Laporan</h2>
+            <p className="mt-0.5 text-xs text-gray-500">
               Kelola template laporan PDF untuk berbagai kebutuhan
             </p>
           </div>
           <GradientButton 
             variant="primary" 
             onClick={handleCreateTemplate}
-            className="flex items-center"
+            className="flex items-center text-xs px-3 py-1.5"
           >
-            <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
+            <PlusIcon className="-ml-0.5 mr-1.5 h-4 w-4" />
             Buat Template
           </GradientButton>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3">
           {/* Template Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {templates.map((template) => (
             <div
               key={template.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border flex flex-col h-full min-h-[200px]"
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border flex flex-col h-full min-h-[160px]"
             >
-              <div className="p-6 flex flex-col h-full">
-                <div className="flex items-start justify-between mb-4 flex-grow">
+              <div className="p-3 flex flex-col h-full">
+                <div className="flex items-start justify-between mb-2 flex-grow">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1">
                       {template.name}
                     </h3>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                    <p className="text-xs text-gray-600 mb-2 line-clamp-3">
                       {template.description}
                     </p>
                   </div>
@@ -227,43 +227,43 @@ export default function TemplateManagementPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-4 text-xs">
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                <div className="flex flex-wrap gap-1.5 mb-3 text-xs">
+                  <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">
                     {template.orientation === 'portrait' ? '📄 Portrait' : '📑 Landscape'}
                   </span>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                  <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">
                     📊 {template.columns.length} kolom
                   </span>
                   {template.includeStats && (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full">📈 Statistik</span>
+                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full">📈 Statistik</span>
                   )}
                   {template.includeChart && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full">📊 Grafik</span>
+                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">📊 Grafik</span>
                   )}
                 </div>
 
-                <div className="flex items-stretch gap-2 mt-auto">
+                <div className="flex items-stretch gap-1.5 mt-auto">
                   <button
                     onClick={() => {
                       setSelectedTemplate(template);
                       setShowPreview(true);
                     }}
                     className={`${!defaultTemplates.find(t => t.id === template.id) 
-                      ? 'w-10 h-10 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors flex items-center justify-center' 
-                      : 'flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm font-medium min-w-0'
+                      ? 'w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors flex items-center justify-center' 
+                      : 'flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 text-xs font-medium min-w-0'
                     }`}
                     title="Preview Template"
                   >
-                    <EyeIcon className="h-4 w-4 flex-shrink-0" />
+                    <EyeIcon className="h-3.5 w-3.5 flex-shrink-0" />
                     {defaultTemplates.find(t => t.id === template.id) && (
                       <span className="truncate">Preview</span>
                     )}
                   </button>
                   <button
                     onClick={() => handleEditTemplate(template)}
-                    className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 px-2 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm font-medium min-w-0"
+                    className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 px-2 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 text-xs font-medium min-w-0"
                   >
-                    <Cog6ToothIcon className="h-4 w-4 flex-shrink-0" />
+                    <Cog6ToothIcon className="h-3.5 w-3.5 flex-shrink-0" />
                     <span className="truncate">Edit</span>
                   </button>
                   
@@ -271,10 +271,10 @@ export default function TemplateManagementPage() {
                   {defaultTemplates.find(t => t.id === template.id) && templateService.isDefaultTemplateModified(template.id) && (
                     <button
                       onClick={() => handleResetTemplate(template)}
-                      className="flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 px-2 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm font-medium min-w-0"
+                      className="flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 px-2 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 text-xs font-medium min-w-0"
                       title="Reset ke Default"
                     >
-                      <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
+                      <ArrowPathIcon className="h-3.5 w-3.5 flex-shrink-0" />
                       <span className="truncate">Reset</span>
                     </button>
                   )}
@@ -283,10 +283,10 @@ export default function TemplateManagementPage() {
                   {!defaultTemplates.find(t => t.id === template.id) && (
                     <button
                       onClick={() => handleDeleteTemplate(template)}
-                      className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 px-2 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm font-medium min-w-0"
+                      className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 px-2 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 text-xs font-medium min-w-0"
                       title="Hapus Template"
                     >
-                      <TrashIcon className="h-4 w-4 flex-shrink-0" />
+                      <TrashIcon className="h-3.5 w-3.5 flex-shrink-0" />
                       <span className="truncate">Hapus</span>
                     </button>
                   )}

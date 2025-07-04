@@ -237,8 +237,30 @@ export default function AuditLogPage() {
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">
+        {/* Header */}
+        <div className="px-4 py-2.5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
+                Riwayat Aktivitas
+              </h2>
+              <p className="mt-0.5 text-xs text-gray-500">
+                Log aktivitas sistem dan perubahan data
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-gray-500">
+                Total Log
+              </div>
+              <div className="text-base font-bold text-gray-900">
+                {data?.pagination?.total_items || 0}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Action buttons section */}
-        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
+        <div className="px-4 py-2.5 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30">
           <div className="flex items-center justify-end">
             <div className="flex items-center gap-2">
               <button
@@ -293,28 +315,28 @@ export default function AuditLogPage() {
                 leaveFrom="translate-x-0"
                 leaveTo="translate-x-full"
               >
-                <div className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white pt-4 pb-3 shadow-xl">
-                  <div className="px-5 flex items-center justify-between border-b border-gray-200 pb-3">
-                    <Dialog.Title className="text-base font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Filter Log Aktivitas</Dialog.Title>
+                <div className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white pt-2.5 pb-2 shadow-xl">
+                  <div className="px-4 flex items-center justify-between border-b border-gray-200 pb-2">
+                    <Dialog.Title className="text-sm font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Filter Log Aktivitas</Dialog.Title>
                     <button
                       type="button"
                       className="rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 p-1 transition-colors"
                       onClick={() => setFilterPanelOpen(false)}
                     >
                       <span className="sr-only">Tutup Panel</span>
-                      <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+                      <XMarkIcon className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
                   </div>
                   
-                  <div className="mt-3 flex flex-col px-5 space-y-4 overflow-y-auto">
+                  <div className="mt-2 flex flex-col px-4 space-y-2.5 overflow-y-auto">
                     {/* Entity Type Filter */}
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <h3 className="text-xs font-medium text-gray-900 mb-1.5 flex items-center">
                         <span className="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full mr-1.5"></span>
                         Jenis Entitas
                       </h3>
-                      <div className="space-y-1.5">
-                        <label className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                      <div className="space-y-1">
+                        <label className="flex items-center bg-white rounded-md px-2 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                           <input
                             type="radio"
                             className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
@@ -326,9 +348,9 @@ export default function AuditLogPage() {
                           <span className="ml-1.5 text-xs">Semua</span>
                         </label>
                         
-                        <div className="grid grid-cols-1 gap-1.5">
+                        <div className="grid grid-cols-1 gap-1">
                           {["asset", "category", "location"].map((type) => (
-                            <label key={type} className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                            <label key={type} className="flex items-center bg-white rounded-md px-2 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                               <input
                                 type="radio"
                                 className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
@@ -345,13 +367,13 @@ export default function AuditLogPage() {
                     </div>
 
                     {/* Action Filter */}
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <h3 className="text-xs font-medium text-gray-900 mb-1.5 flex items-center">
                         <span className="inline-block w-2.5 h-2.5 bg-purple-500 rounded-full mr-1.5"></span>
                         Aksi
                       </h3>
-                      <div className="space-y-1.5">
-                        <label className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                      <div className="space-y-1">
+                        <label className="flex items-center bg-white rounded-md px-2 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                           <input
                             type="radio"
                             className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
@@ -363,14 +385,14 @@ export default function AuditLogPage() {
                           <span className="ml-1.5 text-xs">Semua</span>
                         </label>
                         
-                        <div className="grid grid-cols-2 gap-1.5">
+                        <div className="grid grid-cols-2 gap-1">
                           {[
                             { value: "create", label: "Dibuat" },
                             { value: "update", label: "Diperbarui" },
                             { value: "delete", label: "Dihapus" },
                             { value: "bulk_delete", label: "Hapus Bulk" }
                           ].map((action) => (
-                            <label key={action.value} className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                            <label key={action.value} className="flex items-center bg-white rounded-md px-2 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                               <input
                                 type="radio"
                                 className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
@@ -387,12 +409,12 @@ export default function AuditLogPage() {
                     </div>
 
                     {/* Date Range Filter */}
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <h3 className="text-xs font-medium text-gray-900 mb-1.5 flex items-center">
                         <span className="inline-block w-2.5 h-2.5 bg-green-500 rounded-full mr-1.5"></span>
                         Rentang Tanggal
                       </h3>
-                      <div className="space-y-2.5">
+                      <div className="space-y-2">
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
                             Dari Tanggal
@@ -419,8 +441,8 @@ export default function AuditLogPage() {
                     </div>
 
                     {/* Entity ID Filter */}
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <h3 className="text-xs font-medium text-gray-900 mb-1.5 flex items-center">
                         <span className="inline-block w-2.5 h-2.5 bg-orange-500 rounded-full mr-1.5"></span>
                         ID Entitas
                       </h3>
@@ -435,11 +457,11 @@ export default function AuditLogPage() {
 
                     {/* Active Filters */}
                     {(tempFilters.entity_type || tempFilters.entity_id || tempFilters.action || tempFilters.from_date || tempFilters.to_date) && (
-                      <div className="mt-3 mb-1.5 flex flex-wrap gap-1.5">
+                      <div className="mt-2.5 mb-1 flex flex-wrap gap-1">
                         <h3 className="w-full text-xs font-medium text-gray-500 mb-0.5">Filter Aktif:</h3>
                         
                         {tempFilters.entity_type && (
-                          <div className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs font-medium text-blue-800">
+                          <div className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-xs font-medium text-blue-800">
                             <span>Entitas: </span>
                             <span className="ml-1 font-semibold capitalize">
                               {tempFilters.entity_type === 'asset' ? 'Asset' : tempFilters.entity_type === 'category' ? 'Kategori' : 'Lokasi'}
@@ -456,7 +478,7 @@ export default function AuditLogPage() {
                         )}
                         
                         {tempFilters.action && (
-                          <div className="inline-flex items-center rounded-full bg-purple-50 border border-purple-200 px-2 py-0.5 text-xs font-medium text-purple-800">
+                          <div className="inline-flex items-center rounded-full bg-purple-50 border border-purple-200 px-1.5 py-0.5 text-xs font-medium text-purple-800">
                             <span>Aksi: </span>
                             <span className="ml-1 font-semibold">
                               {tempFilters.action === 'create' ? 'Dibuat' : 
@@ -478,11 +500,11 @@ export default function AuditLogPage() {
                     )}
 
                     {/* Filter Actions */}
-                    <div className="mt-5 px-1">
-                      <div className="flex flex-col space-y-2.5">
+                    <div className="mt-4 px-1">
+                      <div className="flex flex-col space-y-2">
                         <button
                           type="button"
-                          className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                          className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
                           onClick={applyFilters}
                           disabled={isApplyingFilter}
                         >
@@ -506,7 +528,7 @@ export default function AuditLogPage() {
                         
                         <button
                           type="button"
-                          className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                          className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                           onClick={resetTempFiltersToDefaults}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -516,7 +538,7 @@ export default function AuditLogPage() {
                         </button>
                       </div>
                       
-                      <div className="mt-5 pt-3 border-t border-gray-200 text-xs text-center text-gray-500">
+                      <div className="mt-4 pt-2.5 border-t border-gray-200 text-xs text-center text-gray-500">
                         Klik di luar panel untuk menutup
                       </div>
                     </div>
@@ -528,7 +550,7 @@ export default function AuditLogPage() {
         </Transition.Root>
 
         {/* Content */}
-        <div className="p-5">
+        <div className="p-3">
           {/* Active Filters Display */}
           <Transition
             show={!!(filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date)}
@@ -539,9 +561,9 @@ export default function AuditLogPage() {
             leaveFrom="opacity-100 translate-y-0"
             leaveTo="opacity-0 -translate-y-2"
           >
-            <div className="mb-5 bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200/50 shadow-sm">
+            <div className="mb-3 bg-white/70 backdrop-blur-sm rounded-lg p-2 border border-gray-200/50 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1">
                   <span className="text-xs font-medium text-gray-700 flex items-center">
                     <svg className="w-3.5 h-3.5 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
@@ -593,15 +615,14 @@ export default function AuditLogPage() {
               </div>
             </div>
           </Transition>
-        </div>
 
           {/* Audit Logs */}
           <div className="bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200/50">
             {data?.data && data.data.length > 0 ? (
               <div className="divide-y divide-gray-200/50">
-              {data.data.map((log: AuditLog) => (
-                <div key={log.id} className="p-5">
-                  <div className="flex items-start space-x-3.5">
+                {data.data.map((log: AuditLog) => (
+                <div key={log.id} className="p-3">
+                  <div className="flex items-start space-x-3">
                     {/* Action indicator */}
                     <div className="flex-shrink-0 mt-1">
                       {getActionIcon(log.action)}
@@ -610,26 +631,26 @@ export default function AuditLogPage() {
                     {/* Main content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2.5">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getActionColor(log.action)}`}>
+                        <div className="flex items-center space-x-2">
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium border ${getActionColor(log.action)}`}>
                             {getActionLabel(log.action)}
                           </span>
                           <span className="text-xs font-medium text-gray-900 uppercase">
                             {log.entity_type}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-1.5">
-                          <ClockIcon className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-500">
+                        <div className="flex items-center space-x-1">
+                          <ClockIcon className="h-3.5 w-3.5 text-gray-400" />
+                          <span className="text-xs text-gray-500">
                             {formatDate(log.created_at)}
                           </span>
                         </div>
                       </div>
 
-                      <p className="mt-2 text-sm text-gray-700">{log.description}</p>
+                      <p className="mt-1.5 text-xs text-gray-700">{log.description}</p>
 
                       {/* Metadata */}
-                      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                         <div className="flex items-center space-x-1">
                           <ComputerDesktopIcon className="h-3 w-3" />
                           <span>ID: {log.entity_id.substring(0, 8)}...</span>
@@ -650,7 +671,7 @@ export default function AuditLogPage() {
 
                       {/* Changes section (collapsible) */}
                       {log.changes && (
-                        <div className="mt-3">
+                        <div className="mt-2">
                           <button
                             onClick={() => toggleLogExpansion(log.id)}
                             className="flex items-center space-x-1 text-xs text-indigo-600 hover:text-indigo-800"
@@ -667,20 +688,21 @@ export default function AuditLogPage() {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-12 text-center">
-              <ClockIcon className="mx-auto h-12 w-12 text-gray-400" />
+                ))}
+              </div>
+            ) : (
+            <div className="p-6 text-center">
+              <ClockIcon className="mx-auto h-6 w-6 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada riwayat</h3>
-              <p className="mt-1 text-sm text-gray-500">Belum ada aktivitas yang tercatat.</p>
+              <p className="mt-1 text-xs text-gray-500">Belum ada aktivitas yang tercatat.</p>
             </div>
-          )}
+            )}
+          </div>
           
           {/* Pagination */}
           {data?.pagination && (
-            <div className="mt-6 flex items-center justify-between bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50">
-              <div className="text-sm text-gray-700">
+            <div className="mt-3 flex items-center justify-between bg-white/70 backdrop-blur-sm rounded-lg p-2.5 border border-gray-200/50">
+              <div className="text-xs text-gray-700">
                 Menampilkan {((page - 1) * pageSize) + 1} - {Math.min(page * pageSize, data.pagination.total_items)} dari {data.pagination.total_items} aktivitas
               </div>
               <div className="flex items-center space-x-2">
@@ -688,18 +710,18 @@ export default function AuditLogPage() {
                   variant="secondary"
                   onClick={() => setPage(page - 1)}
                   disabled={!data.pagination.has_previous}
-                  className="text-sm"
+                  className="text-xs"
                 >
                   Sebelumnya
                 </GradientButton>
-                <span className="px-3 py-2 text-sm font-medium text-gray-700">
+                <span className="px-2 py-1 text-xs font-medium text-gray-700">
                   Halaman {page} dari {data.pagination.total_pages}
                 </span>
                 <GradientButton
                   variant="secondary"
                   onClick={() => setPage(page + 1)}
                   disabled={!data.pagination.has_next}
-                  className="text-sm"
+                  className="text-xs"
                 >
                   Selanjutnya
                 </GradientButton>
