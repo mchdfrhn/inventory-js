@@ -180,10 +180,10 @@ export default function AuditLogPage() {
       
       return (
         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">Perubahan:</h4>
+          <h4 className="text-[11px] font-medium text-gray-900 mb-2">Perubahan:</h4>
           <div className="space-y-2">
             {Object.entries(changes).map(([field, change]: [string, any]) => (
-              <div key={field} className="text-xs">
+              <div key={field} className="text-[10px]">
                 <span className="font-medium text-gray-700">{field}:</span>
                 <div className="ml-2 text-gray-600">
                   {change.from !== null && (
@@ -201,7 +201,7 @@ export default function AuditLogPage() {
     } catch (error) {
       return (
         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500">Data perubahan tidak dapat ditampilkan</p>
+          <p className="text-[10px] text-gray-500">Data perubahan tidak dapat ditampilkan</p>
         </div>
       );
     }
@@ -237,30 +237,8 @@ export default function AuditLogPage() {
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">
-        {/* Header */}
-        <div className="px-4 py-2.5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
-                Riwayat Aktivitas
-              </h2>
-              <p className="mt-0.5 text-xs text-gray-500">
-                Log aktivitas sistem dan perubahan data
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-gray-500">
-                Total Log
-              </div>
-              <div className="text-base font-bold text-gray-900">
-                {data?.pagination?.total_items || 0}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action buttons section */}
-        <div className="px-4 py-2.5 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30">
+        {/* Filter controls */}
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30">
           <div className="flex items-center justify-end">
             <div className="flex items-center gap-2">
               <button
@@ -632,38 +610,38 @@ export default function AuditLogPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium border ${getActionColor(log.action)}`}>
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${getActionColor(log.action)}`}>
                             {getActionLabel(log.action)}
                           </span>
-                          <span className="text-xs font-medium text-gray-900 uppercase">
+                          <span className="text-[10px] font-medium text-gray-900 uppercase">
                             {log.entity_type}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <ClockIcon className="h-3.5 w-3.5 text-gray-400" />
-                          <span className="text-xs text-gray-500">
+                          <ClockIcon className="h-3 w-3 text-gray-400" />
+                          <span className="text-[10px] text-gray-500">
                             {formatDate(log.created_at)}
                           </span>
                         </div>
                       </div>
 
-                      <p className="mt-1.5 text-xs text-gray-700">{log.description}</p>
+                      <p className="mt-1.5 text-[11px] text-gray-700">{log.description}</p>
 
                       {/* Metadata */}
-                      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-[10px] text-gray-500">
                         <div className="flex items-center space-x-1">
-                          <ComputerDesktopIcon className="h-3 w-3" />
+                          <ComputerDesktopIcon className="h-2.5 w-2.5" />
                           <span>ID: {log.entity_id.substring(0, 8)}...</span>
                         </div>
                         {log.ip_address && (
                           <div className="flex items-center space-x-1">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
                             <span>IP: {log.ip_address}</span>
                           </div>
                         )}
                         {log.user_id && (
                           <div className="flex items-center space-x-1">
-                            <UserIcon className="h-3 w-3" />
+                            <UserIcon className="h-2.5 w-2.5" />
                             <span>User: {log.user_id}</span>
                           </div>
                         )}
@@ -674,9 +652,9 @@ export default function AuditLogPage() {
                         <div className="mt-2">
                           <button
                             onClick={() => toggleLogExpansion(log.id)}
-                            className="flex items-center space-x-1 text-xs text-indigo-600 hover:text-indigo-800"
+                            className="flex items-center space-x-1 text-[10px] text-indigo-600 hover:text-indigo-800"
                           >
-                            <EyeIcon className="h-3 w-3" />
+                            <EyeIcon className="h-2.5 w-2.5" />
                             <span>
                               {expandedLogs.has(log.id) ? 'Sembunyikan' : 'Lihat'} Perubahan
                             </span>

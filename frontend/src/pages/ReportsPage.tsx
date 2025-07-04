@@ -702,42 +702,9 @@ const ReportsPage = () => {
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">
-        {/* Header */}
-        <div className="px-4 py-2.5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
-                Laporan Aset
-              </h2>
-              <p className="mt-0.5 text-xs text-gray-500">
-                Generate laporan PDF dengan berbagai template yang tersedia
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-gray-500">
-                {hasActiveFilters() ? 'Aset Terfilter' : 'Total Aset'}
-              </div>
-              <div className="text-base font-bold text-gray-900">
-                {hasActiveFilters() ? `${filteredCount} dari ${totalAssets}` : totalAssets}
-              </div>
-              <div className="text-xs text-gray-500 mt-0.5">
-                Data dari server
-              </div>
-              {selectedTemplate && (
-                <div className="mt-1 text-xs">
-                  <span className="text-gray-500">Template: </span>
-                  <span className="text-blue-600 font-medium">
-                    {templates.find(t => t.id === selectedTemplate)?.name}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* Search and Filter Controls */}
-        <div className="px-4 py-2.5 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-3">
-          {/* Left side - Search */}
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-3">
+          {/* Search input */}
           <div className="relative rounded-md shadow-sm max-w-md flex-grow">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />

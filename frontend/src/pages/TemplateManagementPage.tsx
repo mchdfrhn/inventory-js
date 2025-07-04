@@ -176,22 +176,15 @@ export default function TemplateManagementPage() {
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <GlassCard className="overflow-hidden">
-        {/* Header section */}
-        <div className="px-4 py-2.5 border-b border-gray-200/50 bg-gradient-to-r from-white/80 to-blue-50/50 flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Manajemen Template Laporan</h2>
-            <p className="mt-0.5 text-xs text-gray-500">
-              Kelola template laporan PDF untuk berbagai kebutuhan
-            </p>
-          </div>
-          <GradientButton 
-            variant="primary" 
+        {/* Controls */}
+        <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex items-center justify-end">
+          <button
             onClick={handleCreateTemplate}
-            className="flex items-center text-xs px-3 py-1.5"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:-translate-y-0.5 transition-all duration-300"
           >
-            <PlusIcon className="-ml-0.5 mr-1.5 h-4 w-4" />
-            Buat Template
-          </GradientButton>
+            <PlusIcon className="h-3.5 w-3.5" />
+            <span>Buat Template</span>
+          </button>
         </div>
 
         {/* Content */}
