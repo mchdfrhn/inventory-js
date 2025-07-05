@@ -15,14 +15,14 @@ const PageSizeSelector: React.FC<PageSizeSelectorProps> = ({
 }) => {
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      <label htmlFor="page-size" className="text-sm text-gray-600">
+      <label htmlFor="page-size" className="text-xs text-gray-600 whitespace-nowrap">
         Tampilkan:
       </label>
       <select
         id="page-size"
         value={pageSize}
         onChange={(e) => onPageSizeChange(Number(e.target.value))}
-        className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-1.5"
+        className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs py-1 px-2 bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
       >
         {options.map(option => (
           <option key={option} value={option}>
@@ -30,7 +30,7 @@ const PageSizeSelector: React.FC<PageSizeSelectorProps> = ({
           </option>
         ))}
       </select>
-      <span className="text-sm text-gray-600">data</span>
+      <span className="text-xs text-gray-600 whitespace-nowrap">data</span>
     </div>
   );
 };

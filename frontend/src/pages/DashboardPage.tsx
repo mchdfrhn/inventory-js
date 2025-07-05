@@ -1,17 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { assetApi, categoryApi, locationApi } from '../services/api';
 import type { Asset } from '../services/api';
 import { 
   ExclamationCircleIcon,
   CheckCircleIcon,
-  ArrowRightIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   CircleStackIcon,
-  ArrowTrendingUpIcon,
-  MapPinIcon
+  ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline';
 import GlassCard from '../components/GlassCard';
 import Loader from '../components/Loader';

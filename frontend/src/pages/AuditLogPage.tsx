@@ -1,6 +1,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { auditLogApi, type AuditLog } from '../services/api';
+import Pagination from '../components/Pagination';
 import { 
   ClockIcon,
   UserIcon, 
@@ -26,7 +27,11 @@ interface AuditLogFilters {
 export default function AuditLogPage() {
   const [mounted, setMounted] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(() => {
+    // Try to get pageSize from localStorage, default to 20 if not found
+    const savedPageSize = localStorage.getItem('auditLogPageSize');
+    return savedPageSize ? parseInt(savedPageSize, 10) : 20;
+  });
   const [filters, setFilters] = useState<AuditLogFilters>({
     entity_type: '',
     entity_id: '',
@@ -50,6 +55,11 @@ export default function AuditLogPage() {
     // Sync tempFilters with current filters on mount
     setTempFilters(filters);
   }, [filters]);
+
+  // Save pageSize to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('auditLogPageSize', pageSize.toString());
+  }, [pageSize]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['audit-logs', page, pageSize, filters],
@@ -679,32 +689,17 @@ export default function AuditLogPage() {
           
           {/* Pagination */}
           {data?.pagination && (
-            <div className="mt-3 flex items-center justify-between bg-white/70 backdrop-blur-sm rounded-lg p-2.5 border border-gray-200/50">
-              <div className="text-xs text-gray-700">
-                Menampilkan {((page - 1) * pageSize) + 1} - {Math.min(page * pageSize, data.pagination.total_items)} dari {data.pagination.total_items} aktivitas
-              </div>
-              <div className="flex items-center space-x-2">
-                <GradientButton
-                  variant="secondary"
-                  onClick={() => setPage(page - 1)}
-                  disabled={!data.pagination.has_previous}
-                  className="text-xs"
-                >
-                  Sebelumnya
-                </GradientButton>
-                <span className="px-2 py-1 text-xs font-medium text-gray-700">
-                  Halaman {page} dari {data.pagination.total_pages}
-                </span>
-                <GradientButton
-                  variant="secondary"
-                  onClick={() => setPage(page + 1)}
-                  disabled={!data.pagination.has_next}
-                  className="text-xs"
-                >
-                  Selanjutnya
-                </GradientButton>
-              </div>
-            </div>
+            <Pagination
+              pagination={data.pagination}
+              currentPage={page}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              itemName="aktivitas"
+              showPageSizeSelector={true}
+              pageSizeOptions={[10, 20, 50, 100]}
+              className="mt-3 bg-white/70 backdrop-blur-sm rounded-lg border border-gray-200/50"
+            />
           )}
         </div>
       </GlassCard>

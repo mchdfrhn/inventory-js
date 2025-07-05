@@ -6,8 +6,6 @@ import type { Asset, Category, Location } from '../services/api';
 import { 
   PlusIcon, 
   MagnifyingGlassIcon, 
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ExclamationCircleIcon,
   XMarkIcon,
   AdjustmentsHorizontalIcon,
@@ -24,7 +22,7 @@ import ExportButton from '../components/ExportButton';
 import BulkTableRow from '../components/BulkTableRow';
 import AssetDetailPopup from '../components/AssetDetailPopup';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
-import PageSizeSelector from '../components/PageSizeSelector';
+import Pagination from '../components/Pagination';
 import { useNotification } from '../context/NotificationContext';
 
 // Status styling with gradient backgrounds for a more modern look
@@ -1452,49 +1450,16 @@ export default function AssetsPage() {
           </div>
         )}          {/* Pagination */}
         {data?.pagination && filteredAndSortedAssets && (
-          <div className="bg-white/50 px-3 py-2 flex items-center justify-between border-t border-gray-200/50 sm:px-4">
-            <div className="flex items-center space-x-3">
-              <div className="hidden sm:block">
-                <p className="text-xs text-gray-700">
-                  Menampilkan <span className="font-medium">{data.pagination.total_items > 0 ? (page - 1) * pageSize + 1 : 0}</span> sampai{' '}
-                  <span className="font-medium">
-                    {Math.min(page * pageSize, data.pagination.total_items)}
-                  </span>{' '}
-                  dari <span className="font-medium">{data.pagination.total_items}</span> data
-                </p>
-              </div>
-              <PageSizeSelector 
-                pageSize={pageSize} 
-                onPageSizeChange={(newSize) => {
-                  setPageSize(newSize);
-                  setPage(1); // Reset to first page when changing page size
-                }}
-                options={[10, 25, 50, 100]}
-              />
-            </div>            <div className="flex-1 flex justify-between sm:justify-end space-x-2">              <button
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
-                className={`relative inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors
-                  ${page === 1 
-                    ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                    : 'text-gray-700 bg-white/70 shadow-sm'}`}
-              >
-                <ChevronLeftIcon className="h-4 w-4 mr-0.5" />
-                Sebelumnya
-              </button>
-              <button
-                onClick={() => setPage(page + 1)}
-                disabled={page === data.pagination.total_pages}
-                className={`relative inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors
-                  ${page === data.pagination.total_pages 
-                    ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                    : 'text-gray-700 bg-white/70 shadow-sm'}`}
-              >
-                Berikutnya
-                <ChevronRightIcon className="h-4 w-4 ml-0.5" />
-              </button>
-            </div>
-          </div>        
+          <Pagination
+            pagination={data.pagination}
+            currentPage={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemName="aset"
+            showPageSizeSelector={true}
+            pageSizeOptions={[10, 25, 50, 100]}
+          />
         )}
         </div>
       </GlassCard>

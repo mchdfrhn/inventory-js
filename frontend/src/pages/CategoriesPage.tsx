@@ -8,8 +8,6 @@ import {
   MagnifyingGlassIcon,
   ExclamationCircleIcon,
   TagIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   DocumentArrowUpIcon,
   DocumentArrowDownIcon
 } from '@heroicons/react/24/outline';
@@ -17,7 +15,7 @@ import type { Category } from '../services/api';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
-import PageSizeSelector from '../components/PageSizeSelector';
+import Pagination from '../components/Pagination';
 import { useNotification } from '../context/NotificationContext';
 
 export default function CategoriesPage() {
@@ -384,50 +382,16 @@ export default function CategoriesPage() {
           </div>
         </div>        {/* Pagination controls */}
         {data?.pagination && filteredCategories && (
-          <div className="bg-white/50 px-3 py-2 flex items-center justify-between border-t border-gray-200/50 sm:px-4">
-            <div className="flex items-center space-x-3">
-              <div className="hidden sm:block">
-                <p className="text-xs text-gray-700">
-                  Menampilkan <span className="font-medium">{data.pagination.total_items > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> sampai{' '}
-                  <span className="font-medium">
-                    {Math.min(currentPage * pageSize, data.pagination.total_items)}
-                  </span>{' '}
-                  dari <span className="font-medium">{data.pagination.total_items}</span> kategori
-                </p>
-              </div>
-              <PageSizeSelector 
-                pageSize={pageSize} 
-                onPageSizeChange={(newSize) => {
-                  setPageSize(newSize);
-                  setCurrentPage(1); // Reset to first page when changing page size
-                }}
-                options={[10, 25, 50, 100]}
-              />
-            </div>
-            <div className="flex-1 flex justify-between sm:justify-end space-x-2">              <button
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md
-                  ${currentPage === 1 
-                    ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                    : 'text-gray-700 bg-white/70 shadow-sm'}`}
-              >
-                <ChevronLeftIcon className="h-4 w-4 mr-0.5" />
-                Sebelumnya
-              </button>
-              <button
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === data.pagination.total_pages}
-                className={`relative inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md
-                  ${currentPage === data.pagination.total_pages 
-                    ? 'text-gray-300 cursor-not-allowed bg-white/50' 
-                    : 'text-gray-700 bg-white/70 shadow-sm'}`}
-              >
-                Berikutnya
-                <ChevronRightIcon className="h-4 w-4 ml-0.5" />
-              </button>
-            </div>
-          </div>
+          <Pagination
+            pagination={data.pagination}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            itemName="kategori"
+            showPageSizeSelector={true}
+            pageSizeOptions={[10, 25, 50, 100]}
+          />
         )}
       </GlassCard>
 
