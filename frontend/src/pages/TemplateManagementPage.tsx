@@ -175,7 +175,7 @@ export default function TemplateManagementPage() {
 
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <GlassCard className="overflow-hidden">
+      <GlassCard hover={false} className="overflow-hidden">
         {/* Controls */}
         <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex items-center justify-end">
           <button

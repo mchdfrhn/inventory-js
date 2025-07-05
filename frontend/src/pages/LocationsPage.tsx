@@ -222,7 +222,7 @@ export default function LocationsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <GlassCard className="p-10 text-center">
+        <GlassCard hover={false} className="p-10 text-center">
           <Loader size="lg" message="Memuat lokasi..." />
         </GlassCard>
       </div>
@@ -231,7 +231,7 @@ export default function LocationsPage() {
 
   if (error) {
     return (
-      <GlassCard className="p-6 border-l-4 border-red-500">
+      <GlassCard hover={false} className="p-6 border-l-4 border-red-500">
         <div className="flex">
           <div className="flex-shrink-0">
             <ExclamationCircleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
@@ -256,7 +256,7 @@ export default function LocationsPage() {
   
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <GlassCard className="overflow-hidden">
+      <GlassCard hover={false} className="overflow-hidden">
         {/* Search and Controls */}
         <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-3">
           {/* Search input */}

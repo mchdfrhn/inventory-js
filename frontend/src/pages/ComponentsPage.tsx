@@ -20,7 +20,7 @@ export default function ComponentsPage() {
         <p className="mt-1 text-sm text-gray-500">Showcase of UI components used in the inventory system</p>
       </div>
         {/* Glass Card Showcase */}
-      <GlassCard className="p-6">
+      <GlassCard hover={false} className="p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Glass Cards</h2>
         
         <div className="space-y-6">
@@ -62,7 +62,7 @@ export default function ComponentsPage() {
       </GlassCard>
       
       {/* Button Showcase */}
-      <GlassCard className="p-6">
+      <GlassCard hover={false} className="p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Gradient Buttons</h2>
         
         <div className="space-y-6">
@@ -136,7 +136,7 @@ export default function ComponentsPage() {
       </GlassCard>
       
       {/* Status Badges */}
-      <GlassCard className="p-6">
+      <GlassCard hover={false} className="p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Status Badges</h2>
         
         <div className="space-y-6">

@@ -190,7 +190,7 @@ function StatCard({
   const TrendIcon = trend === 'up' ? ArrowUpIcon : trend === 'down' ? ArrowDownIcon : null;
 
   return (
-    <GlassCard className="p-5 hover-float">
+    <GlassCard hover={true} className="p-5 hover-float">
       <div className="flex justify-between items-start">
         <div>
           <p className="text-sm font-medium text-gray-600">{title}</p>
@@ -611,14 +611,14 @@ export default function DashboardPage() {
   }, [assetData, categoryData, locationData]);  if (assetsLoading || categoriesLoading || locationsLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <GlassCard className="p-10 text-center">
+        <GlassCard hover={false} className="p-10 text-center">
           <Loader size="lg" message="Memuat dashboard" />
         </GlassCard>
       </div>
     );
   }  if (assetsError || categoriesError || locationsError || !stats) {
     return (
-      <GlassCard className="p-6 border-l-4 border-red-500">
+      <GlassCard hover={false} className="p-6 border-l-4 border-red-500">
         <div className="flex">
           <div className="flex-shrink-0">
             <ExclamationCircleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
@@ -681,7 +681,7 @@ export default function DashboardPage() {
         {/* Top row - Analysis cards */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* Analisis Nominal Aset */}
-          <GlassCard className="p-3">
+          <GlassCard hover={true} className="p-3">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-sm font-semibold text-gray-900">
                 Analisis Nominal Aset
@@ -738,7 +738,7 @@ export default function DashboardPage() {
         </div>
       </GlassCard>
           {/* Status Chart Card */}
-          <GlassCard className="p-3 flex flex-col">
+          <GlassCard hover={true} className="p-3 flex flex-col">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-sm font-semibold text-gray-900">
                 Status Aset
@@ -755,7 +755,7 @@ export default function DashboardPage() {
         {/* Right sidebar - Quick stats */}
         <div className="space-y-3">
           {/* Quick summary */}
-          <GlassCard className="p-3">
+          <GlassCard hover={true} className="p-3">
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Ringkasan Cepat</h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
@@ -776,7 +776,7 @@ export default function DashboardPage() {
           </GlassCard>
 
           {/* Top categories compact */}
-          <GlassCard className="p-3">
+          <GlassCard hover={true} className="p-3">
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Kategori Teratas</h3>
             <div className="space-y-2">
               {(stats?.assetsByCategory || []).slice(0, 4).map((category) => (
@@ -796,7 +796,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Monthly statistics - Full width */}
-      <GlassCard className="p-3">
+      <GlassCard hover={true} className="p-3">
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-sm font-semibold text-gray-900">
             Statistik Bulanan Aset

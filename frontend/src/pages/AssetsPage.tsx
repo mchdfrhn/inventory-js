@@ -643,7 +643,7 @@ export default function AssetsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <GlassCard className="p-10 text-center">
+        <GlassCard hover={false} className="p-10 text-center">
           <Loader size="lg" message="Memuat aset..." />
         </GlassCard>
       </div>
@@ -652,7 +652,7 @@ export default function AssetsPage() {
 
   if (error) {
     return (
-      <GlassCard className="p-6 border-l-4 border-red-500">
+      <GlassCard hover={false} className="p-6 border-l-4 border-red-500">
         <div className="flex">
           <div className="flex-shrink-0">
             <ExclamationCircleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
@@ -677,7 +677,7 @@ export default function AssetsPage() {
     );
   }  return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <GlassCard className="overflow-hidden">
+      <GlassCard hover={false} className="overflow-hidden">
 
         {/* Category Filter Notification */}
         {categoryFilter && categoriesData?.data && (

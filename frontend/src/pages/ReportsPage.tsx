@@ -669,7 +669,7 @@ const ReportsPage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <GlassCard className="max-w-lg w-full text-center">
+        <GlassCard hover={false} className="max-w-lg w-full text-center">
           <div className="p-8">
             <ExclamationCircleIcon className="mx-auto h-12 w-12 text-red-500 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Backend Server Tidak Dapat Diakses</h3>
@@ -701,7 +701,7 @@ const ReportsPage = () => {
 
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      <GlassCard className="overflow-hidden">
+      <GlassCard hover={false} className="overflow-hidden">
         {/* Search and Filter Controls */}
         <div className="px-4 py-3 border-b border-gray-200/50 bg-gradient-to-r from-white/50 to-blue-50/30 flex flex-wrap justify-between items-center gap-3">
           {/* Search input */}
