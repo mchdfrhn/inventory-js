@@ -757,10 +757,10 @@ export default function AssetsPage() {
             <ExportButton assets={filteredAndSortedAssets || []} filename="daftar_aset_sttpu" />
             <button 
               onClick={() => setImportModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white/80 text-gray-600 hover:bg-gray-50 shadow-sm text-xs transition-all duration-300"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:-translate-y-0.5 transition-all duration-300"
             >
               <DocumentArrowUpIcon className="h-3.5 w-3.5" />
-              Import
+              <span>Import</span>
             </button>
             <Link to="/assets/new">
               <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 shadow-sm text-xs transition-all duration-300">
