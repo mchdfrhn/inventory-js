@@ -255,17 +255,17 @@ export default function AuditLogPage() {
                 type="button"
                 onClick={() => setFilterPanelOpen(true)}
                 className={`
-                  flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs
+                  flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium
                   ${filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date
-                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
-                    : 'bg-white/80 border-gray-200 text-gray-600 hover:bg-gray-50'}
-                  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md
+                    ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 border-indigo-200 text-indigo-700 hover:from-indigo-100 hover:to-indigo-200'
+                    : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 text-gray-600 hover:from-gray-100 hover:to-gray-200'}
+                  hover:-translate-y-0.5 transition-all duration-300
                 `}
               >
                 <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
                 <span>{filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date ? 'Filter Aktif' : 'Filter'}</span>
                 {(filters.entity_type || filters.entity_id || filters.action || filters.from_date || filters.to_date) && (
-                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
+                  <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
                     {(filters.entity_type ? 1 : 0) + 
                      (filters.entity_id ? 1 : 0) + 
                      (filters.action ? 1 : 0) + 

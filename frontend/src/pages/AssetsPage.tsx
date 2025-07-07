@@ -777,7 +777,7 @@ export default function AssetsPage() {
               `}
             >
               <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />              <span>{filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter ? 'Filter Aktif' : 'Filter'}</span>
-              {(filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter) && (                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
+              {(filter || depreciationFilter !== 'all' || acquisitionYearFilter || acquisitionSourceFilter || categoryFilter || locationFilter) && (                <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
                   {(filter ? 1 : 0) + 
                    (depreciationFilter !== 'all' ? 1 : 0) + 
                    (acquisitionYearFilter ? 1 : 0) + 
@@ -814,7 +814,7 @@ export default function AssetsPage() {
                 leaveTo="translate-x-full"
               >                <div className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white pt-5 pb-4 shadow-xl">
                   <div className="px-6 flex items-center justify-between border-b border-gray-200 pb-4">
-                    <Dialog.Title className="text-lg font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Filter Aset</Dialog.Title>
+                    <Dialog.Title className="text-base font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Filter Aset</Dialog.Title>
                     <button
                       type="button"
                       className="rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 p-1 transition-colors"
@@ -825,17 +825,17 @@ export default function AssetsPage() {
                     </button>
                   </div>
                   
-                  <div className="mt-4 flex flex-col px-6 space-y-5 overflow-y-auto">                    {/* Status Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                  <div className="mt-4 flex flex-col px-4 space-y-4 overflow-y-auto">                    {/* Status Filter */}
+                    <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full mr-2"></span>
                         Status Aset
                       </h3>
                       <div className="grid grid-cols-2 gap-2">
-                        <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                        <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                           <input 
                             type="radio" 
-                            className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                            className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500" 
                             name="status" 
                             value="" 
                             checked={tempFilter === null}
@@ -843,12 +843,12 @@ export default function AssetsPage() {
                               setTempFilter(null);
                             }} 
                           />
-                          <span className="ml-2 text-sm">Semua Status</span>
+                          <span className="ml-2 text-xs">Semua Status</span>
                         </label>
-                        <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
+                        <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
                           <input 
                             type="radio" 
-                            className="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500" 
+                            className="form-radio h-3.5 w-3.5 text-green-600 border-gray-300 focus:ring-green-500" 
                             name="status" 
                             value="baik"
                             checked={tempFilter === 'baik'} 
@@ -856,12 +856,12 @@ export default function AssetsPage() {
                               setTempFilter('baik');
                             }}
                           />
-                          <span className="ml-2 text-sm text-green-700">Baik</span>
+                          <span className="ml-2 text-xs text-green-700">Baik</span>
                         </label>
-                        <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
+                        <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
                           <input 
                             type="radio" 
-                            className="form-radio h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500" 
+                            className="form-radio h-3.5 w-3.5 text-red-600 border-gray-300 focus:ring-red-500" 
                             name="status" 
                             value="rusak"
                             checked={tempFilter === 'rusak'} 
@@ -869,12 +869,12 @@ export default function AssetsPage() {
                               setTempFilter('rusak');
                             }}
                           />
-                          <span className="ml-2 text-sm text-red-700">Rusak</span>
+                          <span className="ml-2 text-xs text-red-700">Rusak</span>
                         </label>
-                        <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
+                        <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
                           <input 
                             type="radio" 
-                            className="form-radio h-4 w-4 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
+                            className="form-radio h-3.5 w-3.5 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
                             name="status" 
                             value="tidak_memadai"
                             checked={tempFilter === 'tidak_memadai'} 
@@ -882,20 +882,20 @@ export default function AssetsPage() {
                               setTempFilter('tidak_memadai');
                             }}
                           />
-                          <span className="ml-2 text-sm text-yellow-700">Kurang Baik</span>
+                          <span className="ml-2 text-xs text-yellow-700">Tidak Memadai</span>
                         </label>
                       </div>
                     </div>                      {/* Depreciation Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                    <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-purple-500 rounded-full mr-2"></span>
                         Nilai Penyusutan
                       </h3>
                       <div className="space-y-2">
-                        <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                        <label className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                           <input 
                             type="radio" 
-                            className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                            className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500" 
                             name="depreciation" 
                             value="all" 
                             checked={tempDepreciationFilter === 'all'}
@@ -903,14 +903,14 @@ export default function AssetsPage() {
                               setTempDepreciationFilter('all');
                             }} 
                           />
-                          <span className="ml-2 text-sm">Semua Nilai</span>
+                          <span className="ml-2 text-xs">Semua Nilai</span>
                         </label>
                         
                         <div className="grid grid-cols-2 gap-2">
-                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
+                          <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
                             <input 
                               type="radio" 
-                              className="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500" 
+                              className="form-radio h-3.5 w-3.5 text-green-600 border-gray-300 focus:ring-green-500" 
                               name="depreciation" 
                               value="0-25"
                               checked={tempDepreciationFilter === '0-25'} 
@@ -918,13 +918,13 @@ export default function AssetsPage() {
                                 setTempDepreciationFilter('0-25');
                               }}
                             />
-                            <span className="ml-2 text-sm text-green-700">0-25%</span>
+                            <span className="ml-2 text-xs text-green-700">0-25%</span>
                           </label>
                           
-                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                          <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                             <input 
                               type="radio" 
-                              className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                              className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500" 
                               name="depreciation" 
                               value="26-50"
                               checked={tempDepreciationFilter === '26-50'} 
@@ -932,13 +932,13 @@ export default function AssetsPage() {
                                 setTempDepreciationFilter('26-50');
                               }}
                             />
-                            <span className="ml-2 text-sm text-blue-700">26-50%</span>
+                            <span className="ml-2 text-xs text-blue-700">26-50%</span>
                           </label>
                           
-                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
+                          <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
                             <input 
                               type="radio" 
-                              className="form-radio h-4 w-4 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
+                              className="form-radio h-3.5 w-3.5 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
                               name="depreciation" 
                               value="51-75"
                               checked={tempDepreciationFilter === '51-75'} 
@@ -946,13 +946,13 @@ export default function AssetsPage() {
                                 setTempDepreciationFilter('51-75');
                               }}
                             />
-                            <span className="ml-2 text-sm text-yellow-700">51-75%</span>
+                            <span className="ml-2 text-xs text-yellow-700">51-75%</span>
                           </label>
                           
-                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
+                          <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
                             <input 
                               type="radio" 
-                              className="form-radio h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500" 
+                              className="form-radio h-3.5 w-3.5 text-red-600 border-gray-300 focus:ring-red-500" 
                               name="depreciation" 
                               value="76-100"
                               checked={tempDepreciationFilter === '76-100'} 
@@ -960,20 +960,20 @@ export default function AssetsPage() {
                                 setTempDepreciationFilter('76-100');
                               }}
                             />
-                            <span className="ml-2 text-sm text-red-700">76-100%</span>
+                            <span className="ml-2 text-xs text-red-700">76-100%</span>
                           </label>
                         </div>
                       </div>
                     </div>
                       {/* Acquisition Year Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-indigo-500 rounded-full mr-2"></span>
+                    <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-indigo-500 rounded-full mr-2"></span>
                         Tahun Perolehan
                       </h3>
                       <div className="relative">
                         <select 
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs appearance-none bg-white pl-2.5 pr-8 py-2"
                           value={tempAcquisitionYearFilter || ''}
                           onChange={(e) => {
                             setTempAcquisitionYearFilter(e.target.value || null);
@@ -991,23 +991,23 @@ export default function AssetsPage() {
                           })}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                          <svg className="fill-current h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                             <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                           </svg>
                         </div>
                       </div>
                     </div>
                       {/* Acquisition Source Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
+                    <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-amber-500 rounded-full mr-2"></span>
                         Asal Pengadaan
                       </h3>
                       <div className="space-y-2">
-                        <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                        <label className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                           <input
                             type="radio"
-                            className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
                             name="acquisitionSource"
                             value=""
                             checked={tempAcquisitionSourceFilter === null}
@@ -1015,15 +1015,15 @@ export default function AssetsPage() {
                               setTempAcquisitionSourceFilter(null);
                             }}
                           />
-                          <span className="ml-2 text-sm">Semua</span>
+                          <span className="ml-2 text-xs">Semua</span>
                         </label>
                         
                         <div className="grid grid-cols-2 gap-2">
                           {["Pembelian", "Bantuan", "Hibah", "STTST"].map((source) => (
-                            <label key={source} className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                            <label key={source} className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                               <input
                                 type="radio"
-                                className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
                                 name="acquisitionSource"
                                 value={source}
                                 checked={tempAcquisitionSourceFilter === source}
@@ -1031,31 +1031,31 @@ export default function AssetsPage() {
                                   setTempAcquisitionSourceFilter(source);
                                 }}
                               />
-                              <span className="ml-2 text-sm">{source}</span>
+                              <span className="ml-2 text-xs">{source}</span>
                             </label>
                           ))}
                         </div>
                       </div>                    </div>
                       {/* Category Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                    <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-green-500 rounded-full mr-2"></span>
                         Kategori
                       </h3>
                       {categoriesLoading ? (
                         <div className="text-center py-2">
-                          <div className="inline-block animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
-                          <span className="text-sm text-gray-600">Memuat kategori...</span>
+                          <div className="inline-block animate-spin h-3.5 w-3.5 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
+                          <span className="text-xs text-gray-600">Memuat kategori...</span>
                         </div>
                       ) : categoriesError ? (
-                        <div className="text-center py-2 text-sm text-red-600">
-                          <ExclamationCircleIcon className="h-4 w-4 inline mr-1" />
+                        <div className="text-center py-2 text-xs text-red-600">
+                          <ExclamationCircleIcon className="h-3.5 w-3.5 inline mr-1" />
                           Gagal memuat data kategori
                         </div>
                       ) : (
                         <div className="relative">
                           <select 
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs appearance-none bg-white pl-2.5 pr-8 py-2"
                             value={tempCategoryFilter || ''}
                             onChange={(e) => {
                               setTempCategoryFilter(e.target.value || null);
@@ -1069,7 +1069,7 @@ export default function AssetsPage() {
                             ))}
                           </select>
                           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <svg className="fill-current h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                               <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                             </svg>
                           </div>
@@ -1077,25 +1077,25 @@ export default function AssetsPage() {
                       )}
                     </div>
                       {/* Location Filter */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                        <span className="inline-block w-3 h-3 bg-pink-500 rounded-full mr-2"></span>
+                    <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                      <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                        <span className="inline-block w-2.5 h-2.5 bg-pink-500 rounded-full mr-2"></span>
                         Lokasi
                       </h3>
                       {locationsLoading ? (
                         <div className="text-center py-2">
-                          <div className="inline-block animate-spin h-4 w-4 border-2 border-pink-500 border-t-transparent rounded-full mr-2"></div>
-                          <span className="text-sm text-gray-600">Memuat lokasi...</span>
+                          <div className="inline-block animate-spin h-3.5 w-3.5 border-2 border-pink-500 border-t-transparent rounded-full mr-2"></div>
+                          <span className="text-xs text-gray-600">Memuat lokasi...</span>
                         </div>
                       ) : locationsError ? (
-                        <div className="text-center py-2 text-sm text-red-600">
-                          <ExclamationCircleIcon className="h-4 w-4 inline mr-1" />
+                        <div className="text-center py-2 text-xs text-red-600">
+                          <ExclamationCircleIcon className="h-3.5 w-3.5 inline mr-1" />
                           Gagal memuat data lokasi
                         </div>
                       ) : (
                         <div className="relative">
                           <select 
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs appearance-none bg-white pl-2.5 pr-8 py-2"
                             value={tempLocationFilter || ''}
                             onChange={(e) => {
                               setTempLocationFilter(e.target.value || null);
@@ -1109,7 +1109,7 @@ export default function AssetsPage() {
                             ))}
                           </select>
                           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <svg className="fill-current h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                               <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                             </svg>
                           </div>
@@ -1159,17 +1159,17 @@ export default function AssetsPage() {
                     )}
 
                     {/* Filter Actions */}
-                    <div className="mt-6 px-1">
-                      <div className="flex flex-col space-y-3">
+                    <div className="mt-4 px-1">
+                      <div className="flex flex-col space-y-2">
                         <button
                           type="button"
-                          className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                          className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
                           onClick={applyFilters}
                           disabled={isApplyingFilter}
                         >
                           {isApplyingFilter ? (
                             <>
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <svg className="animate-spin -ml-1 mr-2 h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
@@ -1177,7 +1177,7 @@ export default function AssetsPage() {
                             </>
                           ) : (
                             <>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
                               Terapkan Filter
@@ -1187,17 +1187,17 @@ export default function AssetsPage() {
                         
                         <button
                           type="button"
-                          className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                          className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                           onClick={resetTempFiltersToDefaults}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                           </svg>
                           Reset Filter
                         </button>
                       </div>
                       
-                      <div className="mt-6 pt-4 border-t border-gray-200 text-xs text-center text-gray-500">
+                      <div className="mt-4 pt-3 border-t border-gray-200 text-xs text-center text-gray-500">
                         Klik di luar panel untuk menutup
                       </div>
                     </div>

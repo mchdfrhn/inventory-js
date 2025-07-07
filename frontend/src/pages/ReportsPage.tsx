@@ -4,7 +4,8 @@ import {
   ExclamationCircleIcon, 
   FunnelIcon,
   XMarkIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
@@ -717,17 +718,17 @@ const ReportsPage = () => {
               type="button"
               onClick={() => setFilterPanelOpen(true)}
               className={`
-                flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs
+                flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium
                 ${hasActiveFilters()
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                  : 'bg-white/80 border-gray-200 text-gray-600 hover:bg-gray-50'}
-                transition-all duration-300
+                  ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 border-indigo-200 text-indigo-700 hover:from-indigo-100 hover:to-indigo-200'
+                  : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 text-gray-600 hover:from-gray-100 hover:to-gray-200'}
+                hover:-translate-y-0.5 transition-all duration-300
               `}
             >
-              <FunnelIcon className="h-3.5 w-3.5" />
-              <span>Filter</span>
+              <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
+              <span>{hasActiveFilters() ? 'Filter Aktif' : 'Filter'}</span>
               {hasActiveFilters() && (
-                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
+                <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-800">
                   {Object.values(filters).filter(v => v && (Array.isArray(v) ? v.length > 0 : true)).length}
                 </span>
               )}
@@ -824,139 +825,139 @@ const ReportsPage = () => {
                   <div className="mt-3 px-4 flex-1 overflow-y-auto">
                     <div className="mt-3 flex flex-col space-y-4">
                       {/* Status Filter */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                          <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                      <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                        <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                          <span className="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full mr-2"></span>
                           Status Aset
                         </h3>
                         <div className="grid grid-cols-2 gap-2">
-                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                          <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                             <input 
                               type="radio" 
-                              className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                              className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500" 
                               name="status" 
                               value="" 
                               checked={filters.statuses.length === 0}
                               onChange={() => updateFilters({ ...filters, statuses: [] })} 
                             />
-                            <span className="ml-2 text-sm">Semua Status</span>
+                            <span className="ml-2 text-xs">Semua Status</span>
                           </label>
-                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
+                          <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
                             <input 
                               type="radio" 
-                              className="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500" 
+                              className="form-radio h-3.5 w-3.5 text-green-600 border-gray-300 focus:ring-green-500" 
                               name="status" 
                               value="baik"
                               checked={filters.statuses.includes('baik') && filters.statuses.length === 1} 
                               onChange={() => updateFilters({ ...filters, statuses: ['baik'] })}
                             />
-                            <span className="ml-2 text-sm text-green-700">Baik</span>
+                            <span className="ml-2 text-xs text-green-700">Baik</span>
                           </label>
-                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
+                          <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
                             <input 
                               type="radio" 
-                              className="form-radio h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500" 
+                              className="form-radio h-3.5 w-3.5 text-red-600 border-gray-300 focus:ring-red-500" 
                               name="status" 
                               value="rusak"
                               checked={filters.statuses.includes('rusak') && filters.statuses.length === 1} 
                               onChange={() => updateFilters({ ...filters, statuses: ['rusak'] })}
                             />
-                            <span className="ml-2 text-sm text-red-700">Rusak</span>
+                            <span className="ml-2 text-xs text-red-700">Rusak</span>
                           </label>
-                          <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
+                          <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
                             <input 
                               type="radio" 
-                              className="form-radio h-4 w-4 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
+                              className="form-radio h-3.5 w-3.5 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
                               name="status" 
                               value="tidak_memadai"
                               checked={filters.statuses.includes('tidak_memadai') && filters.statuses.length === 1} 
                               onChange={() => updateFilters({ ...filters, statuses: ['tidak_memadai'] })}
                             />
-                            <span className="ml-2 text-sm text-yellow-700">Tidak Memadai</span>
+                            <span className="ml-2 text-xs text-yellow-700">Tidak Memadai</span>
                           </label>
                         </div>
                       </div>
 
                       {/* Depreciation Filter */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                          <span className="inline-block w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                      <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                        <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                          <span className="inline-block w-2.5 h-2.5 bg-purple-500 rounded-full mr-2"></span>
                           Nilai Penyusutan
                         </h3>
                         <div className="space-y-2">
-                          <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                          <label className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                             <input 
                               type="radio" 
-                              className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                              className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500" 
                               name="depreciation" 
                               value="all" 
                               checked={!filters.priceMin && !filters.priceMax}
                               onChange={() => updateFilters({ ...filters, priceMin: null, priceMax: null })} 
                             />
-                            <span className="ml-2 text-sm">Semua Nilai</span>
+                            <span className="ml-2 text-xs">Semua Nilai</span>
                           </label>
                           
                           <div className="grid grid-cols-2 gap-2">
-                            <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
+                            <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-green-300 transition-colors cursor-pointer">
                               <input 
                                 type="radio" 
-                                className="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500" 
+                                className="form-radio h-3.5 w-3.5 text-green-600 border-gray-300 focus:ring-green-500" 
                                 name="depreciation" 
                                 value="0-25"
                                 checked={filters.priceMin === 0 && filters.priceMax === 25} 
                                 onChange={() => updateFilters({ ...filters, priceMin: 0, priceMax: 25 })}
                               />
-                              <span className="ml-2 text-sm text-green-700">0-25%</span>
+                              <span className="ml-2 text-xs text-green-700">0-25%</span>
                             </label>
                             
-                            <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                            <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                               <input 
                                 type="radio" 
-                                className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" 
+                                className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500" 
                                 name="depreciation" 
                                 value="26-50"
                                 checked={filters.priceMin === 26 && filters.priceMax === 50} 
                                 onChange={() => updateFilters({ ...filters, priceMin: 26, priceMax: 50 })}
                               />
-                              <span className="ml-2 text-sm text-blue-700">26-50%</span>
+                              <span className="ml-2 text-xs text-blue-700">26-50%</span>
                             </label>
                             
-                            <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
+                            <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer">
                               <input 
                                 type="radio" 
-                                className="form-radio h-4 w-4 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
+                                className="form-radio h-3.5 w-3.5 text-yellow-600 border-gray-300 focus:ring-yellow-500" 
                                 name="depreciation" 
                                 value="51-75"
                                 checked={filters.priceMin === 51 && filters.priceMax === 75} 
                                 onChange={() => updateFilters({ ...filters, priceMin: 51, priceMax: 75 })}
                               />
-                              <span className="ml-2 text-sm text-yellow-700">51-75%</span>
+                              <span className="ml-2 text-xs text-yellow-700">51-75%</span>
                             </label>
                             
-                            <label className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
+                            <label className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer">
                               <input 
                                 type="radio" 
-                                className="form-radio h-4 w-4 text-red-600 border-gray-300 focus:ring-red-500" 
+                                className="form-radio h-3.5 w-3.5 text-red-600 border-gray-300 focus:ring-red-500" 
                                 name="depreciation" 
                                 value="76-100"
                                 checked={filters.priceMin === 76 && filters.priceMax === 100} 
                                 onChange={() => updateFilters({ ...filters, priceMin: 76, priceMax: 100 })}
                               />
-                              <span className="ml-2 text-sm text-red-700">76-100%</span>
+                              <span className="ml-2 text-xs text-red-700">76-100%</span>
                             </label>
                           </div>
                         </div>
                       </div>
 
                       {/* Acquisition Year Filter */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                          <span className="inline-block w-3 h-3 bg-indigo-500 rounded-full mr-2"></span>
+                      <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                        <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                          <span className="inline-block w-2.5 h-2.5 bg-indigo-500 rounded-full mr-2"></span>
                           Tahun Perolehan
                         </h3>
                         <div className="relative">
                           <select 
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs appearance-none bg-white pl-2.5 pr-8 py-2"
                             value={filters.dateFrom || ''}
                             onChange={(e) => updateFilters({ ...filters, dateFrom: e.target.value })}
                           >
@@ -971,7 +972,7 @@ const ReportsPage = () => {
                             })}
                           </select>
                           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <svg className="fill-current h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                               <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                             </svg>
                           </div>
@@ -979,36 +980,36 @@ const ReportsPage = () => {
                       </div>
 
                       {/* Acquisition Source Filter */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                          <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
+                      <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                        <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                          <span className="inline-block w-2.5 h-2.5 bg-amber-500 rounded-full mr-2"></span>
                           Asal Pengadaan
                         </h3>
                         <div className="space-y-2">
-                          <label className="flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                          <label className="flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                             <input
                               type="radio"
-                              className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
                               name="acquisitionSource"
                               value=""
                               checked={filters.sources.length === 0}
                               onChange={() => updateFilters({ ...filters, sources: [] })}
                             />
-                            <span className="ml-2 text-sm">Semua</span>
+                            <span className="ml-2 text-xs">Semua</span>
                           </label>
                           
                           <div className="grid grid-cols-2 gap-2">
                             {["Pembelian", "Bantuan", "Hibah", "STTST"].map((source) => (
-                              <label key={source} className="inline-flex items-center bg-white rounded-md px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
+                              <label key={source} className="inline-flex items-center bg-white rounded-md px-2.5 py-1.5 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer">
                                 <input
                                   type="radio"
-                                  className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                  className="form-radio h-3.5 w-3.5 text-blue-600 border-gray-300 focus:ring-blue-500"
                                   name="acquisitionSource"
                                   value={source}
                                   checked={filters.sources.includes(source) && filters.sources.length === 1}
                                   onChange={() => updateFilters({ ...filters, sources: [source] })}
                                 />
-                                <span className="ml-2 text-sm">{source}</span>
+                                <span className="ml-2 text-xs">{source}</span>
                               </label>
                             ))}
                           </div>
@@ -1016,14 +1017,14 @@ const ReportsPage = () => {
                       </div>
 
                       {/* Category Filter */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                          <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                      <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                        <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                          <span className="inline-block w-2.5 h-2.5 bg-green-500 rounded-full mr-2"></span>
                           Kategori
                         </h3>
                         <div className="relative">
                           <select 
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs appearance-none bg-white pl-2.5 pr-8 py-2"
                             value={filters.categories.length > 0 ? filters.categories[0] : ''}
                             onChange={(e) => updateFilters({ ...filters, categories: e.target.value ? [e.target.value] : [] })}
                           >
@@ -1035,7 +1036,7 @@ const ReportsPage = () => {
                             ))}
                           </select>
                           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <svg className="fill-current h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                               <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                             </svg>
                           </div>
@@ -1043,14 +1044,14 @@ const ReportsPage = () => {
                       </div>
 
                       {/* Location Filter */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                          <span className="inline-block w-3 h-3 bg-pink-500 rounded-full mr-2"></span>
+                      <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                        <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                          <span className="inline-block w-2.5 h-2.5 bg-pink-500 rounded-full mr-2"></span>
                           Lokasi
                         </h3>
                         <div className="relative">
                           <select 
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none bg-white pl-3 pr-10 py-2.5"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-xs appearance-none bg-white pl-2.5 pr-8 py-2"
                             value={filters.locations.length > 0 ? filters.locations[0] : ''}
                             onChange={(e) => updateFilters({ ...filters, locations: e.target.value ? [e.target.value] : [] })}
                           >
@@ -1062,7 +1063,7 @@ const ReportsPage = () => {
                             ))}
                           </select>
                           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <svg className="fill-current h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                               <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                             </svg>
                           </div>
@@ -1107,37 +1108,37 @@ const ReportsPage = () => {
                       )}
 
                       {/* Filter Actions */}
-                      <div className="mt-6 px-1">
-                        <div className="flex flex-col space-y-3">
+                      <div className="mt-4 px-1">
+                        <div className="flex flex-col space-y-2">
                           <button
                             type="button"
-                            className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                            className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
                             onClick={() => {
                               setFilterPanelOpen(false);
                               addNotification('success', `Filter diterapkan. Menampilkan ${filteredCount} dari ${totalAssets} aset`);
                             }}
                           >
-                            <CheckCircleIcon className="h-4 w-4 mr-2" />
+                            <CheckCircleIcon className="h-3.5 w-3.5 mr-2" />
                             Terapkan Filter
                           </button>
                           
                           <button
                             type="button"
-                            className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                            className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                             onClick={() => {
                               clearFilters();
                               setFilterPanelOpen(false);
                               addNotification('info', 'Filter dihapus. Menampilkan semua aset');
                             }}
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                             Reset Filter
                           </button>
                         </div>
                         
-                        <div className="mt-6 pt-4 border-t border-gray-200 text-xs text-center text-gray-500">
+                        <div className="mt-4 pt-3 border-t border-gray-200 text-xs text-center text-gray-500">
                           Klik di luar panel untuk menutup
                         </div>
                       </div>
