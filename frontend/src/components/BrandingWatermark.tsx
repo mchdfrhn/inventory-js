@@ -18,8 +18,25 @@ const BrandingWatermark: React.FC<BrandingWatermarkProps> = ({
     <div className={`flex items-center justify-center gap-2 text-xs text-gray-400 opacity-70 hover:opacity-100 transition-all duration-300 ${className}`}>
       <div className="flex items-center gap-1.5">
         <div className="relative">
-          <CodeBracketIcon className="h-3.5 w-3.5" />
-          <SparklesIcon className="h-2 w-2 absolute -top-0.5 -right-0.5 text-blue-500 opacity-70" />
+          <img 
+            src="/profile.jpeg" 
+            alt="Mochammad Farhan Ali"
+            className="h-5 w-5 rounded-full object-cover ring-1 ring-blue-500/30 shadow-sm transition-transform duration-300 hover:scale-110"
+            onError={(e) => {
+              const target = e.currentTarget;
+              const fallback = document.createElement('div');
+              fallback.className = 'relative';
+              fallback.innerHTML = `
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                <svg class="h-2 w-2 absolute -top-0.5 -right-0.5 text-blue-500 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-9 3-5-12z"/>
+                </svg>
+              `;
+              target.parentNode?.replaceChild(fallback, target);
+            }}
+          />
         </div>
         <span className="font-medium">Developed by</span>
       </div>
@@ -62,10 +79,21 @@ const BrandingWatermark: React.FC<BrandingWatermarkProps> = ({
     <div className={`flex items-center justify-center gap-3 text-xs text-gray-400 opacity-70 hover:opacity-100 transition-all duration-500 group ${className}`}>
       <div className="flex items-center gap-2">
         <div className="relative group-hover:scale-110 transition-transform duration-300">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-xs">MFA</span>
-          </div>
+          <img 
+            src="/profile.jpeg" 
+            alt="Mochammad Farhan Ali"
+            className="w-8 h-8 rounded-full object-cover ring-2 ring-blue-500/30 shadow-lg transition-all duration-300 group-hover:ring-blue-500/60"
+            onError={(e) => {
+              const target = e.currentTarget;
+              const fallback = document.createElement('div');
+              fallback.className = 'w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg';
+              fallback.innerHTML = '<span class="text-white font-bold text-xs">MFA</span>';
+              target.parentNode?.replaceChild(fallback, target);
+            }}
+          />
           <SparklesIcon className="h-2.5 w-2.5 absolute -top-0.5 -right-0.5 text-yellow-400 opacity-80 group-hover:opacity-100" />
+          {/* Animated glow effect */}
+          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur -z-10"></div>
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1">

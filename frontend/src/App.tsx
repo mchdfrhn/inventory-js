@@ -14,6 +14,7 @@ import AuditLogPage from './pages/AuditLogPage'
 import TemplateManagementPage from './pages/TemplateManagementPage'
 import ReportsPage from './pages/ReportsPage'
 import TestPage from './pages/TestPage'
+import WatermarkDemo from './pages/WatermarkDemo'
 import { NotificationProvider } from './context/NotificationContext'
 import ToastContainer from './components/ToastContainer'
 import './App.css'
@@ -69,6 +70,9 @@ function App() {
               
               {/* Test route */}
               <Route path="test" element={<TestPage />} />
+              
+              {/* Watermark Demo route */}
+              <Route path="watermark-demo" element={<WatermarkDemo />} />
             </Route>
           </Routes>
         </Router>

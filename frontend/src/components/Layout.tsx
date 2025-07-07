@@ -302,9 +302,6 @@ export default function Layout() {
                         </li>
                       </ul>
                     </nav>
-                    
-                    {/* Watermark in sidebar */}
-                    <Watermark variant="sidebar" className="text-center" />
                   </div>
                 </Dialog.Panel>
               </Transition.Child>
@@ -422,9 +419,6 @@ export default function Layout() {
                 </li>
               </ul>
             </nav>
-            
-            {/* Watermark in desktop sidebar */}
-            <Watermark variant="sidebar" className="text-center" />
           </div>
         </div>
 
