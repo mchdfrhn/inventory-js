@@ -10,7 +10,8 @@ import {
   ExclamationCircleIcon,
   MapPinIcon,
   DocumentArrowUpIcon,
-  DocumentArrowDownIcon
+  DocumentArrowDownIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import GlassCard from '../components/GlassCard';
 import Loader from '../components/Loader';
@@ -280,13 +281,13 @@ export default function LocationsPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setImportModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:-translate-y-0.5 transition-all duration-300"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200 hover:from-purple-100 hover:to-purple-200 hover:-translate-y-0.5 transition-all duration-300"
             >
               <DocumentArrowUpIcon className="h-3.5 w-3.5" />
               <span>Import</span>
             </button>
             <Link to="/locations/new">
-              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:-translate-y-0.5 transition-all duration-300">
+              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:-translate-y-0.5 transition-all duration-300">
                 <PlusIcon className="h-3.5 w-3.5" />
                 <span>Tambah Lokasi</span>
               </button>
@@ -501,119 +502,196 @@ export default function LocationsPage() {
         </Dialog>
       </Transition>
 
-      {/* Import Modal */}
+      {/* Import Side Panel */}
       <Transition.Root show={importModalOpen} as={Fragment}>
-        <Dialog as="div" className="fixed z-10 inset-0 overflow-y-auto" onClose={setImportModalOpen}>
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <Dialog as="div" className="fixed inset-y-0 right-0 z-50 overflow-y-auto" onClose={setImportModalOpen}>
+          <div className="flex h-full">
             <Transition.Child
               as={Fragment}
-              enter="ease-out duration-300"
+              enter="transition-opacity ease-linear duration-300"
               enterFrom="opacity-0"
               enterTo="opacity-100"
-              leave="ease-in duration-200"
+              leave="transition-opacity ease-linear duration-300"
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm transition-opacity" />
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
             </Transition.Child>
 
-            {/* This element is to trick the browser into centering the modal contents. */}
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
-              &#8203;
-            </span>
             <Transition.Child
               as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enter="transition ease-in-out duration-300 transform"
+              enterFrom="translate-x-full"
+              enterTo="translate-x-0"
+              leave="transition ease-in-out duration-300 transform"
+              leaveFrom="translate-x-0"
+              leaveTo="translate-x-full"
             >
-              <div className="glass-card inline-block align-bottom rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <DocumentArrowUpIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
-                  </div>                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-                    <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
-                      Import Lokasi
-                    </Dialog.Title>                    <div className="mt-2">
-                      <p className="text-sm text-gray-500 mb-4">
-                        Upload file Excel atau CSV untuk mengimport data lokasi secara bulk. Kolom dengan tanda (*) wajib diisi.
-                      </p>
+              <div className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white pt-5 pb-4 shadow-xl">
+                {/* Header */}
+                <div className="px-6 flex items-center justify-between border-b border-gray-200 pb-4">
+                  <Dialog.Title className="text-lg font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-800 flex items-center">
+                    <DocumentArrowUpIcon className="h-5 w-5 text-purple-600 mr-2" />
+                    Import Lokasi
+                  </Dialog.Title>
+                  <button
+                    type="button"
+                    className="rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 p-1 transition-colors"
+                    onClick={() => setImportModalOpen(false)}
+                  >
+                    <span className="sr-only">Tutup Panel</span>
+                    <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                </div>
+                
+                {/* Content */}
+                <div className="mt-4 flex flex-col px-6 space-y-5 overflow-y-auto">
+                  {/* Instructions Section */}
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                    <h3 className="text-xs font-medium text-gray-900 mb-3 flex items-center">
+                      <span className="inline-block w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                      Panduan Import
+                    </h3>
+                    <div className="text-xs text-gray-700 space-y-2">
+                      <p>Upload file Excel atau CSV untuk mengimport data lokasi secara bulk. Kolom dengan tanda (*) wajib diisi.</p>
                       
-                      {/* Download Template Button */}
-                      <div className="mb-4">
-                        <button
-                          type="button"
-                          onClick={downloadTemplate}
-                          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
-                          Download Template
-                        </button>
+                      <div className="space-y-1">
+                        <p><strong>Format file:</strong> Excel (.xlsx, .xls) atau CSV (.csv)</p>
+                        <p><strong>Kode Lokasi:</strong> Gunakan format 3 digit (001, 002, 003, dll)</p>
+                        <p><strong>Nama Lokasi:</strong> Nama unik untuk setiap lokasi</p>
+                        <p><strong>Gedung & Lantai:</strong> Informasi opsional untuk detail lokasi</p>
                       </div>
+                    </div>
+                  </div>
 
-                      {/* File Upload */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Pilih File
-                        </label>
-                        <input
-                          type="file"
-                          accept=".xlsx,.xls,.csv"
-                          onChange={handleFileSelect}
-                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                        />
-                        {importFile && (
-                          <p className="mt-2 text-sm text-green-600">
+                  {/* Tips Section */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                    <h3 className="text-xs font-medium text-gray-900 mb-3 flex items-center">
+                      <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                      Tips & Panduan
+                    </h3>
+                    <div className="text-xs text-blue-700 space-y-2">
+                      <p>💡 <strong>Tips:</strong> Pastikan kode lokasi unik dan belum ada di sistem untuk menghindari duplikasi data.</p>
+                      <p>🏢 <strong>Struktur:</strong> Gunakan struktur hierarki yang konsisten untuk kemudahan pengelolaan lokasi.</p>
+                    </div>
+                  </div>
+                  
+                  {/* Download Template Section */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-xs font-medium text-gray-900 mb-3 flex items-center">
+                      <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                      Template CSV
+                    </h3>
+                    <p className="text-xs text-gray-600 mb-3">Download template untuk memastikan format data yang benar.</p>
+                    <button
+                      type="button"
+                      onClick={downloadTemplate}
+                      className="inline-flex items-center px-2.5 py-1.5 border border-green-300 shadow-sm text-xs font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 hover:-translate-y-0.5"
+                    >
+                      <DocumentArrowDownIcon className="h-3.5 w-3.5 mr-1.5" />
+                      Download Template
+                    </button>
+                  </div>
+
+                  {/* File Upload Section */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-xs font-medium text-gray-900 mb-3 flex items-center">
+                      <span className="inline-block w-3 h-3 bg-gray-500 rounded-full mr-2"></span>
+                      Upload File
+                    </h3>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls,.csv"
+                        onChange={handleFileSelect}
+                        className="block w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 file:transition-colors file:cursor-pointer border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                      />
+                      {importFile && (
+                        <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-md">
+                          <p className="text-xs text-green-700 flex items-center">
+                            <svg className="h-3.5 w-3.5 mr-1.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             File terpilih: {importFile.name}
                           </p>
-                        )}
-                      </div>
-
-                      {/* Error Message */}
-                      {importError && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                          <p className="text-sm text-red-600">{importError}</p>
-                        </div>
-                      )}
-
-                      {/* Success Message */}
-                      {importSuccess && (
-                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                          <p className="text-sm text-green-600">{importSuccess}</p>
                         </div>
                       )}
                     </div>
                   </div>
+
+                  {/* Status Messages */}
+                  {importError && (
+                    <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                      <div className="flex items-start">
+                        <ExclamationCircleIcon className="h-5 w-5 text-red-400 mr-2 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h3 className="text-sm font-medium text-red-800 mb-1">Error</h3>
+                          <p className="text-sm text-red-700">{importError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {importSuccess && (
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                      <div className="flex items-start">
+                        <svg className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <h3 className="text-sm font-medium text-green-800 mb-1">Berhasil</h3>
+                          <p className="text-sm text-green-700">{importSuccess}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <div className="flex flex-col space-y-3">
+                      <button
+                        type="button"
+                        className={`w-full inline-flex justify-center items-center rounded-lg border border-transparent shadow-sm px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ${
+                          importLoading || !importFile
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 focus:ring-purple-500 hover:-translate-y-0.5 shadow-lg'
+                        }`}
+                        onClick={handleImportSubmit}
+                        disabled={importLoading || !importFile}
+                      >
+                        {importLoading ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Mengimpor...
+                          </>
+                        ) : (
+                          <>
+                            <DocumentArrowUpIcon className="h-3.5 w-3.5 mr-1.5" />
+                            Import Data
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        className="w-full inline-flex justify-center items-center rounded-lg border border-gray-300 shadow-sm px-3 py-2 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200"
+                        onClick={() => {
+                          setImportModalOpen(false);
+                          setImportFile(null);
+                          setImportError(null);
+                          setImportSuccess(null);
+                        }}
+                        disabled={importLoading}
+                      >
+                        <XMarkIcon className="h-3.5 w-3.5 mr-1.5" />
+                        Batal
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                  <button
-                    className="w-full sm:ml-3 sm:w-auto flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border shadow-sm text-xs font-medium bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleImportSubmit}
-                    disabled={importLoading || !importFile}
-                  >
-                    {importLoading && (
-                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    )}
-                    {importLoading ? 'Mengimport...' : 'Import'}
-                  </button>                  <button
-                    type="button"
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm transition-all duration-200 hover:-translate-y-0.5"
-                    onClick={() => {
-                      setImportModalOpen(false);
-                      setImportFile(null);
-                      setImportError(null);
-                      setImportSuccess(null);
-                    }}
-                  >
-                    Batal
-                  </button>
-                </div>              </div>
+              </div>
             </Transition.Child>
           </div>
         </Dialog>
