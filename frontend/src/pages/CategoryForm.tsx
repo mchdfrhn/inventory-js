@@ -170,26 +170,26 @@ export default function CategoryForm() {
     );
   }
   return (
-    <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-      <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+    <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
         <div className="flex items-center">
           <div className="mr-4">
-            <Link to="/categories" className="text-blue-600 hover:text-blue-800 transition-colors">
+            <Link to="/categories" className="text-purple-600 hover:text-purple-800 transition-colors">
               <ArrowLeftIcon className="h-5 w-5" />
             </Link>
           </div>
-          <div>
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold leading-6 text-gray-900">
               {isEditMode ? 'Edit Kategori' : 'Tambah Kategori Baru'}
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-600">
               {isEditMode 
                 ? 'Perbarui informasi kategori dalam sistem inventaris' 
                 : 'Tambahkan kategori baru untuk mengatur aset Anda'}
             </p>
           </div>
           {isEditMode && (
-            <div className="ml-auto text-sm text-gray-600">
+            <div className="ml-auto text-sm text-gray-600 bg-white px-3 py-1 rounded-md shadow-sm">
               <span className="flex items-center">
                 <PencilIcon className="h-4 w-4 mr-1" />
                 ID: {id}
@@ -199,90 +199,122 @@ export default function CategoryForm() {
         </div>
       </div>
 
-      <div className="px-4 py-5 sm:p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">        {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 flex items-center">
-            <XCircleIcon className="h-5 w-5 text-red-500 mr-2" />
-            <span className="text-sm">{error}</span>
+      <div className="px-6 py-6">
+        <form onSubmit={handleSubmit} className="space-y-5">        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-md p-3 flex items-center">
+            <XCircleIcon className="h-4 w-4 text-red-500 mr-2" />
+            <span className="text-sm font-medium">{error}</span>
           </div>
-        )}        <div>          <h3 className="text-lg font-medium text-gray-900 mb-4">Informasi Kategori</h3>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">            <div>
-              <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-                Kode Kategori <span className="text-red-500">*</span>
-                <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
-              </label>
-              <input
-                type="text"
-                name="code"
-                id="code"
-                required
-                placeholder={!isEditMode ? "Auto-generating..." : "Kode tidak dapat diubah"}
-                readOnly={true}
-                disabled={true}
-                className="block w-full rounded-md shadow-sm sm:text-sm bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300"
-                value={formData.code}
-              />
-              {!isEditMode ? (
-                <p className="mt-1 text-xs text-gray-500">
-                  Kode kategori akan dibuat secara otomatis dengan kelipatan 10 (10, 20, 30, dst)
-                </p>
-              ) : (
-                <p className="mt-1 text-xs text-gray-500">
-                  Kode kategori tidak dapat diubah untuk menghindari duplikasi
-                </p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Nama Kategori <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                id="name"
-                required
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                value={formData.name}
-                onChange={handleChange}
-              />
-              <p className="mt-1 text-xs text-gray-500">Nama kategori harus unik</p>
-            </div><div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-              Deskripsi
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              rows={4}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              value={formData.description || ''}
-              onChange={handleChange}
-            ></textarea>
-          </div>
-          </div>
-        </div>
+        )}
 
-        <div className="mt-6 flex items-center justify-end space-x-3">          <Link
+          {/* Section 1: Basic Information */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center border-b border-gray-200 pb-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-purple-500 text-white text-xs font-medium rounded-full mr-2">1</span>
+              Informasi Dasar
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
+                  Kode Kategori <span className="text-red-500">*</span>
+                  <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
+                </label>
+                <input
+                  type="text"
+                  name="code"
+                  id="code"
+                  required
+                  placeholder={!isEditMode ? "Auto-generating..." : "Kode tidak dapat diubah"}
+                  readOnly={true}
+                  disabled={true}
+                  className="block w-full rounded-md shadow-sm sm:text-sm bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300"
+                  value={formData.code}
+                />
+                {!isEditMode ? (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Kode kategori akan dibuat secara otomatis dengan kelipatan 10 (10, 20, 30, dst)
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Kode kategori tidak dapat diubah untuk menghindari duplikasi
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Kategori <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  id="name"
+                  required
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Contoh: Elektronik"
+                />
+                <p className="mt-1 text-xs text-gray-500">Nama kategori harus unik</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Description */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center border-b border-gray-200 pb-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-500 text-white text-xs font-medium rounded-full mr-2">2</span>
+              Deskripsi
+            </h3>
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                Deskripsi Kategori
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                rows={3}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                value={formData.description || ''}
+                onChange={handleChange}
+                placeholder="Deskripsi detail tentang kategori ini (opsional)"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Berikan informasi tentang jenis aset yang termasuk dalam kategori ini.
+              </p>
+            </div>
+          </div>
+
+        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">          <Link
             to="/categories"
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="inline-flex items-center px-6 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
           >
+            <ArrowLeftIcon className="h-4 w-4 mr-2" />
             Batal
-          </Link><button
+          </Link>
+
+          <button
             type="submit"
             disabled={isSubmitting}
-            className={`px-4 py-2 rounded-md border border-transparent text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-              isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+            className={`inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 ${
+              isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
             }`}
           >
             {isSubmitting ? (
-              <div className="flex items-center">
+              <>
                 <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 Menyimpan...
-              </div>
-            ) : isEditMode ? 'Perbarui' : 'Simpan'}
+              </>
+            ) : isEditMode ? (
+              <>
+                <PencilIcon className="h-4 w-4 mr-2" />
+                Perbarui
+              </>
+            ) : (
+              'Simpan'
+            )}
           </button>        </div>
       </form>
       </div>
