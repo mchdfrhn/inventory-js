@@ -67,10 +67,10 @@ func (r *LocationRepository) List(page, pageSize int) ([]domain.Location, int, e
 		return nil, 0, err
 	}
 
-	// Get paginated results ordered by code DESC
+	// Get paginated results ordered by code ASC
 	offset := (page - 1) * pageSize
 	result := r.db.Table("locations").
-		Order("code DESC").
+		Order("code ASC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&locations)
@@ -95,12 +95,12 @@ func (r *LocationRepository) Search(query string, page, pageSize int) (*[]domain
 		Where(whereClause, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery).
 		Count(&count)
 
-	// Get the matching locations ordered by code DESC
+	// Get the matching locations ordered by code ASC
 	err := r.db.Table("locations").
 		Where(whereClause, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery).
 		Offset(offset).
 		Limit(pageSize).
-		Order("code DESC").
+		Order("code ASC").
 		Find(&locations).Error
 
 	if err != nil {
