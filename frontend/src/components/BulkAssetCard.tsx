@@ -4,6 +4,7 @@ import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import type { Asset } from '../services/api';
 import { assetApi } from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import FuturisticLoader from './FuturisticLoader';
 
 // Status styling with gradient backgrounds
 const statusGradients = {
@@ -157,9 +158,8 @@ const BulkAssetCard: React.FC<BulkAssetCardProps> = ({ asset, onDelete, onDetail
           <div className="p-4">
             <h4 className="text-sm font-medium text-gray-900 mb-3">Asset dalam Bulk ini:</h4>
             {isLoading ? (
-              <div className="text-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mx-auto"></div>
-                <p className="text-xs text-gray-500 mt-2">Memuat data...</p>
+              <div className="text-center py-6">
+                <FuturisticLoader size="md" variant="primary" text="Memuat data..." />
               </div>
             ) : (              <div className="space-y-2 max-h-60 overflow-y-auto">
                 {bulkAssets?.data?.map((bulkAsset: Asset) => (

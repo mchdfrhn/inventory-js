@@ -24,6 +24,8 @@ import AssetDetailPopup from '../components/AssetDetailPopup';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import Pagination from '../components/Pagination';
 import { useNotification } from '../context/NotificationContext';
+import FuturisticLoader from '../components/FuturisticLoader';
+import InlineLoader from '../components/InlineLoader';
 
 // Status styling with gradient backgrounds for a more modern look
 const statusGradients: Record<string, string> = {
@@ -1043,9 +1045,8 @@ export default function AssetsPage() {
                         Kategori
                       </h3>
                       {categoriesLoading ? (
-                        <div className="text-center py-2">
-                          <div className="inline-block animate-spin h-3.5 w-3.5 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
-                          <span className="text-xs text-gray-600">Memuat kategori...</span>
+                        <div className="text-center py-3">
+                          <FuturisticLoader size="sm" variant="primary" text="Memuat kategori..." />
                         </div>
                       ) : categoriesError ? (
                         <div className="text-center py-2 text-xs text-red-600">
@@ -1083,9 +1084,8 @@ export default function AssetsPage() {
                         Lokasi
                       </h3>
                       {locationsLoading ? (
-                        <div className="text-center py-2">
-                          <div className="inline-block animate-spin h-3.5 w-3.5 border-2 border-pink-500 border-t-transparent rounded-full mr-2"></div>
-                          <span className="text-xs text-gray-600">Memuat lokasi...</span>
+                        <div className="text-center py-3">
+                          <FuturisticLoader size="sm" variant="accent" text="Memuat lokasi..." />
                         </div>
                       ) : locationsError ? (
                         <div className="text-center py-2 text-xs text-red-600">
@@ -1169,10 +1169,7 @@ export default function AssetsPage() {
                         >
                           {isApplyingFilter ? (
                             <>
-                              <svg className="animate-spin -ml-1 mr-2 h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
+                              <InlineLoader size="xs" variant="white" className="mr-2" />
                               Menerapkan Filter...
                             </>
                           ) : (
@@ -1636,10 +1633,7 @@ export default function AssetsPage() {
                       >
                         {importLoading ? (
                           <>
-                            <svg className="animate-spin -ml-1 mr-2 h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
+                            <InlineLoader size="xs" variant="white" />
                             Mengimpor...
                           </>
                         ) : (

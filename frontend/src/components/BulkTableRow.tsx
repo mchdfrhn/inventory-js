@@ -4,6 +4,7 @@ import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import type { Asset } from '../services/api';
 import { assetApi } from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import FuturisticLoader from './FuturisticLoader';
 
 // Status styling with gradient backgrounds
 const statusGradients = {
@@ -181,9 +182,8 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
             <div className="space-y-2.5">
               <h4 className="text-xs font-medium text-gray-900 mb-2">Asset dalam Bulk ini:</h4>
               {isLoading ? (
-                <div className="text-center py-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600 mx-auto"></div>
-                  <p className="text-xs text-gray-500 mt-1.5">Memuat data...</p>
+                <div className="text-center py-4">
+                  <FuturisticLoader size="sm" variant="primary" text="Memuat data..." />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-52 overflow-y-auto">

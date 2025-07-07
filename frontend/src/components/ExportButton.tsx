@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import type { Asset } from '../services/api';
 import { assetApi } from '../services/api';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/outline';
+import InlineLoader from './InlineLoader';
 
 interface ExportButtonProps {
   assets: Asset[];
@@ -222,8 +223,17 @@ export default function ExportButton({ assets, filename = 'assets' }: ExportButt
         transition-all duration-300
       `}
     >
-      <DocumentArrowDownIcon className="h-3.5 w-3.5" />
-      <span>{isExporting ? 'Mengekspor...' : 'Export Excel'}</span>
+      {isExporting ? (
+        <>
+          <InlineLoader size="xs" variant="primary" />
+          <span>Mengekspor...</span>
+        </>
+      ) : (
+        <>
+          <DocumentArrowDownIcon className="h-3.5 w-3.5" />
+          <span>Export Excel</span>
+        </>
+      )}
       {assets.length > 0 && (
         <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 text-xs font-medium text-emerald-800">
           {assets.length}

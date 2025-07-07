@@ -5,6 +5,8 @@ import { categoryApi } from '../services/api';
 import type { Category } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { ArrowLeftIcon, PencilIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import PageLoader from '../components/PageLoader';
+import InlineLoader from '../components/InlineLoader';
 
 // Define the required fields for category creation/update
 type CategoryFormData = {
@@ -162,12 +164,7 @@ export default function CategoryForm() {
   };
   // Loading state
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
-        <span className="sr-only">Memuat...</span>
-      </div>
-    );
+    return <PageLoader text="Memuat data kategori..." />;
   }
   return (
     <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
@@ -301,10 +298,7 @@ export default function CategoryForm() {
           >
             {isSubmitting ? (
               <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <InlineLoader size="sm" variant="white" className="mr-2" />
                 Menyimpan...
               </>
             ) : isEditMode ? (
