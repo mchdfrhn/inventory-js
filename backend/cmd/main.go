@@ -43,6 +43,9 @@ func main() {
 	}
 	defer logger.Sync()
 
+	// Print startup information
+	printStartupBanner(logger)
+
 	// Set Gin mode
 	gin.SetMode(cfg.Server.Mode)
 
@@ -56,8 +59,23 @@ func main() {
 	// Setup routes
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"status": "ok",
-			"time":   time.Now().Format(time.RFC3339),
+			"status":    "ok",
+			"time":      time.Now().Format(time.RFC3339),
+			"service":   "STTPU Inventory Management System",
+			"version":   "v1.0.0",
+			"developer": "Mochammad Farhan Ali",
+		})
+	})
+
+	// Version endpoint
+	router.GET("/version", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"service":      "STTPU Inventory Management System",
+			"version":      "v1.0.0",
+			"developer":    "Mochammad Farhan Ali",
+			"organization": "STTPU",
+			"description":  "Backend API for inventory asset management",
+			"build_time":   "2025-01-01",
 		})
 	})
 	// Initialize API handlers with router
@@ -202,4 +220,14 @@ func initUsecases(repos *repositories) *usecases {
 		Location: usecase.NewLocationUseCase(repos.location),
 		AuditLog: auditLogUsecase,
 	}
+}
+
+// printStartupBanner displays startup information and developer credits
+func printStartupBanner(logger *zap.Logger) {
+	logger.Info("🚀 STTPU Inventory Management System")
+	logger.Info("📋 Starting inventory backend server...")
+	logger.Info("🔧 Developed by Mochammad Farhan Ali")
+	logger.Info("📅 Version: v1.0.0")
+	logger.Info("🏢 Organization: STTPU")
+	logger.Info("═══════════════════════════════════════")
 }

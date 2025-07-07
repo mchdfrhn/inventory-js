@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "STTPU Inventory Management System",
+  "author": "Mochammad Farhan Ali",
+  "keywords": ["inventory", "management", "sttpu", "assets"],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

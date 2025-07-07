@@ -584,6 +584,18 @@ const ReportsPage = () => {
           .filter-info li {
             margin-bottom: 4px;
           }
+          .watermark {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            opacity: 0.7;
+            font-style: italic;
+          }
+          .watermark .developer {
+            font-weight: 600;
+            color: #2563eb;
+          }
         </style>
       </head>
       <body>
@@ -651,6 +663,9 @@ const ReportsPage = () => {
           <p><strong>Total Aset:</strong> ${assets.length}</p>
           <p>Dicetak pada: ${now.toLocaleString('id-ID')}</p>
           <p>Sistem Inventaris Aset - ${template.name}</p>
+          <div class="watermark">
+            🔧 Developed by <span class="developer">Mochammad Farhan Ali</span>
+          </div>
         </div>
       </body>
       </html>
@@ -660,7 +675,11 @@ const ReportsPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Loader />
+        <Loader 
+          message="Loading inventory data" 
+          showWatermark={true}
+          size="lg" 
+        />
       </div>
     );
   }

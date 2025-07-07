@@ -17,6 +17,8 @@ import {
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import BackToTopButton from './BackToTopButton'
+import Watermark from './Watermark'
+import AppCredits from './AppCredits'
 
 // Enhanced navigation items with subtle animations
 const navigation = [  
@@ -300,6 +302,9 @@ export default function Layout() {
                         </li>
                       </ul>
                     </nav>
+                    
+                    {/* Watermark in sidebar */}
+                    <Watermark variant="sidebar" className="text-center" />
                   </div>
                 </Dialog.Panel>
               </Transition.Child>
@@ -417,6 +422,9 @@ export default function Layout() {
                 </li>
               </ul>
             </nav>
+            
+            {/* Watermark in desktop sidebar */}
+            <Watermark variant="sidebar" className="text-center" />
           </div>
         </div>
 
@@ -459,10 +467,16 @@ export default function Layout() {
             <div className="px-4 sm:px-6 lg:px-8 h-full">
               <Outlet />
             </div>
+            
+            {/* App Credits Footer */}
+            <AppCredits expandable={true} />
           </main>
           
           {/* Back to top button */}
           <BackToTopButton />
+          
+          {/* Floating watermark - subtle and elegant */}
+          <Watermark variant="floating" />
         </div>
       </div>
     </>

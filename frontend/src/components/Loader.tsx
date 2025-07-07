@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import Watermark from './Watermark';
 
 type LoaderProps = {
   size?: 'sm' | 'md' | 'lg';
   color?: 'blue' | 'gray' | 'white' | 'gradient';
   message?: string;
   className?: string;
+  showWatermark?: boolean;
 };
 
 const sizeMap = {
@@ -20,8 +22,9 @@ const colorMap = {
   gradient: 'border-gradient-loader shadow-blue-500/30',
 };
 
-export default function Loader({ size = 'md', color = 'gradient', message = '', className = '' }: LoaderProps) {
+export default function Loader({ size = 'md', color = 'gradient', message = '', className = '', showWatermark = false }: LoaderProps) {
   const [dots, setDots] = useState('.');
+  const [showDelayedWatermark, setShowDelayedWatermark] = useState(false);
   
   // Animated dots for loading message
   useEffect(() => {
@@ -33,6 +36,17 @@ export default function Loader({ size = 'md', color = 'gradient', message = '', 
     
     return () => clearInterval(interval);
   }, [message]);
+
+  // Show watermark after 3 seconds of loading
+  useEffect(() => {
+    if (!showWatermark) return;
+    
+    const timer = setTimeout(() => {
+      setShowDelayedWatermark(true);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [showWatermark]);
 
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
@@ -57,6 +71,11 @@ export default function Loader({ size = 'md', color = 'gradient', message = '', 
           {message}
           <span className="inline-block w-[24px]">{dots}</span>
         </p>
+      )}
+      {showDelayedWatermark && (
+        <div className="mt-8 animate-fade-in">
+          <Watermark className="opacity-50" />
+        </div>
       )}
     </div>
   );
