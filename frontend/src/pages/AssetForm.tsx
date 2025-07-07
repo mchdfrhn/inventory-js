@@ -459,24 +459,24 @@ export default function AssetForm() {
   }
 
   return (
-    <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-      <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+    <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
         <div className="flex items-center">
           <div className="mr-4">
             <Link to="/assets" className="text-blue-600 hover:text-blue-800 transition-colors">
               <ArrowLeftIcon className="h-5 w-5" />
             </Link>
           </div>
-          <div>
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold leading-6 text-gray-900">
               {isEditMode ? 'Edit Aset' : 'Tambah Aset Baru'}
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-600">
               {isEditMode ? 'Perbarui informasi aset dalam sistem inventaris' : 'Tambahkan aset baru ke sistem inventaris'}
             </p>
           </div>
           {isEditMode && (
-            <div className="ml-auto text-sm text-gray-600">
+            <div className="ml-auto text-sm text-gray-600 bg-white px-3 py-1 rounded-md shadow-sm">
               <span className="flex items-center">
                 <PencilIcon className="h-4 w-4 mr-1" />
                 ID: {id}
@@ -486,7 +486,7 @@ export default function AssetForm() {
         </div>
       </div>
       
-      <div className="px-4 py-5 sm:p-6">
+      <div className="px-6 py-6">
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 flex items-center">
             <XCircleIcon className="h-5 w-5 mr-2 text-red-500" />
@@ -494,23 +494,23 @@ export default function AssetForm() {
               <span className="font-medium">{error}</span>
             </div>
           </div>
-        )}        <form onSubmit={handleSubmit} className="space-y-8">
+        )}        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Info untuk create mode */}          {!isEditMode && (
-            <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 flex items-center">
-              <InformationCircleIcon className="h-5 w-5 mr-2 text-blue-500 flex-shrink-0" />
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-3 flex items-center">
+              <InformationCircleIcon className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
               <div>
-                <span className="font-medium">Kode Asset akan dibuat otomatis</span>
+                <span className="text-sm font-medium">Kode Asset akan dibuat otomatis</span>
               </div>
             </div>
           )}
 
           {/* Info untuk bulk asset edit mode */}
           {isEditMode && assetData?.data?.is_bulk_parent && (
-            <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4 flex items-center">
-              <InformationCircleIcon className="h-5 w-5 mr-2 text-amber-500 flex-shrink-0" />
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-3 flex items-center">
+              <InformationCircleIcon className="h-4 w-4 mr-2 text-amber-500 flex-shrink-0" />
               <div>
-                <span className="font-medium">📦 Bulk Asset: Perubahan akan diterapkan ke semua {assetData.data.bulk_total_count || 1} unit dalam bulk ini</span>
-                <p className="text-sm text-amber-700 mt-1">
+                <span className="text-sm font-medium">📦 Bulk Asset: Perubahan akan diterapkan ke semua {assetData.data.bulk_total_count || 1} unit dalam bulk ini</span>
+                <p className="text-xs text-amber-700 mt-1">
                   Saat Anda menyimpan perubahan, semua asset dalam grup bulk ini akan diperbarui dengan data yang sama.
                 </p>
               </div>
@@ -518,15 +518,15 @@ export default function AssetForm() {
           )}
 
           {/* Section 1: Basic Information */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
-              <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-500 text-white text-sm font-medium rounded-full mr-2">1</span>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center border-b border-gray-200 pb-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-500 text-white text-xs font-medium rounded-full mr-2">1</span>
               Informasi Dasar
             </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">              {/* Field kode asset hanya ditampilkan saat edit mode dan readonly */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">              {/* Field kode asset hanya ditampilkan saat edit mode dan readonly */}
               {isEditMode && (
                 <div>
-                  <label htmlFor="kode" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="kode" className="block text-sm font-medium text-gray-700 mb-1">
                     Kode Aset <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -552,8 +552,8 @@ export default function AssetForm() {
                 </div>
               )}
 
-              <div className={isEditMode ? "" : "md:col-span-2"}>
-                <label htmlFor="nama" className="block text-sm font-medium text-gray-700 mb-2">
+              <div className={isEditMode ? "" : "lg:col-span-2"}>
+                <label htmlFor="nama" className="block text-sm font-medium text-gray-700 mb-1">
                   Nama Aset <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -570,18 +570,18 @@ export default function AssetForm() {
                   placeholder="Contoh: Laptop Dell Inspiron 15"
                 />
                 {touched.nama && fieldErrors.nama && (
-                  <p className="mt-2 text-sm text-red-600">{fieldErrors.nama}</p>
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.nama}</p>
                 )}
               </div>
 
-              <div className="md:col-span-2">
-                <label htmlFor="spesifikasi" className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="lg:col-span-2">
+                <label htmlFor="spesifikasi" className="block text-sm font-medium text-gray-700 mb-1">
                   Spesifikasi
                 </label>
                 <textarea
                   name="spesifikasi"
                   id="spesifikasi"
-                  rows={3}
+                  rows={2}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   value={formData.spesifikasi}
                   onChange={handleChange}
@@ -592,14 +592,14 @@ export default function AssetForm() {
           </div>
 
           {/* Section 2: Categorization & Location */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
-              <span className="inline-flex items-center justify-center w-6 h-6 bg-green-500 text-white text-sm font-medium rounded-full mr-2">2</span>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center border-b border-gray-200 pb-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white text-xs font-medium rounded-full mr-2">2</span>
               Kategorisasi & Lokasi
             </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div>
-                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-1">
                   Kategori <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -622,7 +622,7 @@ export default function AssetForm() {
               </div>
 
               <div>
-                <label htmlFor="lokasi_id" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="lokasi_id" className="block text-sm font-medium text-gray-700 mb-1">
                   Lokasi <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -647,13 +647,13 @@ export default function AssetForm() {
           </div>
 
           {/* Section 3: Quantity & Status */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
-              <span className="inline-flex items-center justify-center w-6 h-6 bg-purple-500 text-white text-sm font-medium rounded-full mr-2">3</span>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center border-b border-gray-200 pb-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-purple-500 text-white text-xs font-medium rounded-full mr-2">3</span>
               Kuantitas & Status
             </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">              <div>
-                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">              <div>
+                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
                   Jumlah <span className="text-red-500">*</span>
                 </label>
                 {isEditMode ? (
@@ -690,12 +690,12 @@ export default function AssetForm() {
                       onChange={handleChange}
                     />
                     {Number(formData.quantity) > 1 && ['unit', 'pcs', 'set', 'buah'].includes(formData.satuan) && (
-                      <p className="mt-1 text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                      <p className="mt-1 text-xs text-amber-600 bg-amber-50 p-1 rounded">
                         ⚠️ Jumlah lebih dari 1 akan membuat bulk asset dengan kode unik untuk setiap unit
                       </p>
                     )}
                     {Number(formData.quantity) > 1 && ['meter', 'kg', 'liter'].includes(formData.satuan) && (
-                      <p className="mt-1 text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                      <p className="mt-1 text-xs text-blue-600 bg-blue-50 p-1 rounded">
                         ℹ️ Untuk satuan {formData.satuan}, tidak akan dibuat bulk asset terpisah
                       </p>
                     )}
@@ -704,7 +704,7 @@ export default function AssetForm() {
               </div>
 
               <div>
-                <label htmlFor="satuan" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="satuan" className="block text-sm font-medium text-gray-700 mb-1">
                   Satuan <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -726,7 +726,7 @@ export default function AssetForm() {
               </div>
 
               <div>
-                <label htmlFor="asal_pengadaan" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="asal_pengadaan" className="block text-sm font-medium text-gray-700 mb-1">
                   Asal Pengadaan <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -748,7 +748,7 @@ export default function AssetForm() {
               </div>
 
               <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                   Status <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -768,14 +768,14 @@ export default function AssetForm() {
           </div>
 
           {/* Section 4: Financial Information */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
-              <span className="inline-flex items-center justify-center w-6 h-6 bg-orange-500 text-white text-sm font-medium rounded-full mr-2">4</span>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center border-b border-gray-200 pb-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-orange-500 text-white text-xs font-medium rounded-full mr-2">4</span>
               Informasi Keuangan
             </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
-                <label htmlFor="tanggal_perolehan" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="tanggal_perolehan" className="block text-sm font-medium text-gray-700 mb-1">
                   Tanggal Perolehan <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -790,7 +790,7 @@ export default function AssetForm() {
               </div>
 
               <div>
-                <label htmlFor="harga_perolehan" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="harga_perolehan" className="block text-sm font-medium text-gray-700 mb-1">
                   Harga Perolehan <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -810,7 +810,7 @@ export default function AssetForm() {
               </div>
 
               <div>
-                <label htmlFor="umur_ekonomis_tahun" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="umur_ekonomis_tahun" className="block text-sm font-medium text-gray-700 mb-1">
                   Umur Ekonomis (Tahun) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -830,19 +830,19 @@ export default function AssetForm() {
           </div>
 
           {/* Section 5: Additional Information */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center border-b border-gray-200 pb-3">
-              <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-500 text-white text-sm font-medium rounded-full mr-2">5</span>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center border-b border-gray-200 pb-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-500 text-white text-xs font-medium rounded-full mr-2">5</span>
               Informasi Tambahan
             </h3>
             <div>
-              <label htmlFor="keterangan" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="keterangan" className="block text-sm font-medium text-gray-700 mb-1">
                 Keterangan
               </label>
               <textarea
                 name="keterangan"
                 id="keterangan"
-                rows={4}
+                rows={3}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 value={formData.keterangan}
                 onChange={handleChange}
@@ -853,10 +853,10 @@ export default function AssetForm() {
               </p>
             </div>
           </div>          {/* Submit Button */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
             <Link
               to="/assets"
-              className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              className="inline-flex items-center px-6 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
             >
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Batal
@@ -864,7 +864,7 @@ export default function AssetForm() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ${
+              className={`inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ${
                 isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
               }`}
             >
