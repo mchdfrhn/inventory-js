@@ -41,7 +41,7 @@ const formatStatus = (status: string): string => {
   } else if (status === 'rusak') {
     return 'Rusak';
   } else if (status === 'tidak_memadai') {
-    return 'Kurang Baik';
+    return 'Tidak Memadai';
   }
   return 'Baik'; // Default fallback
 };

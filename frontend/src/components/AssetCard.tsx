@@ -31,7 +31,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete, onDetailClick })
     switch (status) {
       case 'baik': return 'Baik';
       case 'rusak': return 'Rusak';
-      case 'tidak_memadai': return 'Kurang Baik'; // Shorter label for card view
+      case 'tidak_memadai': return 'Tidak Memadai';
       default: return 'Baik'; // Default to 'Baik' if invalid status
     }
   };

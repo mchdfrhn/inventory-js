@@ -43,7 +43,7 @@ const BulkAssetCard: React.FC<BulkAssetCardProps> = ({ asset, onDelete, onDetail
     switch (status) {
       case 'baik': return 'Baik';
       case 'rusak': return 'Rusak';
-      case 'tidak_memadai': return 'Kurang Baik';
+      case 'tidak_memadai': return 'Tidak Memadai';
       default: return 'Baik';
     }
   };

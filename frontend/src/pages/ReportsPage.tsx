@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { 
   DocumentTextIcon, 
   ExclamationCircleIcon, 
-  FunnelIcon,
   XMarkIcon,
   CheckCircleIcon,
   AdjustmentsHorizontalIcon

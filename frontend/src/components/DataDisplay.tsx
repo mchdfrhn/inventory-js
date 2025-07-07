@@ -21,7 +21,7 @@ const formatStatusLabel = (status: string): string => {
   switch (status) {
     case 'baik': return 'Baik';
     case 'rusak': return 'Rusak';
-    case 'tidak_memadai': return 'Kurang Baik'; // Shorter label
+    case 'tidak_memadai': return 'Tidak Memadai';
     case 'available': return 'Tersedia';
     case 'in_use': return 'Digunakan';
     case 'maintenance': return 'Pemeliharaan';
