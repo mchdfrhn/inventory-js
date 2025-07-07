@@ -187,6 +187,91 @@ func (r *assetRepository) Update(asset *domain.Asset) error {
 	return tx.Commit().Error
 }
 
+// UpdateBulkAssets mengupdate semua asset dalam satu bulk berdasarkan bulk_id
+func (r *assetRepository) UpdateBulkAssets(bulkID uuid.UUID, assetData *domain.Asset) error {
+	tx := r.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Normalize status value
+	assetData.Status = normalizeStatus(assetData.Status)
+
+	// Hitung ulang nilai penyusutan dan nilai sisa
+	// Konversi umur ekonomis dari tahun ke bulan
+	umurEkonomisBulan := assetData.UmurEkonomisTahun * 12
+
+	// Hitung masa pemakaian dalam bulan
+	now := time.Now()
+	tahunPemakaian := now.Year() - assetData.TanggalPerolehan.Year()
+	bulanPemakaian := int(now.Month() - assetData.TanggalPerolehan.Month())
+	totalBulanPemakaian := tahunPemakaian*12 + bulanPemakaian
+
+	// Pastikan nilai tidak negatif
+	if totalBulanPemakaian < 0 {
+		totalBulanPemakaian = 0
+	}
+
+	// Batas penyusutan
+	if totalBulanPemakaian > umurEkonomisBulan {
+		totalBulanPemakaian = umurEkonomisBulan
+	}
+
+	// Hitung penyusutan dan nilai sisa
+	var akumulasiPenyusutan, nilaiSisa float64
+	if umurEkonomisBulan > 0 {
+		penyusutanPerBulan := assetData.HargaPerolehan / float64(umurEkonomisBulan)
+		akumulasiPenyusutan = penyusutanPerBulan * float64(totalBulanPemakaian)
+		// Bulatkan nilai ke 2 desimal
+		akumulasiPenyusutan = math.Round(akumulasiPenyusutan*100) / 100
+
+		nilaiSisa = assetData.HargaPerolehan - akumulasiPenyusutan
+		if nilaiSisa < 0 {
+			nilaiSisa = 0
+		}
+		// Bulatkan nilai sisa ke 2 desimal
+		nilaiSisa = math.Round(nilaiSisa*100) / 100
+	}
+
+	// Update semua asset dengan bulk_id yang sama
+	// Kecuali field-field yang harus tetap unik seperti kode dan bulk_sequence
+	result := tx.Model(&domain.Asset{}).
+		Where("bulk_id = ?", bulkID).
+		Updates(map[string]interface{}{
+			"nama":                 assetData.Nama,
+			"spesifikasi":          assetData.Spesifikasi,
+			"quantity":             1, // Setiap asset dalam bulk memiliki quantity 1
+			"satuan":               assetData.Satuan,
+			"tanggal_perolehan":    assetData.TanggalPerolehan,
+			"harga_perolehan":      assetData.HargaPerolehan,
+			"umur_ekonomis_tahun":  assetData.UmurEkonomisTahun,
+			"umur_ekonomis_bulan":  umurEkonomisBulan,
+			"akumulasi_penyusutan": akumulasiPenyusutan,
+			"nilai_sisa":           nilaiSisa,
+			"keterangan":           assetData.Keterangan,
+			"lokasi":               assetData.Lokasi,
+			"lokasi_id":            assetData.LokasiID,
+			"asal_pengadaan":       assetData.AsalPengadaan,
+			"category_id":          assetData.CategoryID,
+			"status":               assetData.Status,
+			"updated_at":           time.Now(),
+		})
+
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return gorm.ErrRecordNotFound
+	}
+
+	return tx.Commit().Error
+}
+
 func (r *assetRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&domain.Asset{}, id).Error
 }

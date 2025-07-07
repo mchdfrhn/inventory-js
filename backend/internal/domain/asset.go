@@ -55,6 +55,7 @@ type AssetRepository interface {
 	Create(asset *Asset) error
 	CreateBulk(assets []Asset) error
 	Update(asset *Asset) error
+	UpdateBulkAssets(bulkID uuid.UUID, assetData *Asset) error // Update semua asset dalam bulk
 	Delete(id uuid.UUID) error
 	DeleteBulkAssets(bulkID uuid.UUID) error // Tambahkan method baru untuk delete bulk
 	GetByID(id uuid.UUID) (*Asset, error)
@@ -81,6 +82,7 @@ type AssetUsecase interface {
 	CreateBulkAssetWithSequence(asset *Asset, quantity int, startSequence int) ([]Asset, error)
 	GetNextAvailableSequenceRange(count int) (int, error)
 	UpdateAsset(asset *Asset) error
+	UpdateBulkAssets(bulkID uuid.UUID, assetData *Asset) error // Update semua asset dalam bulk
 	DeleteAsset(id uuid.UUID) error
 	DeleteBulkAssets(bulkID uuid.UUID) error // Tambahkan method baru untuk delete bulk
 	GetAsset(id uuid.UUID) (*Asset, error)

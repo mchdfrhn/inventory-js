@@ -35,6 +35,7 @@ func NewAssetHandler(r *gin.Engine, au domain.AssetUsecase) {
 			assets.POST("", handler.CreateAsset)
 			assets.POST("/bulk", handler.CreateBulkAsset)
 			assets.GET("/bulk/:bulk_id", handler.GetBulkAssets)
+			assets.PUT("/bulk/:bulk_id", handler.UpdateBulkAssets)
 			assets.DELETE("/bulk/:bulk_id", handler.DeleteBulkAssets)
 			assets.GET("/with-bulk", handler.ListAssetsWithBulk)
 			assets.POST("/import", handler.Import)
@@ -210,7 +211,18 @@ func (h *AssetHandler) UpdateAsset(c *gin.Context) {
 	asset.IsBulkParent = existingAsset.IsBulkParent
 	asset.BulkTotalCount = existingAsset.BulkTotalCount
 
-	if err := h.assetUsecase.UpdateAsset(asset); err != nil {
+	// Jika asset ini merupakan bagian dari bulk, update seluruh bulk
+	if existingAsset.BulkID != nil {
+		// Update semua asset dalam bulk dengan data yang sama
+		fmt.Printf("Updating bulk assets with BulkID: %s\n", existingAsset.BulkID.String())
+		err = h.assetUsecase.UpdateBulkAssets(*existingAsset.BulkID, asset)
+	} else {
+		// Update hanya asset individual
+		fmt.Printf("Updating individual asset: %s\n", id.String())
+		err = h.assetUsecase.UpdateAsset(asset)
+	}
+
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, dto.ValidationError{
 				Status:  "error",
@@ -233,10 +245,169 @@ func (h *AssetHandler) UpdateAsset(c *gin.Context) {
 		return
 	}
 
+	// Tentukan message berdasarkan apakah ini update bulk atau individual
+	var message string
+	var updateCount int = 1
+	if existingAsset.BulkID != nil {
+		message = fmt.Sprintf("Bulk asset berhasil diperbarui! %d unit telah diupdate.", existingAsset.BulkTotalCount)
+		updateCount = existingAsset.BulkTotalCount
+	} else {
+		message = "Asset berhasil diperbarui!"
+	}
+
 	c.JSON(http.StatusOK, dto.Response{
 		Status:  "success",
-		Message: "Asset updated successfully",
-		Data:    asset,
+		Message: message,
+		Data: gin.H{
+			"asset":        asset,
+			"is_bulk":      existingAsset.BulkID != nil,
+			"update_count": updateCount,
+		},
+	})
+}
+
+// UpdateBulkAssets updates all assets in a bulk group
+func (h *AssetHandler) UpdateBulkAssets(c *gin.Context) {
+	fmt.Printf("=== UpdateBulkAssets Handler Called ===\n")
+	bulkID, err := uuid.Parse(c.Param("bulk_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.ValidationError{
+			Status:  "error",
+			Message: "Invalid bulk ID format",
+			Details: []dto.ErrorDetail{{
+				Field:   "bulk_id",
+				Message: "Must be a valid UUID format",
+			}},
+		})
+		return
+	}
+	fmt.Printf("Update request for bulk ID: %s\n", bulkID.String())
+
+	var req dto.UpdateAssetRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		var details []dto.ErrorDetail
+		if validationErrs, ok := err.(validator.ValidationErrors); ok {
+			for _, e := range validationErrs {
+				details = append(details, dto.NewErrorDetail(
+					e.Field(),
+					e.Tag(),
+					e.Param(),
+				))
+			}
+			c.JSON(http.StatusBadRequest, dto.ValidationError{
+				Status:  "error",
+				Message: "Invalid request data",
+				Details: details,
+			})
+		} else {
+			c.JSON(http.StatusBadRequest, dto.ValidationError{
+				Status:  "error",
+				Message: "Invalid request format",
+				Details: []dto.ErrorDetail{{
+					Field:   "body",
+					Message: "Invalid JSON format",
+				}},
+			})
+		}
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, dto.ValidationError{
+			Status:  "error",
+			Message: "Validation failed",
+			Details: []dto.ErrorDetail{{
+				Field:   "status",
+				Message: err.Error(),
+			}},
+		})
+		return
+	}
+
+	if !dto.AssetStatus(req.Status).IsValid() {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Status:  "error",
+			Message: "Invalid status value",
+		})
+		return
+	}
+
+	// Ambil salah satu asset dari bulk untuk mendapatkan data
+	bulkAssets, err := h.assetUsecase.GetBulkAssets(bulkID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Status:  "error",
+			Message: "Failed to get bulk assets: " + err.Error(),
+		})
+		return
+	}
+
+	if len(bulkAssets) == 0 {
+		c.JSON(http.StatusNotFound, dto.ValidationError{
+			Status:  "error",
+			Message: "Bulk assets not found",
+			Details: []dto.ErrorDetail{{
+				Field:   "bulk_id",
+				Message: "No assets found with this bulk ID",
+			}},
+		})
+		return
+	}
+
+	// Gunakan ID dari asset parent untuk konversi
+	parentAsset := bulkAssets[0]
+	for _, asset := range bulkAssets {
+		if asset.IsBulkParent {
+			parentAsset = asset
+			break
+		}
+	}
+
+	asset, err := req.ToAsset(parentAsset.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Status:  "error",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Update semua asset dalam bulk
+	fmt.Printf("Updating all assets in bulk ID: %s\n", bulkID.String())
+	if err := h.assetUsecase.UpdateBulkAssets(bulkID, asset); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, dto.ValidationError{
+				Status:  "error",
+				Message: "Resource not found",
+				Details: []dto.ErrorDetail{{
+					Field:   "category_id",
+					Message: "Category does not exist. Available categories can be found at /api/v1/categories",
+				}},
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, dto.ValidationError{
+			Status:  "error",
+			Message: "Internal server error",
+			Details: []dto.ErrorDetail{{
+				Field:   "",
+				Message: "An error occurred while updating the bulk assets. Please try again later.",
+			}},
+		})
+		return
+	}
+
+	bulkCount := len(bulkAssets)
+	message := fmt.Sprintf("Bulk asset berhasil diperbarui! %d unit telah diupdate.", bulkCount)
+
+	c.JSON(http.StatusOK, dto.Response{
+		Status:  "success",
+		Message: message,
+		Data: gin.H{
+			"bulk_id":      bulkID,
+			"update_count": bulkCount,
+			"is_bulk":      true,
+		},
 	})
 }
 

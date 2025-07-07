@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type assetUsecase struct {
@@ -144,7 +145,63 @@ func (u *assetUsecase) CreateBulkAsset(asset *domain.Asset, quantity int) ([]dom
 
 // Required interface methods
 func (u *assetUsecase) UpdateAsset(asset *domain.Asset) error { return u.assetRepo.Update(asset) }
-func (u *assetUsecase) DeleteAsset(id uuid.UUID) error        { return u.assetRepo.Delete(id) }
+func (u *assetUsecase) UpdateBulkAssets(bulkID uuid.UUID, assetData *domain.Asset) error {
+	// Ambil data asset lama untuk audit log
+	oldAssets, err := u.assetRepo.GetBulkAssets(bulkID)
+	if err != nil {
+		return err
+	}
+
+	if len(oldAssets) == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	// Update semua asset dalam bulk
+	err = u.assetRepo.UpdateBulkAssets(bulkID, assetData)
+	if err != nil {
+		return err
+	}
+
+	// Log audit untuk setiap asset yang diupdate
+	for _, oldAsset := range oldAssets {
+		// Buat copy dari assetData untuk new values dengan ID yang sesuai
+		newAsset := *assetData
+		newAsset.ID = oldAsset.ID
+		newAsset.Kode = oldAsset.Kode // Kode tidak berubah
+		newAsset.BulkID = oldAsset.BulkID
+		newAsset.BulkSequence = oldAsset.BulkSequence
+		newAsset.IsBulkParent = oldAsset.IsBulkParent
+		newAsset.BulkTotalCount = oldAsset.BulkTotalCount
+		newAsset.Quantity = 1 // Setiap asset dalam bulk memiliki quantity 1
+
+		description := fmt.Sprintf("Bulk asset update - Asset %s updated as part of bulk ID %s",
+			oldAsset.Kode, bulkID.String())
+
+		metadata := map[string]string{
+			"bulk_id":        bulkID.String(),
+			"bulk_sequence":  fmt.Sprintf("%d", oldAsset.BulkSequence),
+			"is_bulk_parent": fmt.Sprintf("%t", oldAsset.IsBulkParent),
+			"update_type":    "bulk_update",
+		}
+
+		// Log audit activity
+		if err := u.auditLogUsecase.LogActivity(
+			"asset",
+			oldAsset.ID,
+			"update",
+			oldAsset,
+			&newAsset,
+			description,
+			metadata,
+		); err != nil {
+			// Log error tapi tidak menggagalkan update
+			fmt.Printf("Failed to log audit for asset %s: %v\n", oldAsset.ID, err)
+		}
+	}
+
+	return nil
+}
+func (u *assetUsecase) DeleteAsset(id uuid.UUID) error { return u.assetRepo.Delete(id) }
 func (u *assetUsecase) DeleteBulkAssets(bulkID uuid.UUID) error {
 	return u.assetRepo.DeleteBulkAssets(bulkID)
 }
