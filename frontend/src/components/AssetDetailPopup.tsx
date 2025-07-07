@@ -1,8 +1,9 @@
 import React, { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, DocumentMagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import type { Asset } from '../services/api';
 import AssetDetailView from './AssetDetailView';
+import GlassCard from './GlassCard';
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
@@ -25,11 +26,11 @@ const AssetDetailPopup: React.FC<AssetDetailPopupProps> = ({ isOpen, onClose, as
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm transition-opacity" />
+          <div className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity" />
         </Transition.Child>
 
         <div className="fixed inset-0 z-10 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+          <div className="flex min-h-full items-center justify-center p-2 sm:p-3">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -39,37 +40,51 @@ const AssetDetailPopup: React.FC<AssetDetailPopupProps> = ({ isOpen, onClose, as
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                  <Dialog.Title as="h3" className="text-lg font-semibold text-gray-900">
-                    Detail Asset
-                  </Dialog.Title>
-                  <button
-                    type="button"
-                    className="rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 p-2 transition-colors"
-                    onClick={onClose}
-                  >
-                    <span className="sr-only">Close</span>
-                    <XMarkIcon className="h-5 w-5" aria-hidden="true" />
-                  </button>
-                </div>
+              <Dialog.Panel className="relative w-full max-w-2xl">
+                <GlassCard className="overflow-hidden shadow-xl border border-white/20" hover={false}>
+                  {/* Enhanced Header with Glass Morphism */}
+                  <div className="px-3 py-2 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 backdrop-blur-md border-b border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-1 bg-blue-500/20 rounded-lg">
+                          <DocumentMagnifyingGlassIcon className="h-3.5 w-3.5 text-blue-600" />
+                        </div>
+                        <div>
+                          <Dialog.Title as="h3" className="text-sm font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                            Detail Aset
+                          </Dialog.Title>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white/20 p-1 transition-all duration-200 hover:scale-105"
+                        onClick={onClose}
+                      >
+                        <span className="sr-only">Tutup</span>
+                        <XMarkIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
 
-                {/* Content */}
-                <div className="max-h-[80vh] overflow-y-auto">
-                  <AssetDetailView asset={asset} />
-                </div>
+                  {/* Content with optimized scroll */}
+                  <div className="max-h-[calc(80vh-80px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    <AssetDetailView asset={asset} />
+                  </div>
 
-                {/* Footer */}
-                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
-                  <button
-                    type="button"
-                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    onClick={onClose}
-                  >
-                    Tutup
-                  </button>
-                </div>
+                  {/* Enhanced Footer */}
+                  <div className="px-3 py-2 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-md border-t border-white/20">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded-lg text-gray-700 bg-white/80 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:scale-105 shadow-sm"
+                        onClick={onClose}
+                      >
+                        <XMarkIcon className="h-3 w-3 mr-1" />
+                        Tutup
+                      </button>
+                    </div>
+                  </div>
+                </GlassCard>
               </Dialog.Panel>
             </Transition.Child>
           </div>
