@@ -1,0 +1,16 @@
+server:
+  port: "8080"
+  mode: "debug"
+
+database:
+  driver: "sqlite"    # postgres, mysql, sqlite
+  host: ""            # Not used for SQLite
+  port: ""            # Not used for SQLite
+  user: ""            # Not used for SQLite
+  password: ""        # Not used for SQLite
+  dbname: "inventaris" # This will create inventaris.db file
+  sslmode: "disable"
+  # MySQL specific configurations (not used for SQLite)
+  charset: "utf8mb4"
+  parsetime: true
+  loc: "Local"

@@ -3,9 +3,14 @@ server:
   mode: "debug"
 
 database:
+  driver: "postgres"  # postgres, mysql, sqlite
   host: "localhost"
   port: "5432"
   user: "postgres"
   password: 123
   dbname: "inventaris"
   sslmode: "disable"
+  # MySQL specific configurations
+  charset: "utf8mb4"
+  parsetime: true
+  loc: "Local"

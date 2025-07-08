@@ -16,16 +16,15 @@ import (
 	"time"
 
 	"en-inventory/internal/config"
+	"en-inventory/internal/database"
 	httpdelivery "en-inventory/internal/delivery/http"
 	"en-inventory/internal/delivery/http/middleware"
 	"en-inventory/internal/domain"
-	"en-inventory/internal/models"
 	"en-inventory/internal/repository/postgres"
 	"en-inventory/internal/usecase"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	pgdriver "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -111,20 +110,34 @@ func main() {
 	logger.Info("Server exiting")
 }
 
-// initDB initializes the database connection and performs automatic migrations.
-// It uses GORM as the ORM and PostgreSQL as the database.
+// initDB initializes the database connection using the database factory and performs automatic migrations.
+// It supports multiple database types (PostgreSQL, MySQL, SQLite) based on configuration.
 // The function will:
-// 1. Establish database connection using provided configuration
-// 2. Automatically migrate the schema for Asset and AssetCategory
-// 3. Panic with a fatal log if any step fails
+// 1. Create database connection using the factory pattern
+// 2. Run database migrations using the migration manager
+// 3. Create database-specific indexes for performance
+// 4. Panic with a fatal log if any step fails
 func initDB(cfg *config.Config, logger *zap.Logger) *gorm.DB {
-	db, err := gorm.Open(pgdriver.Open(cfg.Database.GetDSN()), &gorm.Config{})
+	// Create database factory
+	dbFactory := database.NewDatabaseFactory(&cfg.Database, logger)
+
+	// Create database connection
+	db, err := dbFactory.CreateConnection()
 	if err != nil {
 		logger.Fatal("Failed to connect to database", zap.Error(err))
-	} // Auto migrate the schema
-	err = db.AutoMigrate(&domain.Asset{}, &domain.AssetCategory{}, &models.Location{}, &domain.AuditLog{})
+	}
+
+	// Create migration manager and run migrations
+	migrationManager := database.NewMigrationManager(db, dbFactory.GetSQLDialect(), logger)
+	err = migrationManager.RunMigrations()
 	if err != nil {
-		logger.Fatal("Failed to migrate database", zap.Error(err))
+		logger.Fatal("Failed to run database migrations", zap.Error(err))
+	}
+
+	// Create database-specific indexes
+	err = migrationManager.CreateIndexes()
+	if err != nil {
+		logger.Warn("Some database indexes may not have been created", zap.Error(err))
 	}
 
 	return db
