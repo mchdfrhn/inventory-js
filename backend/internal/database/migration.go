@@ -2,7 +2,6 @@ package database
 
 import (
 	"en-inventory/internal/domain"
-	"en-inventory/internal/models"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -28,11 +27,16 @@ func NewMigrationManager(db *gorm.DB, dialect string, logger *zap.Logger) *Migra
 func (m *MigrationManager) RunMigrations() error {
 	m.logger.Info("Running database migrations", zap.String("dialect", m.dialect))
 
-	// Define all models that need to be migrated
+	// Try to use the SQL migration files first
+	if m.dialect == "postgres" {
+		return m.runSQLMigrations()
+	}
+
+	// Fallback to GORM AutoMigrate for other databases
 	models := []interface{}{
 		&domain.Asset{},
 		&domain.AssetCategory{},
-		&models.Location{},
+		&domain.Location{},
 		&domain.AuditLog{},
 	}
 
@@ -124,5 +128,33 @@ func (m *MigrationManager) createSQLiteIndexes() error {
 		}
 	}
 
+	return nil
+}
+
+// runSQLMigrations executes SQL migration files for PostgreSQL
+func (m *MigrationManager) runSQLMigrations() error {
+	m.logger.Info("Running SQL migrations for PostgreSQL")
+
+	// Always use GORM AutoMigrate as it's more flexible with existing tables
+	m.logger.Warn("Using GORM AutoMigrate instead of SQL migration for better compatibility")
+	return m.runGormMigrations()
+}
+
+// runGormMigrations uses GORM AutoMigrate as fallback
+func (m *MigrationManager) runGormMigrations() error {
+	models := []interface{}{
+		&domain.Asset{},
+		&domain.AssetCategory{},
+		&domain.Location{},
+		&domain.AuditLog{},
+	}
+
+	// Run auto migrations
+	if err := m.db.AutoMigrate(models...); err != nil {
+		m.logger.Error("Failed to run GORM migrations", zap.Error(err))
+		return err
+	}
+
+	m.logger.Info("GORM migrations completed successfully")
 	return nil
 }

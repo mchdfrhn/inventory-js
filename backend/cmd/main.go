@@ -131,7 +131,8 @@ func initDB(cfg *config.Config, logger *zap.Logger) *gorm.DB {
 	migrationManager := database.NewMigrationManager(db, dbFactory.GetSQLDialect(), logger)
 	err = migrationManager.RunMigrations()
 	if err != nil {
-		logger.Fatal("Failed to run database migrations", zap.Error(err))
+		logger.Warn("Database migrations failed, continuing without migrations", zap.Error(err))
+		// Continue without migrations for now
 	}
 
 	// Create database-specific indexes

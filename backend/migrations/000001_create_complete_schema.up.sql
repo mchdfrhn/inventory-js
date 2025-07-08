@@ -16,6 +16,7 @@ $$ language 'plpgsql';
 -- 1. ASSET CATEGORIES TABLE
 CREATE TABLE IF NOT EXISTS asset_categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -95,38 +96,38 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- INDEXES for Performance Optimization
 
 -- Asset Categories Indexes
-CREATE INDEX idx_asset_categories_name ON asset_categories(name);
+CREATE INDEX IF NOT EXISTS idx_asset_categories_name ON asset_categories(name);
 
 -- Locations Indexes
-CREATE INDEX idx_locations_name ON locations(name);
-CREATE INDEX idx_locations_code ON locations(code);
-CREATE INDEX idx_locations_building ON locations(building);
+CREATE INDEX IF NOT EXISTS idx_locations_name ON locations(name);
+CREATE INDEX IF NOT EXISTS idx_locations_code ON locations(code);
+CREATE INDEX IF NOT EXISTS idx_locations_building ON locations(building);
 
 -- Assets Indexes (most critical for performance)
-CREATE INDEX idx_assets_category_id ON assets(category_id);
-CREATE INDEX idx_assets_lokasi_id ON assets(lokasi_id);
-CREATE INDEX idx_assets_status ON assets(status);
-CREATE INDEX idx_assets_deleted_at ON assets(deleted_at);
-CREATE INDEX idx_assets_tanggal_perolehan ON assets(tanggal_perolehan);
-CREATE INDEX idx_assets_harga_perolehan ON assets(harga_perolehan);
-CREATE INDEX idx_assets_nilai_sisa ON assets(nilai_sisa);
-CREATE INDEX idx_assets_bulk_id ON assets(bulk_id);
-CREATE INDEX idx_assets_is_bulk_parent ON assets(is_bulk_parent);
-CREATE INDEX idx_assets_asal_pengadaan ON assets(asal_pengadaan);
-CREATE INDEX idx_assets_kode ON assets(kode);
+CREATE INDEX IF NOT EXISTS idx_assets_category_id ON assets(category_id);
+CREATE INDEX IF NOT EXISTS idx_assets_lokasi_id ON assets(lokasi_id);
+CREATE INDEX IF NOT EXISTS idx_assets_status ON assets(status);
+CREATE INDEX IF NOT EXISTS idx_assets_deleted_at ON assets(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_assets_tanggal_perolehan ON assets(tanggal_perolehan);
+CREATE INDEX IF NOT EXISTS idx_assets_harga_perolehan ON assets(harga_perolehan);
+CREATE INDEX IF NOT EXISTS idx_assets_nilai_sisa ON assets(nilai_sisa);
+CREATE INDEX IF NOT EXISTS idx_assets_bulk_id ON assets(bulk_id);
+CREATE INDEX IF NOT EXISTS idx_assets_is_bulk_parent ON assets(is_bulk_parent);
+CREATE INDEX IF NOT EXISTS idx_assets_asal_pengadaan ON assets(asal_pengadaan);
+CREATE INDEX IF NOT EXISTS idx_assets_kode ON assets(kode);
 
 -- Audit Logs Indexes
-CREATE INDEX idx_audit_logs_entity_type ON audit_logs(entity_type);
-CREATE INDEX idx_audit_logs_entity_id ON audit_logs(entity_id);
-CREATE INDEX idx_audit_logs_action ON audit_logs(action);
-CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
-CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type ON audit_logs(entity_type);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_id ON audit_logs(entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 
 -- Composite Indexes for common queries
-CREATE INDEX idx_audit_logs_entity_type_id ON audit_logs(entity_type, entity_id);
-CREATE INDEX idx_audit_logs_entity_type_action ON audit_logs(entity_type, action);
-CREATE INDEX idx_assets_status_category ON assets(status, category_id);
-CREATE INDEX idx_assets_lokasi_status ON assets(lokasi_id, status);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type_id ON audit_logs(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type_action ON audit_logs(entity_type, action);
+CREATE INDEX IF NOT EXISTS idx_assets_status_category ON assets(status, category_id);
+CREATE INDEX IF NOT EXISTS idx_assets_lokasi_status ON assets(lokasi_id, status);
 
 -- TRIGGERS for automatic updated_at
 
