@@ -1,13 +1,13 @@
-# STTPU Inventory System - Deployment Guide
+# STTPU Inventory Management System - Deployment Guide
 
-Panduan deployment untuk STTPU Inventory Management System dengan berbagai environment.
+Panduan deployment untuk STTPU Inventory Management System dengan PostgreSQL.
 
 ## 📋 Prerequisites
 
 - Docker & Docker Compose
 - Node.js 18+ (untuk development)
 - Go 1.21+ (untuk development)
-- PostgreSQL (jika tidak menggunakan Docker)
+- PostgreSQL 12+ (jika tidak menggunakan Docker)
 
 ## 🚀 Quick Start
 
@@ -19,68 +19,314 @@ cd inventory
 
 ### 2. Setup Environment
 ```bash
-# Copy example environment file
+# Backend configuration already set in config.yaml
+# Frontend environment (optional)
+cd frontend
 cp .env.example .env
-
-# Edit the environment variables according to your setup
-nano .env  # or use your preferred editor
 ```
 
 ### 3. Deploy
 
-#### For Development
+#### For Development (Recommended)
 ```bash
-# Linux/Mac
-./deploy.sh development
+# Start backend
+cd backend
+go run cmd/main.go
 
-# Windows
-deploy.bat development
-```
-
-#### For Production
-```bash
-# Linux/Mac
-./deploy.sh production
-
-# Windows
-deploy.bat production
+# Start frontend (in new terminal)
+cd frontend
+npm install
+npm run dev
 ```
 
 #### For Docker
 ```bash
-# Linux/Mac
-./deploy.sh docker
-
-# Windows
-deploy.bat docker
+cd backend
+docker-compose up -d
 ```
 
-## 📁 Environment Files
+## 📁 Configuration Files
 
-### Backend Environment Variables
+### Backend Configuration (`backend/config.yaml`)
+```yaml
+server:
+  port: "8080"
+  mode: "debug"
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `PORT` | Server port | 8080 | No |
-| `GIN_MODE` | Gin mode (debug/release) | debug | No |
-| `DB_HOST` | Database host | localhost | Yes |
-| `DB_PORT` | Database port | 5432 | No |
-| `DB_USER` | Database user | postgres | Yes |
-| `DB_PASSWORD` | Database password | postgres | Yes |
-| `DB_NAME` | Database name | inventaris | Yes |
-| `DB_SSLMODE` | SSL mode | disable | No |
-| `JWT_SECRET` | JWT secret key | - | Yes |
-| `CORS_ALLOWED_ORIGINS` | Allowed CORS origins | - | No |
+database:
+  driver: "postgres"  # Only PostgreSQL supported
+  host: "localhost"
+  port: "5432"
+  user: "postgres"
+  password: "123"     # Change for production
+  dbname: "inventaris"
+  sslmode: "disable"
+```
 
-### Frontend Environment Variables
+### Frontend Environment Variables (`frontend/.env`)
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `VITE_API_BASE_URL` | Backend API URL | http://localhost:8080 | Yes |
-| `VITE_API_TIMEOUT` | API timeout (ms) | 10000 | No |
-| `VITE_APP_NAME` | Application name | STTPU Inventory System | No |
-| `VITE_ENABLE_ANALYTICS` | Enable analytics | false | No |
-| `VITE_ENABLE_DEBUG` | Enable debug mode | true | No |
+
+## 🔧 Manual Deployment
+
+### Backend Only
+```bash
+cd backend
+
+# Ensure PostgreSQL is running and database exists
+createdb inventaris
+
+# Start backend (auto-migration enabled)
+go run cmd/main.go
+```
+
+### Frontend Only
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Or build for production
+npm run build
+npm run preview
+```
+
+## 🐳 Docker Deployment
+
+### Backend with PostgreSQL
+```bash
+cd backend
+docker-compose up -d
+```
+
+This will start:
+- PostgreSQL database
+- Backend API server
+- Automatic database migration
+
+### Frontend Docker Build
+```bash
+cd frontend
+docker build -t inventory-frontend .
+docker run -p 3000:3000 inventory-frontend
+```
+
+## 🗄️ Database Setup
+
+### Automatic Setup (Recommended)
+The backend automatically handles database migration when started. No manual migration needed.
+
+### Manual Database Creation
+```sql
+-- Create database
+CREATE DATABASE inventaris;
+
+-- Create user (optional)
+CREATE USER inventory_user WITH PASSWORD 'secure_password';
+GRANT ALL PRIVILEGES ON DATABASE inventaris TO inventory_user;
+```
+
+### Schema Information
+The system automatically creates:
+- `asset_categories` - Asset categories with code and name
+- `locations` - Physical locations
+- `assets` - Main asset table with complete information
+- `audit_logs` - Activity tracking
+
+## 🌍 Environment Configurations
+
+### Development Environment
+- Debug mode enabled
+- CORS allows all origins
+- Database on localhost
+- Hot reload for frontend
+- Detailed logging
+- Auto-migration enabled
+
+### Production Environment
+- Release mode recommended
+- Restricted CORS origins
+- SSL enabled for database
+- Optimized builds
+- Error logging only
+- Manual migration verification
+
+## 📊 Monitoring & Health Checks
+
+### Backend Health Check
+```bash
+curl http://localhost:8080/health
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "time": "2025-07-08T...",
+  "service": "STTPU Inventory Management System",
+  "version": "v1.0.0",
+  "developer": "Mochammad Farhan Ali"
+}
+```
+
+### Version Information
+```bash
+curl http://localhost:8080/version
+```
+
+### Database Health
+```bash
+# If using Docker
+docker-compose exec postgres pg_isready -U postgres
+
+# Manual check
+psql -U postgres -d inventaris -c "SELECT version();"
+```
+
+## 🔒 Security Considerations
+
+### Production Checklist
+- [ ] Change default database password
+- [ ] Enable SSL for database connection
+- [ ] Configure proper CORS origins
+- [ ] Set up HTTPS for frontend
+- [ ] Use environment variables for secrets
+- [ ] Configure firewall rules
+- [ ] Set up SSL certificates
+- [ ] Regular security updates
+
+### Database Security
+```yaml
+# Production database config
+database:
+  driver: "postgres"
+  host: "your-db-host"
+  port: "5432"
+  user: "inventory_user"
+  password: "${DB_PASSWORD}"  # From environment
+  dbname: "inventaris"
+  sslmode: "require"
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Database Connection Failed
+```bash
+# Check if PostgreSQL is running
+systemctl status postgresql  # Linux
+brew services list | grep postgres  # macOS
+
+# Check database exists
+psql -U postgres -l | grep inventaris
+
+# Test connection
+psql -U postgres -d inventaris -c "SELECT 1;"
+```
+
+#### Backend Migration Warnings
+The backend may show warnings about existing tables or indexes. This is normal and doesn't affect functionality.
+
+#### Frontend Build Failed
+```bash
+# Clear cache and reinstall
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+
+# Check environment variables
+cat .env
+```
+
+#### Port Conflicts
+Default ports:
+- Backend: 8080
+- Frontend: 3000 (dev), 4173 (preview)
+- Database: 5432
+
+Change in configuration files if needed.
+
+### Performance Optimization
+
+#### Database
+- Indexes are automatically created
+- Use connection pooling in production
+- Monitor query performance
+- Regular VACUUM operations
+
+#### Backend
+- Set `mode: "release"` for production
+- Configure proper timeouts
+- Monitor memory usage
+- Use reverse proxy (nginx)
+
+#### Frontend
+- Use `npm run build` for production
+- Enable gzip compression
+- Use CDN for static assets
+- Implement caching strategy
+
+## 🚀 API Endpoints
+
+### Health & System
+- `GET /health` - Health check
+- `GET /version` - Version info
+
+### Assets Management
+- `POST /api/v1/assets` - Create asset
+- `GET /api/v1/assets` - List assets
+- `GET /api/v1/assets/:id` - Get asset
+- `PUT /api/v1/assets/:id` - Update asset
+- `DELETE /api/v1/assets/:id` - Delete asset
+- `POST /api/v1/assets/bulk` - Bulk create
+
+### Categories Management
+- `POST /api/v1/categories` - Create category
+- `GET /api/v1/categories` - List categories
+- `PUT /api/v1/categories/:id` - Update category
+- `DELETE /api/v1/categories/:id` - Delete category
+
+### Locations Management
+- `POST /api/v1/locations` - Create location
+- `GET /api/v1/locations` - List locations
+- `PUT /api/v1/locations/:id` - Update location
+- `DELETE /api/v1/locations/:id` - Delete location
+
+### Audit Logs
+- `GET /api/v1/audit-logs` - List audit logs
+- `GET /api/v1/audit-logs/entity/:type/:id` - Entity history
+
+## 📞 Support
+
+### System Information
+- **Developer**: Mochammad Farhan Ali
+- **Organization**: STTPU
+- **Version**: v1.0.0
+- **Database**: PostgreSQL only
+- **Architecture**: Go backend + React frontend
+
+### Getting Help
+1. Check logs: Backend console output
+2. Verify database connection
+3. Check API endpoints with curl
+4. Review configuration files
+5. Contact development team
+
+## 📝 Notes
+
+- Only PostgreSQL is supported for database
+- Auto-migration handles database setup
+- All timestamps use system timezone
+- CORS is enabled for development
+- Session management built-in
+- File uploads supported
 
 ## 🔧 Manual Deployment
 
