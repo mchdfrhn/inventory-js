@@ -18,7 +18,9 @@ class AssetUseCase {
     try {
       // Generate kode if not provided using enhanced algorithm
       if (!assetData.kode) {
-        assetData.kode = await this.generateAssetCode(assetData.category_id, assetData);
+        // Get next available sequence like Go implementation
+        const sequence = await this.getNextAvailableSequenceRange(1);
+        assetData.kode = await this.generateAssetCodeWithSequence(assetData.category_id, assetData, sequence);
       }
 
       // Validate required fields
@@ -116,7 +118,7 @@ class AssetUseCase {
           id: uuidv4(),
           kode: assetKode,
           bulk_id: bulkId,
-          bulk_sequence: sequence,
+          bulk_sequence: i + 1, // Bulk sequence within the group (1, 2, 3...)
           is_bulk_parent: i === 0,
           bulk_total_count: quantity,
           quantity: 1, // Each bulk asset has quantity 1
@@ -161,8 +163,8 @@ class AssetUseCase {
       // Generate bulk ID
       const bulkId = uuidv4();
       
-      // Get next available sequence range
-      const startSequence = await this.getNextAvailableSequence();
+      // Get next available sequence range like Go implementation
+      const startSequence = await this.getNextAvailableSequenceRange(quantity);
 
       // Prepare bulk assets
       const assetsToCreate = [];
@@ -182,7 +184,7 @@ class AssetUseCase {
           id: uuidv4(),
           kode: assetKode,
           bulk_id: bulkId,
-          bulk_sequence: sequence,
+          bulk_sequence: i + 1, // Bulk sequence within the group (1, 2, 3...)
           is_bulk_parent: i === 0, // First item is parent
           bulk_total_count: quantity,
           quantity: 1, // Each bulk asset has quantity 1
@@ -206,61 +208,12 @@ class AssetUseCase {
     }
   }
 
-  async createBulkAssetWithSequence(assetData, quantity, startSequence, metadata = {}) {
-    try {
-      if (quantity <= 0) {
-        throw new Error('Quantity must be greater than 0');
-      }
 
-      // Validate base asset data
-      await this.validateAssetData(assetData);
-
-      // Generate bulk ID
-      const bulkId = uuidv4();
-
-      // Prepare bulk assets
-      const assetsToCreate = [];
-      const baseKode = assetData.kode;
-
-      for (let i = 0; i < quantity; i++) {
-        const sequence = startSequence + i;
-        const assetKode = `${baseKode}-${String(i + 1).padStart(3, '0')}`;
-
-        // Check if this specific kode exists
-        const kodeExists = await this.assetRepository.checkKodeExists(assetKode);
-        if (kodeExists) {
-          throw new Error(`Asset with code '${assetKode}' already exists`);
-        }
-
-        const assetItem = {
-          ...assetData,
-          id: uuidv4(),
-          kode: assetKode,
-          bulk_id: bulkId,
-          bulk_sequence: sequence,
-          is_bulk_parent: i === 0,
-          bulk_total_count: quantity,
-        };
-
-        assetsToCreate.push(assetItem);
-      }
-
-      // Create all assets
-      const createdAssets = await this.assetRepository.createBulk(assetsToCreate);
-
-      // Log audit
-      await this.auditLogUseCase.logBulkAssetCreated(createdAssets, metadata);
-
-      return createdAssets;
-    } catch (error) {
-      logger.error('Error in createBulkAssetWithSequence usecase:', error);
-      throw error;
-    }
-  }
 
   async getNextAvailableSequenceRange(count) {
     try {
-      return await this.assetRepository.getNextAvailableSequenceRange(count);
+      const result = await this.assetRepository.getNextAvailableSequenceRange(count);
+      return result.start; // Return start sequence like Go implementation
     } catch (error) {
       logger.error('Error in getNextAvailableSequenceRange usecase:', error);
       throw error;
@@ -382,6 +335,19 @@ class AssetUseCase {
       return asset;
     } catch (error) {
       logger.error('Error in getAsset usecase:', error);
+      throw error;
+    }
+  }
+
+  async getAssetById(id) {
+    try {
+      const asset = await this.assetRepository.getById(id);
+      if (!asset) {
+        throw new Error('Asset not found');
+      }
+      return asset;
+    } catch (error) {
+      logger.error('Error in getAssetById usecase:', error);
       throw error;
     }
   }

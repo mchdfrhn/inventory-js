@@ -326,11 +326,45 @@ class AssetRepository {
 
   async getNextAvailableSequenceRange(count) {
     try {
-      const lastSequence = await this.getNextAvailableSequence();
-      return {
-        start: lastSequence,
-        end: lastSequence + count - 1,
-      };
+      // Get all assets and parse their codes for sequences
+      const allAssets = await Asset.findAll({
+        attributes: ['kode'],
+        order: [['created_at', 'ASC']]
+      });
+
+      const existingSequences = new Set();
+      for (const asset of allAssets) {
+        const code = asset.kode;
+        if (code && code.includes('.')) {
+          const parts = code.split('.');
+          if (parts.length === 5) {
+            // Last part is the sequence number
+            const sequence = parseInt(parts[4]);
+            if (!isNaN(sequence)) {
+              existingSequences.add(sequence);
+            }
+          }
+        }
+      }
+
+      // Find the first available range starting from 1
+      let start = 1;
+      while (true) {
+        let canAllocate = true;
+        for (let i = 0; i < count; i++) {
+          if (existingSequences.has(start + i)) {
+            canAllocate = false;
+            break;
+          }
+        }
+        if (canAllocate) {
+          return {
+            start: start,
+            end: start + count - 1,
+          };
+        }
+        start++;
+      }
     } catch (error) {
       logger.error('Error getting next available sequence range:', error);
       throw error;
