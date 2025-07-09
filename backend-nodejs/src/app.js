@@ -5,7 +5,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 
-const { logger } = require('./utils/logger');
+const logger = require('./utils/logger');
 const config = require('./config');
 const routes = require('./routes');
 const { errorHandler, requestMetadata } = require('./middlewares');

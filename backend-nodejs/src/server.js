@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const app = require('./app');
 const { sequelize } = require('./database/connection');
-const { logger } = require('./utils/logger');
+const logger = require('./utils/logger');
 const config = require('./config');
 
 // Function to start the server
@@ -12,11 +12,9 @@ async function startServer() {
     await sequelize.authenticate();
     logger.info(`Database connection established successfully (${sequelize.getDialect()})`);
 
-    // Sync database models (without force in production)
-    if (config.env === 'development') {
-      await sequelize.sync({ alter: true });
-      logger.info('Database models synchronized');
-    }
+    // Skip database sync in development if tables already exist
+    // await sequelize.sync({ force: false });
+    // logger.info('Database models synchronized');
 
     // Start the server
     const server = app.listen(config.server.port, config.server.host, () => {
