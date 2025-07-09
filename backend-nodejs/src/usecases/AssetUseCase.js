@@ -16,6 +16,11 @@ class AssetUseCase {
 
   async createAsset(assetData, metadata = {}) {
     try {
+      // Generate kode if not provided using enhanced algorithm
+      if (!assetData.kode) {
+        assetData.kode = await this.generateAssetCode(assetData.category_id, assetData);
+      }
+
       // Validate required fields
       await this.validateAssetData(assetData);
 
@@ -29,6 +34,9 @@ class AssetUseCase {
       assetData.bulk_sequence = assetData.bulk_sequence || 1;
       assetData.is_bulk_parent = false;
       assetData.bulk_total_count = 1;
+
+      // Calculate depreciation values
+      assetData = await this.calculateDepreciationValues(assetData);
 
       // Create asset
       const asset = await this.assetRepository.create(assetData);
@@ -45,10 +53,89 @@ class AssetUseCase {
 
   async createAssetWithSequence(assetData, sequence, metadata = {}) {
     try {
+      // Generate kode using provided sequence
+      assetData.kode = await this.generateAssetCodeWithSequence(assetData.category_id, assetData, sequence);
+
+      // Validate required fields
+      await this.validateAssetData(assetData);
+
+      // Check if kode already exists
+      const kodeExists = await this.assetRepository.checkKodeExists(assetData.kode);
+      if (kodeExists) {
+        throw new Error(`Asset with code '${assetData.kode}' already exists`);
+      }
+
+      // Set default values
       assetData.bulk_sequence = sequence;
-      return await this.createAsset(assetData, metadata);
+      assetData.is_bulk_parent = false;
+      assetData.bulk_total_count = 1;
+
+      // Calculate depreciation values
+      assetData = await this.calculateDepreciationValues(assetData);
+
+      // Create asset
+      const asset = await this.assetRepository.create(assetData);
+
+      // Log audit
+      await this.auditLogUseCase.logAssetCreated(asset, metadata);
+
+      return asset;
     } catch (error) {
       logger.error('Error in createAssetWithSequence usecase:', error);
+      throw error;
+    }
+  }
+
+  async createBulkAssetWithSequence(assetData, quantity, startSequence, metadata = {}) {
+    try {
+      if (quantity <= 0) {
+        throw new Error('Quantity must be greater than 0');
+      }
+
+      // Validate base asset data
+      await this.validateAssetData(assetData);
+
+      // Generate bulk ID
+      const bulkId = uuidv4();
+
+      // Prepare bulk assets
+      const assetsToCreate = [];
+
+      for (let i = 0; i < quantity; i++) {
+        const sequence = startSequence + i;
+        const assetKode = await this.generateAssetCodeWithSequence(assetData.category_id, assetData, sequence);
+
+        // Check if this specific kode exists
+        const kodeExists = await this.assetRepository.checkKodeExists(assetKode);
+        if (kodeExists) {
+          throw new Error(`Asset with code '${assetKode}' already exists`);
+        }
+
+        const assetItem = {
+          ...assetData,
+          id: uuidv4(),
+          kode: assetKode,
+          bulk_id: bulkId,
+          bulk_sequence: sequence,
+          is_bulk_parent: i === 0,
+          bulk_total_count: quantity,
+          quantity: 1, // Each bulk asset has quantity 1
+        };
+
+        // Calculate depreciation values for each asset
+        const calculatedAssetItem = await this.calculateDepreciationValues(assetItem);
+        assetsToCreate.push(calculatedAssetItem);
+      }
+
+      // Create all assets
+      const createdAssets = await this.assetRepository.createBulk(assetsToCreate);
+
+      // Log audit
+      await this.auditLogUseCase.logBulkAssetCreated(createdAssets, metadata);
+
+      return createdAssets;
+    } catch (error) {
+      logger.error('Error in createBulkAssetWithSequence usecase:', error);
       throw error;
     }
   }
@@ -63,6 +150,11 @@ class AssetUseCase {
         return [await this.createAsset(assetData, metadata)];
       }
 
+      // Generate kode if not provided using enhanced algorithm
+      if (!assetData.kode) {
+        assetData.kode = await this.generateAssetCode(assetData.category_id, assetData);
+      }
+
       // Validate base asset data
       await this.validateAssetData(assetData);
 
@@ -70,15 +162,14 @@ class AssetUseCase {
       const bulkId = uuidv4();
       
       // Get next available sequence range
-      const sequenceRange = await this.assetRepository.getNextAvailableSequenceRange(quantity);
+      const startSequence = await this.getNextAvailableSequence();
 
       // Prepare bulk assets
       const assetsToCreate = [];
-      const baseKode = assetData.kode;
-
+      
       for (let i = 0; i < quantity; i++) {
-        const sequence = sequenceRange.start + i;
-        const assetKode = `${baseKode}-${String(i + 1).padStart(3, '0')}`;
+        const sequence = startSequence + i;
+        const assetKode = await this.generateAssetCodeWithSequence(assetData.category_id, assetData, sequence);
 
         // Check if this specific kode exists
         const kodeExists = await this.assetRepository.checkKodeExists(assetKode);
@@ -94,9 +185,12 @@ class AssetUseCase {
           bulk_sequence: sequence,
           is_bulk_parent: i === 0, // First item is parent
           bulk_total_count: quantity,
+          quantity: 1, // Each bulk asset has quantity 1
         };
 
-        assetsToCreate.push(assetItem);
+        // Calculate depreciation values for each asset
+        const calculatedAssetItem = await this.calculateDepreciationValues(assetItem);
+        assetsToCreate.push(calculatedAssetItem);
       }
 
       // Create all assets
@@ -192,6 +286,9 @@ class AssetUseCase {
         }
       }
 
+      // Calculate depreciation values
+      assetData = await this.calculateDepreciationValues(assetData);
+
       // Update asset
       const updatedAsset = await this.assetRepository.update(assetData);
 
@@ -218,8 +315,11 @@ class AssetUseCase {
       delete dataToValidate.kode; // Don't validate kode for bulk update
       await this.validateAssetData(dataToValidate, null, true);
 
+      // Calculate depreciation values
+      const calculatedAssetData = await this.calculateDepreciationValues(assetData);
+
       // Update bulk assets
-      const updatedAssets = await this.assetRepository.updateBulkAssets(bulkId, assetData);
+      const updatedAssets = await this.assetRepository.updateBulkAssets(bulkId, calculatedAssetData);
 
       // Log audit
       await this.auditLogUseCase.logBulkAssetUpdated(bulkId, existingAssets, updatedAssets, metadata);
@@ -381,7 +481,8 @@ class AssetUseCase {
 
   async validateAssetData(assetData, excludeId = null, isBulkUpdate = false) {
     // Required field validation
-    if (!isBulkUpdate && (!assetData.kode || !assetData.kode.trim())) {
+    // kode is not required for creation as it will be auto-generated
+    if (!isBulkUpdate && excludeId && (!assetData.kode || !assetData.kode.trim())) {
       throw new Error('Asset code (kode) is required');
     }
 
@@ -509,6 +610,192 @@ class AssetUseCase {
     }
     if (!assetData.status) {
       assetData.status = 'baik';
+    }
+  }
+
+  async generateAssetCode(categoryId, assetData = {}) {
+    try {
+      // Get category info to construct the code
+      const category = await this.categoryRepository.getById(categoryId);
+      if (!category) {
+        throw new Error('Category not found');
+      }
+
+      // Get location code (default to '001' if not provided)
+      let locationCode = '001';
+      if (assetData.lokasi_id) {
+        const location = await this.locationRepository.getById(assetData.lokasi_id);
+        if (location && location.code) {
+          locationCode = location.code.padStart(3, '0');
+        }
+      }
+
+      // Get category code (default to '10' if not provided)
+      const categoryCode = category.code ? category.code.padStart(2, '0') : '10';
+
+      // Map procurement source to code
+      const procurementMap = {
+        'pembelian': '1',
+        'bantuan': '2', 
+        'hibah': '3',
+        'sumbangan': '4',
+        'produksi_sendiri': '5'
+      };
+      const procurementCode = procurementMap[assetData.asal_pengadaan] || '1';
+
+      // Get year from tanggal_perolehan
+      const year = assetData.tanggal_perolehan 
+        ? new Date(assetData.tanggal_perolehan).getFullYear() 
+        : new Date().getFullYear();
+      const yearCode = String(year).slice(-2).padStart(2, '0');
+
+      // Get next available sequence
+      const sequence = await this.getNextAvailableSequence();
+      const sequenceCode = String(sequence).padStart(3, '0');
+
+      // Generate the new code with format: 001.10.1.24.001
+      const newCode = `${locationCode}.${categoryCode}.${procurementCode}.${yearCode}.${sequenceCode}`;
+      
+      return newCode;
+    } catch (error) {
+      logger.error('Error generating asset code:', error);
+      // Fallback to UUID-based code if generation fails
+      return `AST-${uuidv4().substring(0, 8).toUpperCase()}`;
+    }
+  }
+
+  async generateAssetCodeWithSequence(categoryId, assetData = {}, sequence) {
+    try {
+      // Get category info to construct the code
+      const category = await this.categoryRepository.getById(categoryId);
+      if (!category) {
+        throw new Error('Category not found');
+      }
+
+      // Get location code (default to '001' if not provided)
+      let locationCode = '001';
+      if (assetData.lokasi_id) {
+        const location = await this.locationRepository.getById(assetData.lokasi_id);
+        if (location && location.code) {
+          locationCode = location.code.padStart(3, '0');
+        }
+      }
+
+      // Get category code (default to '10' if not provided)
+      const categoryCode = category.code ? category.code.padStart(2, '0') : '10';
+
+      // Map procurement source to code
+      const procurementMap = {
+        'pembelian': '1',
+        'bantuan': '2', 
+        'hibah': '3',
+        'sumbangan': '4',
+        'produksi_sendiri': '5'
+      };
+      const procurementCode = procurementMap[assetData.asal_pengadaan] || '1';
+
+      // Get year from tanggal_perolehan
+      const year = assetData.tanggal_perolehan 
+        ? new Date(assetData.tanggal_perolehan).getFullYear() 
+        : new Date().getFullYear();
+      const yearCode = String(year).slice(-2).padStart(2, '0');
+
+      // Use provided sequence
+      const sequenceCode = String(sequence).padStart(3, '0');
+
+      // Generate the new code with format: 001.10.1.24.001
+      const newCode = `${locationCode}.${categoryCode}.${procurementCode}.${yearCode}.${sequenceCode}`;
+      
+      return newCode;
+    } catch (error) {
+      logger.error('Error generating asset code with sequence:', error);
+      // Fallback to UUID-based code if generation fails
+      return `AST-${uuidv4().substring(0, 8).toUpperCase()}`;
+    }
+  }
+
+  async calculateDepreciationValues(assetData) {
+    try {
+      // Convert economic life from years to months
+      const umurEkonomisBulan = assetData.umur_ekonomis_tahun * 12;
+      
+      // Calculate months in use
+      const now = new Date();
+      const tanggalPerolehan = new Date(assetData.tanggal_perolehan);
+      
+      const yearsDiff = now.getFullYear() - tanggalPerolehan.getFullYear();
+      const monthsDiff = now.getMonth() - tanggalPerolehan.getMonth();
+      let totalBulanPemakaian = yearsDiff * 12 + monthsDiff;
+      
+      // Ensure non-negative value
+      if (totalBulanPemakaian < 0) {
+        totalBulanPemakaian = 0;
+      }
+      
+      // Cap depreciation at asset's economic life
+      if (totalBulanPemakaian > umurEkonomisBulan) {
+        totalBulanPemakaian = umurEkonomisBulan;
+      }
+      
+      // Calculate depreciation and remaining value
+      let akumulasiPenyusutan = 0;
+      let nilaiSisa = assetData.harga_perolehan;
+      
+      if (umurEkonomisBulan > 0) {
+        const penyusutanPerBulan = assetData.harga_perolehan / umurEkonomisBulan;
+        akumulasiPenyusutan = penyusutanPerBulan * totalBulanPemakaian;
+        // Round to 2 decimal places
+        akumulasiPenyusutan = Math.round(akumulasiPenyusutan * 100) / 100;
+        
+        nilaiSisa = assetData.harga_perolehan - akumulasiPenyusutan;
+        if (nilaiSisa < 0) {
+          nilaiSisa = 0;
+        }
+        // Round to 2 decimal places
+        nilaiSisa = Math.round(nilaiSisa * 100) / 100;
+      }
+      
+      return {
+        ...assetData,
+        umur_ekonomis_bulan: umurEkonomisBulan,
+        akumulasi_penyusutan: akumulasiPenyusutan,
+        nilai_sisa: nilaiSisa,
+      };
+    } catch (error) {
+      logger.error('Error calculating depreciation values:', error);
+      return assetData;
+    }
+  }
+
+  async getNextAvailableSequence() {
+    try {
+      const allAssets = await this.assetRepository.list({});
+      
+      const existingSequences = new Set();
+      for (const asset of allAssets) {
+        const code = asset.kode;
+        if (code && code.includes('.')) {
+          const parts = code.split('.');
+          if (parts.length === 5) {
+            // Last part is the sequence number
+            const sequence = parseInt(parts[4]);
+            if (!isNaN(sequence)) {
+              existingSequences.add(sequence);
+            }
+          }
+        }
+      }
+
+      // Find the first available sequence starting from 1
+      let sequence = 1;
+      while (existingSequences.has(sequence)) {
+        sequence++;
+      }
+
+      return sequence;
+    } catch (error) {
+      logger.error('Error getting next available sequence:', error);
+      return 1;
     }
   }
 }

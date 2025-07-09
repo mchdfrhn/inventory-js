@@ -307,29 +307,36 @@ class AssetController {
       const assets = [];
       const errors = [];
 
-      // Parse CSV file
+      // Read file content to detect separator
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      const lines = fileContent.split('\n');
+      const firstLine = lines[0];
+      
+      // Auto-detect separator: prioritize semicolon if found, otherwise use comma
+      let delimiter = ',';
+      if (firstLine.includes(';')) {
+        delimiter = ';';
+      }
+
+      // Parse CSV file with detected delimiter
       const stream = fs.createReadStream(filePath)
-        .pipe(csv())
+        .pipe(csv({ separator: delimiter }))
         .on('data', (row) => {
           try {
-            // Map CSV columns to asset fields
+            // Map CSV columns to asset fields - Support both Indonesian and English headers
             const assetData = {
-              kode: row.kode || row.code,
-              nama: row.nama || row.name,
-              spesifikasi: row.spesifikasi || row.specification,
-              quantity: parseInt(row.quantity) || 1,
-              satuan: row.satuan || row.unit,
-              tanggal_perolehan: new Date(row.tanggal_perolehan || row.acquisition_date),
-              harga_perolehan: parseFloat(row.harga_perolehan || row.acquisition_price),
-              umur_ekonomis_tahun: parseInt(row.umur_ekonomis_tahun || row.economic_life_years) || 0,
-              umur_ekonomis_bulan: parseInt(row.umur_ekonomis_bulan || row.economic_life_months) || 0,
-              akumulasi_penyusutan: parseFloat(row.akumulasi_penyusutan || row.accumulated_depreciation) || 0,
-              nilai_sisa: parseFloat(row.nilai_sisa || row.residual_value) || 0,
-              keterangan: row.keterangan || row.description,
-              lokasi: row.lokasi || row.location,
-              asal_pengadaan: row.asal_pengadaan || row.procurement_source,
-              category_id: row.category_id,
-              status: row.status || 'baik',
+              nama: row['Nama Aset*'] || row['Asset Name*'] || row.nama || row.name,
+              category_code: row['Kode Kategori*'] || row['Category Code*'] || row.category_code,
+              spesifikasi: row['Spesifikasi'] || row['Specification'] || row.spesifikasi || row.specification,
+              tanggal_perolehan: this.parseFlexibleDate(row['Tanggal Perolehan*'] || row['Acquisition Date*'] || row.tanggal_perolehan || row.acquisition_date),
+              quantity: parseInt(row['Jumlah*'] || row['Quantity*'] || row.quantity) || 1,
+              satuan: row['Satuan'] || row['Unit'] || row.satuan || row.unit || 'unit',
+              harga_perolehan: parseFloat(row['Harga Perolehan*'] || row['Acquisition Price*'] || row.harga_perolehan || row.acquisition_price),
+              umur_ekonomis_tahun: parseInt(row['Umur Ekonomis'] || row['Economic Life'] || row.umur_ekonomis_tahun || row.economic_life_years) || 0,
+              lokasi_code: row['Kode Lokasi*'] || row['Location Code*'] || row.lokasi_code || row.location_code,
+              asal_pengadaan: row['ID Asal Pengadaan*'] || row['Procurement Source*'] || row.asal_pengadaan || row.procurement_source,
+              status: row['Status'] || row.status || 'baik',
+              keterangan: row['Keterangan'] || row['Description'] || row.keterangan || row.description,
             };
 
             assets.push(assetData);
@@ -350,14 +357,83 @@ class AssetController {
               });
             }
 
-            // Import assets
+            // Process and import assets
             const importedAssets = [];
             const importErrors = [];
 
+            // Get starting sequence for the entire import batch
+            let totalAssetCount = 0;
+            for (const asset of assets) {
+              if (asset.quantity > 1) {
+                // Check if satuan is eligible for bulk creation
+                const bulkEligibleUnits = ['unit', 'pcs', 'set', 'buah'];
+                const isEligible = bulkEligibleUnits.some(unit => 
+                  asset.satuan?.toLowerCase() === unit.toLowerCase()
+                );
+                if (isEligible) {
+                  totalAssetCount += asset.quantity; // Bulk assets count as quantity
+                } else {
+                  totalAssetCount += 1; // Non-bulk eligible, treat as single
+                }
+              } else {
+                totalAssetCount += 1; // Single asset
+              }
+            }
+
+            // Reserve sequence range for the entire batch
+            const startSequence = await this.assetUseCase.getNextAvailableSequence();
+            let currentSequence = startSequence;
+
+            // Process assets in CSV order with sequential numbering
             for (let i = 0; i < assets.length; i++) {
               try {
-                const asset = await this.assetUseCase.createAsset(assets[i], req.metadata);
-                importedAssets.push(asset);
+                const asset = assets[i];
+                
+                // Resolve category and location by code
+                const category = await this.assetUseCase.getCategoryByCode(asset.category_code);
+                if (!category) {
+                  importErrors.push(`Row ${i + 1}: Category with code '${asset.category_code}' not found`);
+                  continue;
+                }
+                asset.category_id = category.id;
+
+                if (asset.lokasi_code) {
+                  const location = await this.assetUseCase.getLocationByCode(asset.lokasi_code);
+                  if (!location) {
+                    importErrors.push(`Row ${i + 1}: Location with code '${asset.lokasi_code}' not found`);
+                    continue;
+                  }
+                  asset.lokasi_id = location.id;
+                }
+
+                // Clean up codes that are not needed for asset creation
+                delete asset.category_code;
+                delete asset.lokasi_code;
+
+                if (asset.quantity > 1) {
+                  // Check if satuan is eligible for bulk creation
+                  const bulkEligibleUnits = ['unit', 'pcs', 'set', 'buah'];
+                  const isEligible = bulkEligibleUnits.some(unit => 
+                    asset.satuan?.toLowerCase() === unit.toLowerCase()
+                  );
+
+                  if (isEligible) {
+                    // Create bulk asset with sequential sequence
+                    const bulkResult = await this.assetUseCase.createBulkAssetWithSequence(asset, asset.quantity, currentSequence, req.metadata);
+                    importedAssets.push(...bulkResult);
+                    currentSequence += asset.quantity; // Move sequence forward by quantity
+                  } else {
+                    // Treat as single asset even if quantity > 1 for non-bulk eligible units
+                    const singleAsset = await this.assetUseCase.createAssetWithSequence(asset, currentSequence, req.metadata);
+                    importedAssets.push(singleAsset);
+                    currentSequence++; // Move sequence forward by 1
+                  }
+                } else {
+                  // Create single asset with sequential sequence
+                  const singleAsset = await this.assetUseCase.createAssetWithSequence(asset, currentSequence, req.metadata);
+                  importedAssets.push(singleAsset);
+                  currentSequence++; // Move sequence forward by 1
+                }
               } catch (error) {
                 importErrors.push(`Row ${i + 1}: ${error.message}`);
               }
@@ -368,6 +444,7 @@ class AssetController {
               message: `Import completed. ${importedAssets.length} assets imported successfully`,
               data: {
                 imported: importedAssets.length,
+                total_rows: assets.length,
                 errors: importErrors,
               },
             });
@@ -386,6 +463,40 @@ class AssetController {
         message: error.message,
       });
     }
+  }
+
+  parseFlexibleDate(dateStr) {
+    if (!dateStr) return null;
+    
+    dateStr = dateStr.trim();
+
+    // Try YYYY-MM-DD format first
+    let date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+
+    // Try DD/MM/YYYY format
+    const ddmmyyyy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (ddmmyyyy) {
+      const [, day, month, year] = ddmmyyyy;
+      date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    // Try DD-MM-YYYY format
+    const ddmmyyyy2 = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+    if (ddmmyyyy2) {
+      const [, day, month, year] = ddmmyyyy2;
+      date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    throw new Error(`Unsupported date format: ${dateStr} (supported: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY)`);
   }
 
   async exportAssets(req, res) {

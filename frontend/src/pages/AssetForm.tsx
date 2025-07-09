@@ -267,6 +267,31 @@ export default function AssetForm() {
     const touchedFields = allFields.reduce((acc, field) => ({...acc, [field]: true}), {});
     setTouched(touchedFields);
       
+    // Validate required fields
+    if (!formData.nama || !formData.nama.trim()) {
+      setFieldErrors(prev => ({ ...prev, nama: 'Nama aset wajib diisi' }));
+      setIsSubmitting(false);
+      return;
+    }
+    
+    if (!formData.category_id) {
+      setFieldErrors(prev => ({ ...prev, category_id: 'Kategori wajib dipilih' }));
+      setIsSubmitting(false);
+      return;
+    }
+    
+    if (!formData.lokasi_id) {
+      setFieldErrors(prev => ({ ...prev, lokasi_id: 'Lokasi wajib dipilih' }));
+      setIsSubmitting(false);
+      return;
+    }
+    
+    if (!formData.asal_pengadaan) {
+      setFieldErrors(prev => ({ ...prev, asal_pengadaan: 'Asal pengadaan wajib dipilih' }));
+      setIsSubmitting(false);
+      return;
+    }
+      
     // Only validate number fields since HTML5 validation handles empty/required fields
     if (Number(formData.quantity) <= 0) {
       setFieldErrors(prev => ({ ...prev, quantity: 'Jumlah wajib lebih dari 0' }));
@@ -339,11 +364,12 @@ export default function AssetForm() {
       dataToSubmit.umur_ekonomis_tahun = umurNum;
     }
       // Convert lokasi_id to number or null
-    const lokasiIdNum = dataToSubmit.lokasi_id ? Number(dataToSubmit.lokasi_id) : undefined;
+    const lokasiIdNum = dataToSubmit.lokasi_id ? Number(dataToSubmit.lokasi_id) : null;
     if (lokasiIdNum && !isNaN(lokasiIdNum)) {
       dataToSubmit.lokasi_id = lokasiIdNum;
     } else {
-      dataToSubmit.lokasi_id = undefined;
+      // If no valid lokasi_id, this should be caught by validation
+      delete dataToSubmit.lokasi_id;
     }
 
     // Prepare final data to submit
@@ -440,6 +466,14 @@ export default function AssetForm() {
   // Validate a single field
   const validateField = (name: string, value: any): string => {
     switch (name) {
+      case 'nama':
+        return (value && value.trim()) ? '' : 'Nama aset wajib diisi';
+      case 'category_id':
+        return value ? '' : 'Kategori wajib dipilih';
+      case 'lokasi_id':
+        return value ? '' : 'Lokasi wajib dipilih';
+      case 'asal_pengadaan':
+        return value ? '' : 'Asal pengadaan wajib dipilih';
       case 'quantity':
         return value > 0 ? '' : 'Jumlah wajib lebih dari 0';
       case 'harga_perolehan':
@@ -606,7 +640,9 @@ export default function AssetForm() {
                   name="category_id"
                   id="category_id"
                   required
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                    touched.category_id && fieldErrors.category_id ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : ''
+                  }`}
                   value={formData.category_id}
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, category_id: true }))}
@@ -619,6 +655,9 @@ export default function AssetForm() {
                     </option>
                   ))}
                 </select>
+                {touched.category_id && fieldErrors.category_id && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.category_id}</p>
+                )}
               </div>
 
               <div>
@@ -629,7 +668,9 @@ export default function AssetForm() {
                   name="lokasi_id"
                   id="lokasi_id"
                   required
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                    touched.lokasi_id && fieldErrors.lokasi_id ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : ''
+                  }`}
                   value={formData.lokasi_id || ''}
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, lokasi_id: true }))}
@@ -642,6 +683,9 @@ export default function AssetForm() {
                     </option>
                   ))}
                 </select>
+                {touched.lokasi_id && fieldErrors.lokasi_id && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.lokasi_id}</p>
+                )}
               </div>
             </div>
           </div>
@@ -733,7 +777,9 @@ export default function AssetForm() {
                   name="asal_pengadaan"
                   id="asal_pengadaan"
                   required
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                    touched.asal_pengadaan && fieldErrors.asal_pengadaan ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : ''
+                  }`}
                   value={formData.asal_pengadaan}
                   onChange={handleChange}
                   onBlur={() => setTouched(prev => ({ ...prev, asal_pengadaan: true }))}
@@ -745,6 +791,9 @@ export default function AssetForm() {
                   <option value="sumbangan">Sumbangan</option>
                   <option value="produksi_sendiri">Produksi Sendiri</option>
                 </select>
+                {touched.asal_pengadaan && fieldErrors.asal_pengadaan && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.asal_pengadaan}</p>
+                )}
               </div>
 
               <div>

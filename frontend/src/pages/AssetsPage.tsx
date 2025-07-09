@@ -1454,12 +1454,6 @@ export default function AssetsPage() {
                               minimumFractionDigits: 0
                             }).format(getTotalNilaiSisa(asset))}
                           </div>
-                          {/* Debug info */}
-                          {process.env.NODE_ENV === 'development' && (
-                            <div className="text-xs text-gray-400">
-                              Raw: {asset.nilai_sisa} | Calc: {getTotalNilaiSisa(asset)}
-                            </div>
-                          )}
                         </td>
                         <td className="whitespace-nowrap px-2 py-3">
                           {(() => {
@@ -1494,12 +1488,6 @@ export default function AssetsPage() {
                                 <div className="w-full bg-gray-200 rounded-full h-1">
                                   <div className={`${barColor} h-1 rounded-full`} style={{ width: `${depreciationPercentage}%` }}></div>
                                 </div>
-                                {/* Debug info */}
-                                {process.env.NODE_ENV === 'development' && (
-                                  <div className="text-xs text-gray-400">
-                                    H:{hargaPerolehan} A:{akumulasiPenyusutan}
-                                  </div>
-                                )}
                               </div>
                             );
                           })()}
@@ -1507,15 +1495,9 @@ export default function AssetsPage() {
                         <td className="whitespace-nowrap px-2 py-3">
                           <div className="text-xs text-gray-900">
                             {asset.lokasi_id && asset.location_info ? 
-                              `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
+                              `${asset.location_info.building || asset.location_info.name}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''}` 
                               : asset.lokasi || 'Lokasi tidak tersedia'}
                           </div>
-                          {/* Debug info */}
-                          {process.env.NODE_ENV === 'development' && (
-                            <div className="text-xs text-gray-400">
-                              ID:{asset.lokasi_id} | Info:{asset.location_info ? 'Yes' : 'No'} | Legacy:{asset.lokasi}
-                            </div>
-                          )}
                         </td>
                         <td className="whitespace-nowrap px-2 py-3">
                           <span className={`status-badge inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gradient-to-r ${statusGradients[asset.status] || 'from-gray-50 to-gray-100 border-gray-200'} shadow-sm transition-all duration-300 hover:scale-105 border`}>

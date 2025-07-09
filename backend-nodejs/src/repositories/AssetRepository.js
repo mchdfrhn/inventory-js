@@ -290,15 +290,37 @@ class AssetRepository {
 
   async getNextAvailableSequence() {
     try {
-      const lastAsset = await Asset.findOne({
-        order: [['bulk_sequence', 'DESC']],
-        attributes: ['bulk_sequence'],
+      // Get all assets and parse their codes for sequences
+      const allAssets = await Asset.findAll({
+        attributes: ['kode'],
+        order: [['created_at', 'ASC']]
       });
 
-      return lastAsset ? lastAsset.bulk_sequence + 1 : 1;
+      const existingSequences = new Set();
+      for (const asset of allAssets) {
+        const code = asset.kode;
+        if (code && code.includes('.')) {
+          const parts = code.split('.');
+          if (parts.length === 5) {
+            // Last part is the sequence number
+            const sequence = parseInt(parts[4]);
+            if (!isNaN(sequence)) {
+              existingSequences.add(sequence);
+            }
+          }
+        }
+      }
+
+      // Find the first available sequence starting from 1
+      let sequence = 1;
+      while (existingSequences.has(sequence)) {
+        sequence++;
+      }
+
+      return sequence;
     } catch (error) {
       logger.error('Error getting next available sequence:', error);
-      throw error;
+      return 1;
     }
   }
 
@@ -395,6 +417,25 @@ class AssetRepository {
     }
 
     return whereClause;
+  }
+
+  async getLatestAssetByPrefix(prefix) {
+    try {
+      const asset = await Asset.findOne({
+        where: {
+          kode: {
+            [Op.like]: `${prefix}%`
+          }
+        },
+        order: [['kode', 'DESC']],
+        attributes: ['id', 'kode']
+      });
+
+      return asset;
+    } catch (error) {
+      logger.error('Error getting latest asset by prefix:', error);
+      throw error;
+    }
   }
 }
 

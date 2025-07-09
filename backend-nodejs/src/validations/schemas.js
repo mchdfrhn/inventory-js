@@ -36,10 +36,9 @@ const createLocationSchema = Joi.object({
 const updateLocationSchema = createLocationSchema;
 
 const createAssetSchema = Joi.object({
-  kode: Joi.string().trim().min(1).max(50).required().messages({
+  kode: Joi.string().trim().min(1).max(50).optional().messages({
     'string.empty': 'Asset code is required',
     'string.max': 'Asset code must be 50 characters or less',
-    'any.required': 'Asset code is required',
   }),
   nama: Joi.string().trim().min(1).max(255).required().messages({
     'string.empty': 'Asset name is required',
@@ -53,8 +52,8 @@ const createAssetSchema = Joi.object({
     'string.max': 'Unit must be 50 characters or less',
     'any.required': 'Unit is required',
   }),
-  tanggal_perolehan: Joi.date().max('now').required().messages({
-    'date.max': 'Acquisition date cannot be in the future',
+  tanggal_perolehan: Joi.date().required().messages({
+    'date.base': 'Acquisition date must be a valid date',
     'any.required': 'Acquisition date is required',
   }),
   harga_perolehan: Joi.number().min(0).required().messages({
@@ -67,13 +66,19 @@ const createAssetSchema = Joi.object({
   nilai_sisa: Joi.number().min(0).default(0),
   keterangan: Joi.string().trim().allow('').optional(),
   lokasi: Joi.string().trim().max(255).allow('').optional(),
-  lokasi_id: Joi.number().integer().positive().optional(),
-  asal_pengadaan: Joi.string().trim().max(255).allow('').optional(),
+  lokasi_id: Joi.number().integer().positive().required().messages({
+    'number.positive': 'Location ID must be a positive number',
+    'any.required': 'Location ID is required',
+  }),
+  asal_pengadaan: Joi.string().trim().max(255).required().messages({
+    'string.empty': 'Asal pengadaan is required',
+    'any.required': 'Asal pengadaan is required',
+  }),
   category_id: Joi.string().uuid().required().messages({
     'string.guid': 'Category ID must be a valid UUID',
     'any.required': 'Category ID is required',
   }),
-  status: Joi.string().valid('baik', 'rusak', 'dalam_perbaikan', 'tidak_aktif').default('baik'),
+  status: Joi.string().valid('baik', 'rusak', 'tidak_memadai').default('baik'),
 });
 
 const updateAssetSchema = createAssetSchema.keys({
@@ -106,7 +111,7 @@ const bulkUpdateAssetSchema = Joi.object({
   lokasi_id: Joi.number().integer().positive().optional(),
   asal_pengadaan: Joi.string().trim().max(255).allow('').optional(),
   category_id: Joi.string().uuid().optional(),
-  status: Joi.string().valid('baik', 'rusak', 'dalam_perbaikan', 'tidak_aktif').optional(),
+  status: Joi.string().valid('baik', 'rusak', 'tidak_memadai').optional(),
 });
 
 const paginationSchema = Joi.object({
