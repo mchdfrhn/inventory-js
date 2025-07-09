@@ -690,7 +690,11 @@ export default function AuditLogPage() {
           {/* Pagination */}
           {data?.pagination && (
             <Pagination
-              pagination={data.pagination}
+              pagination={{
+                total_items: data.pagination.total,
+                total_pages: data.pagination.totalPages,
+                current_page: data.pagination.page,
+              }}
               currentPage={page}
               pageSize={pageSize}
               onPageChange={setPage}

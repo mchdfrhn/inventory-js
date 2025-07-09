@@ -14,6 +14,7 @@ import AuditLogPage from './pages/AuditLogPage'
 import TemplateManagementPage from './pages/TemplateManagementPage'
 import ReportsPage from './pages/ReportsPage'
 import TestPage from './pages/TestPage'
+import SimpleTestPage from './pages/SimpleTestPage'
 import ConnectionTest from './pages/ConnectionTest'
 import WatermarkDemo from './pages/WatermarkDemo'
 import { NotificationProvider } from './context/NotificationContext'
@@ -71,6 +72,7 @@ function App() {
               
               {/* Test route */}
               <Route path="test" element={<TestPage />} />
+              <Route path="simple-test" element={<SimpleTestPage />} />
               
               {/* Connection test route */}
               <Route path="connection-test" element={<ConnectionTest />} />

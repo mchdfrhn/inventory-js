@@ -12,6 +12,7 @@ import { Fragment } from 'react';
 import { templateService, type ReportTemplate, defaultTemplates, columnOptions } from '../services/templateService';
 import { useNotification } from '../context/NotificationContext';
 import { useAssetFilters, type Asset } from '../hooks/useAssetFilters';
+import { assetApi } from '../services/api';
 import FilterSummary from '../components/FilterSummary';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
@@ -92,102 +93,34 @@ const ReportsPage = () => {
       
       console.log('[ReportsPage] 🔄 Memuat data aset...');
       
-      // Try different possible backend URLs
-      const possibleUrls = [
-        'http://localhost:8080/api/v1/assets?page_size=100',  // Go backend correct endpoint with max page size
-        'http://localhost:8080/api/v1/assets',                // Go backend correct endpoint default
-        'http://localhost:8080/api/assets',                   // Alternative without v1
-        'http://localhost:3001/api/assets',                   // Alternative port
-        'http://localhost:5000/api/assets',                   // Another common port
-        '/api/v1/assets?page_size=100',                       // Same origin with v1
-        '/api/v1/assets',                                     // Same origin with v1 default
-        '/api/assets'                                         // Same origin fallback
-      ];
+      // Use the same API service as AssetsPage
+      console.log('[ReportsPage] 🔄 Memuat data aset menggunakan assetApi...');
       
-      let apiAssets = [];
-      let lastError = null;
-      let successfulUrl = '';
+      // Fetch all assets with pagination
+      let allAssets: any[] = [];
+      let currentPage = 1;
+      let totalPages = 1;
       
-      for (const url of possibleUrls) {
-        try {
-          console.log(`[ReportsPage] 🌐 Mencoba endpoint: ${url}`);
-          const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            }
-          });
+      do {
+        const response = await assetApi.listWithBulk(currentPage, 100);
+        
+        if (response.data && response.data.length > 0) {
+          allAssets = [...allAssets, ...response.data];
+          console.log(`[ReportsPage] ✅ Halaman ${currentPage}: +${response.data.length} aset`);
           
-          if (response.ok) {
-            const responseData = await response.json();
-            successfulUrl = url;
-            
-            // Handle the API response structure {status, message, data, pagination}
-            if (responseData.status === 'success' && responseData.data) {
-              apiAssets = responseData.data;
-              console.log(`[ReportsPage] ✅ Berhasil memuat ${apiAssets.length} aset dari: ${url}`);
-              console.log(`[ReportsPage] 📄 Pagination info:`, responseData.pagination);
-              
-              // If there are more pages, fetch them all
-              if (responseData.pagination && responseData.pagination.total_pages > 1) {
-                console.log(`[ReportsPage] 📚 Mengambil ${responseData.pagination.total_pages} halaman data...`);
-                
-                // Fetch remaining pages
-                for (let page = 2; page <= responseData.pagination.total_pages; page++) {
-                  try {
-                    const pageUrl = `${url}?page=${page}&page_size=${responseData.pagination.page_size}`;
-                    console.log(`[ReportsPage] 📄 Mengambil halaman ${page}: ${pageUrl}`);
-                    
-                    const pageResponse = await fetch(pageUrl, {
-                      method: 'GET',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                      }
-                    });
-                    
-                    if (pageResponse.ok) {
-                      const pageData = await pageResponse.json();
-                      if (pageData.status === 'success' && pageData.data) {
-                        apiAssets = [...apiAssets, ...pageData.data];
-                        console.log(`[ReportsPage] ✅ Halaman ${page}: +${pageData.data.length} aset`);
-                      }
-                    }
-                  } catch (pageError) {
-                    console.log(`[ReportsPage] ⚠️ Error mengambil halaman ${page}:`, pageError);
-                  }
-                }
-                
-                console.log(`[ReportsPage] 📊 Total semua halaman: ${apiAssets.length} aset`);
-              }
-            } else {
-              console.log(`[ReportsPage] ⚠️ Response tidak valid dari ${url}:`, responseData);
-              throw new Error(`Invalid response structure from ${url}`);
-            }
-            break;
-          } else {
-            if (response.status === 404) {
-              console.log(`[ReportsPage] ❌ Endpoint tidak ditemukan: ${url} (404)`);
-            } else {
-              console.log(`[ReportsPage] ❌ Error HTTP dari ${url}: ${response.status} ${response.statusText}`);
-            }
-            lastError = new Error(`HTTP ${response.status}: ${response.statusText} dari ${url}`);
+          // Update pagination info
+          if (response.pagination) {
+            totalPages = response.pagination.totalPages;
           }
-        } catch (fetchError) {
-          console.log(`[ReportsPage] ❌ Network error dari ${url}:`, fetchError);
-          lastError = fetchError;
         }
-      }
+        
+        currentPage++;
+      } while (currentPage <= totalPages);
       
-      if (apiAssets.length === 0) {
-        throw lastError || new Error('Semua endpoint backend tidak dapat diakses');
-      }
+      console.log(`[ReportsPage] 📊 Total data dimuat: ${allAssets.length} aset`);
       
-      console.log(`[ReportsPage] 📊 Data mentah dari backend (${apiAssets.length} items):`, apiAssets.slice(0, 2));
-      
-      // Transform API data to match our Asset interface if needed
-      const transformedAssets: Asset[] = apiAssets.map((asset: any) => ({
+      // Transform API data to match our Asset interface
+      const transformedAssets: Asset[] = allAssets.map((asset: any) => ({
         id: asset.id,
         kode: asset.kode,
         nama: asset.nama,
@@ -213,11 +146,19 @@ const ReportsPage = () => {
         // Additional fields from API
         quantity: asset.quantity || 1,
         satuan: asset.satuan || 'unit',
-        keterangan: asset.keterangan || ''
+        keterangan: asset.keterangan || '',
+        category_id: asset.category_id || '',
+        lokasi_id: asset.lokasi_id,
+        created_at: asset.created_at || '',
+        updated_at: asset.updated_at || '',
+        umur_ekonomis_bulan: asset.umur_ekonomis_bulan || 0,
+        bulk_id: asset.bulk_id,
+        bulk_sequence: asset.bulk_sequence,
+        is_bulk_parent: asset.is_bulk_parent,
+        bulk_total_count: asset.bulk_total_count
       }));
       
       console.log(`[ReportsPage] 🔄 Data setelah transform (${transformedAssets.length} aset):`, transformedAssets.slice(0, 2));
-      console.log(`[ReportsPage] 📈 Data source: ${successfulUrl}`);
       
       // Validasi data
       if (transformedAssets.length > 0) {
@@ -251,13 +192,12 @@ const ReportsPage = () => {
       }
       
       console.log(`[ReportsPage] ✅ State berhasil diupdate: ${transformedAssets.length} aset, ${sortedTemplates.length} template`);
-      // Removed success notification to reduce noise for users
       
     } catch (error) {
       console.error('[ReportsPage] ❌ Error loading data:', error);
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      setError(`Backend server tidak dapat diakses: ${errorMsg}`);
-      addNotification('error', 'Gagal mengakses backend server. Pastikan backend berjalan dengan benar.');
+      setError(`Error memuat aset: ${errorMsg}`);
+      addNotification('error', 'Gagal memuat data aset. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }

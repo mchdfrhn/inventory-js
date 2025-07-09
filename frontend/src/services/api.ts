@@ -3,7 +3,7 @@ import axios from 'axios';
 // Use environment variable for API URL
 const API_URL = import.meta.env.VITE_API_BASE_URL 
   ? `${import.meta.env.VITE_API_BASE_URL}/api/v1`
-  : 'http://localhost:3001/api/v1';
+  : '/api/v1'; // Use relative URL for proxy
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -30,6 +30,8 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    console.error('[API Error]', error);
+    
     // Handle common error scenarios
     const errorResponse = {
       message: 'Terjadi kesalahan yang tidak terduga',
@@ -44,9 +46,6 @@ api.interceptors.response.use(
       errorResponse.message = 'Server tidak merespons';
       errorResponse.code = 0;
     }
-    
-    // Log error for debugging (remove in production)
-    console.error('API Error:', errorResponse);
     
     return Promise.reject(errorResponse);
   }
@@ -128,17 +127,22 @@ export interface AuditLog {
   created_at: string;
 }
 
+// Single resource response interface
+export interface SingleResourceResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
 export interface PaginatedResponse<T> {
-  status: string;
-  message: string;
+  success: boolean;
+  message?: string;
   data: T[];
   pagination: {
-    current_page: number;
-    page_size: number;
-    total_items: number;
-    total_pages: number;
-    has_previous: boolean;
-    has_next: boolean;
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
   };
 }
 
@@ -149,29 +153,29 @@ export const assetApi = {
   },
 
   getById: async (id: string) => {
-    const response = await api.get<{ status: string; message: string; data: Asset }>(`/assets/${id}`);
+    const response = await api.get<SingleResourceResponse<Asset>>(`/assets/${id}`);
     return response.data;
   },
 
   create: async (asset: Omit<Asset, 'id' | 'created_at' | 'updated_at'>) => {
-    const response = await api.post<{ status: string; message: string; data: Asset }>('/assets', asset);
+    const response = await api.post<SingleResourceResponse<Asset>>('/assets', asset);
     return response.data;
   },
 
   update: async (id: string, asset: Omit<Asset, 'id' | 'created_at' | 'updated_at'>) => {
-    const response = await api.put<{ status: string; message: string; data: Asset }>(`/assets/${id}`, asset);
+    const response = await api.put<SingleResourceResponse<Asset>>(`/assets/${id}`, asset);
     return response.data;
   },
 
   delete: async (id: string) => {
-    const response = await api.delete<{ status: string; message: string }>(`/assets/${id}`);
+    const response = await api.delete<SingleResourceResponse<null>>(`/assets/${id}`);
     return response.data;
   },  // New: Delete bulk assets - menghapus semua asset dalam bulk
   deleteBulk: async (bulkId: string) => {
     if (!bulkId) {
       throw new Error('Bulk ID is required for bulk deletion');
     }
-    const response = await api.delete<{ status: string; message: string }>(`/assets/bulk/${bulkId}`);
+    const response = await api.delete<SingleResourceResponse<null>>(`/assets/bulk/${bulkId}`);
     return response.data;
   },
 
@@ -182,8 +186,8 @@ export const assetApi = {
 
   // New: Create bulk asset
   createBulk: async (asset: Omit<Asset, 'id' | 'created_at' | 'updated_at'>, quantity: number) => {
-    const response = await api.post<{ status: string; message: string; data: Asset[] }>('/assets/bulk', {
-      asset,
+    const response = await api.post<SingleResourceResponse<Asset[]>>('/assets/bulk', {
+      ...asset,
       quantity
     });
     return response.data;
@@ -191,7 +195,7 @@ export const assetApi = {
 
   // New: Get bulk assets
   getBulkAssets: async (bulkId: string) => {
-    const response = await api.get<{ status: string; message: string; data: Asset[] }>(`/assets/bulk/${bulkId}`);
+    const response = await api.get<SingleResourceResponse<Asset[]>>(`/assets/bulk/${bulkId}`);
     return response.data;
   },
 
@@ -220,22 +224,22 @@ export const categoryApi = {
   },
 
   getById: async (id: string) => {
-    const response = await api.get<{ status: string; message: string; data: Category }>(`/categories/${id}`);
+    const response = await api.get<SingleResourceResponse<Category>>(`/categories/${id}`);
     return response.data;
   },
   
   create: async (category: Omit<Category, 'id' | 'created_at' | 'updated_at'>) => {
-    const response = await api.post<{ status: string; message: string; data: Category }>('/categories', category);
+    const response = await api.post<SingleResourceResponse<Category>>('/categories', category);
     return response.data;
   },
 
   update: async (id: string, category: Omit<Category, 'id' | 'created_at' | 'updated_at'>) => {
-    const response = await api.put<{ status: string; message: string; data: Category }>(`/categories/${id}`, category);
+    const response = await api.put<SingleResourceResponse<Category>>(`/categories/${id}`, category);
     return response.data;
   },
 
   delete: async (id: string) => {
-    const response = await api.delete<{ status: string; message: string }>(`/categories/${id}`);
+    const response = await api.delete<SingleResourceResponse<null>>(`/categories/${id}`);
     return response.data;
   },
     // New function to get categories with asset counts and proper pagination
@@ -254,7 +258,7 @@ export const categoryApi = {
             // Add the count to the category
             return {
               ...category,
-              asset_count: assetsResponse.data.pagination.total_items
+              asset_count: assetsResponse.data.pagination.total
             };
           } catch (error) {
             console.error(`Error fetching assets for category ${category.id}:`, error);
@@ -285,28 +289,28 @@ export const locationApi = {
   },
 
   getById: async (id: number) => {
-    const response = await api.get<{ status: string; message: string; data: Location }>(`/locations/${id}`);
+    const response = await api.get<SingleResourceResponse<Location>>(`/locations/${id}`);
     return response.data;
   },
 
   create: async (location: Omit<Location, 'id' | 'created_at' | 'updated_at'>) => {
-    const response = await api.post<{ status: string; message: string; data: Location }>('/locations', location);
+    const response = await api.post<SingleResourceResponse<Location>>('/locations', location);
     return response.data;
   },
 
   update: async (id: number, location: Omit<Location, 'id' | 'created_at' | 'updated_at'>) => {
-    const response = await api.put<{ status: string; message: string; data: Location }>(`/locations/${id}`, location);
+    const response = await api.put<SingleResourceResponse<Location>>(`/locations/${id}`, location);
     return response.data;
   },
 
   delete: async (id: number) => {
-    const response = await api.delete<{ status: string; message: string }>(`/locations/${id}`);
+    const response = await api.delete<SingleResourceResponse<null>>(`/locations/${id}`);
     return response.data;
   },
   search: async (query: string, page = 1, pageSize = 10) => {
     // Server-side search with pagination
     const response = await api.get<PaginatedResponse<Location>>(
-      `/locations?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(query)}`
+      `/locations/search?query=${encodeURIComponent(query)}&page=${page}&page_size=${pageSize}`
     );
     return response.data;
   },
@@ -318,7 +322,7 @@ export const locationApi = {
     }
     
     try {
-      const response = await api.get<{ status: string; message: string; data: Location }>(`/locations/${lokasiId}`);
+      const response = await api.get<SingleResourceResponse<Location>>(`/locations/${lokasiId}`);
       return response.data.data;    } catch (error) {
       console.error("Error fetching location for asset:", error);
       return null;    }
@@ -334,7 +338,7 @@ export const locationApi = {
       // The backend already supports pagination, so let's get just the locations from this page
       // Get count of assets first to determine how many to fetch
       const countResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&page_size=1`);
-      const totalItems = countResponse.data.pagination.total_items;
+      const totalItems = countResponse.data.pagination.total;
       
       // Get assets for asset counts
       const assetsResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&page_size=${totalItems > 0 ? totalItems : 10}`);
@@ -420,7 +424,7 @@ export const auditLogApi = {
   },
 
   getEntityHistory: async (entityType: string, entityId: string) => {
-    const response = await api.get<{ status: string; message: string; data: AuditLog[] }>(`/audit-logs/entity/${entityType}/${entityId}`);
+    const response = await api.get<SingleResourceResponse<AuditLog[]>>(`/audit-logs/history/${entityType}/${entityId}`);
     return response.data;
   },
 }

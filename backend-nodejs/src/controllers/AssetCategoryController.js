@@ -1,4 +1,6 @@
 const AssetCategoryUseCase = require('../usecases/AssetCategoryUseCase');
+const csv = require('csv-parser');
+const fs = require('fs');
 const logger = require('../utils/logger');
 
 class AssetCategoryController {
@@ -142,6 +144,94 @@ class AssetCategoryController {
       }
     } catch (error) {
       logger.error('Error in listCategories controller:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async importCategories(req, res) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'CSV file is required',
+        });
+      }
+
+      const filePath = req.file.path;
+      const categories = [];
+      const errors = [];
+
+      // Parse CSV file
+      const stream = fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (row) => {
+          try {
+            // Map CSV columns to category fields
+            const categoryData = {
+              code: row.code || row.kode || row.Kode || row['Kode*'],
+              name: row.name || row.nama || row.Nama || row['Nama*'],
+              description: row.description || row.deskripsi || row.Deskripsi || row['Deskripsi'],
+            };
+
+            // Basic validation
+            if (!categoryData.code || !categoryData.name) {
+              throw new Error('Code and name are required');
+            }
+
+            categories.push(categoryData);
+          } catch (error) {
+            errors.push(`Row ${categories.length + 1}: ${error.message}`);
+          }
+        })
+        .on('end', async () => {
+          try {
+            // Clean up uploaded file
+            fs.unlinkSync(filePath);
+
+            if (errors.length > 0) {
+              return res.status(400).json({
+                success: false,
+                message: 'CSV parsing errors',
+                errors,
+              });
+            }
+
+            // Import categories
+            const importedCategories = [];
+            const importErrors = [];
+
+            for (let i = 0; i < categories.length; i++) {
+              try {
+                const category = await this.categoryUseCase.createCategory(categories[i], req.metadata);
+                importedCategories.push(category);
+              } catch (error) {
+                importErrors.push(`Row ${i + 1}: ${error.message}`);
+              }
+            }
+
+            res.status(200).json({
+              success: true,
+              message: `Import completed. ${importedCategories.length} categories imported successfully`,
+              imported_count: importedCategories.length,
+              total_rows: categories.length,
+              data: {
+                imported: importedCategories.length,
+                errors: importErrors,
+              },
+            });
+          } catch (error) {
+            logger.error('Error in category import:', error);
+            res.status(500).json({
+              success: false,
+              message: error.message,
+            });
+          }
+        });
+    } catch (error) {
+      logger.error('Error in importCategories controller:', error);
       res.status(500).json({
         success: false,
         message: error.message,

@@ -245,8 +245,8 @@ export default function AssetsPage() {
 
     try {
       const formData = new FormData();
-      formData.append('file', importFile);      console.log('Sending import request to http://localhost:8080/api/v1/assets/import');
-      const response = await fetch('http://localhost:8080/api/v1/assets/import', {
+      formData.append('file', importFile);      console.log('Sending import request to http://localhost:3001/api/v1/assets/import');
+      const response = await fetch('http://localhost:3001/api/v1/assets/import', {
         method: 'POST',
         body: formData,
       });
@@ -1448,7 +1448,11 @@ export default function AssetsPage() {
         )}          {/* Pagination */}
         {data?.pagination && filteredAndSortedAssets && (
           <Pagination
-            pagination={data.pagination}
+            pagination={{
+              total_items: data.pagination.total,
+              total_pages: data.pagination.totalPages,
+              current_page: data.pagination.page,
+            }}
             currentPage={page}
             pageSize={pageSize}
             onPageChange={setPage}

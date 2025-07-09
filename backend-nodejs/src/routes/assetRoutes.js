@@ -79,6 +79,13 @@ router.delete(
   assetController.deleteBulkAssets.bind(assetController)
 );
 
+// List assets with bulk view
+router.get(
+  '/with-bulk',
+  validate(assetFilterSchema, 'query'),
+  assetController.listAssetsWithBulk.bind(assetController)
+);
+
 // Get single asset
 router.get(
   '/:id',
@@ -89,13 +96,6 @@ router.get(
 router.get(
   '/bulk/:bulk_id',
   assetController.getBulkAssets.bind(assetController)
-);
-
-// List assets with bulk view
-router.get(
-  '/with-bulk',
-  validate(assetFilterSchema, 'query'),
-  assetController.listAssetsWithBulk.bind(assetController)
 );
 
 // Import assets from CSV

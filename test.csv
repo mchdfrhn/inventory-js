@@ -1,0 +1,3 @@
+kode,nama,spesifikasi,quantity,satuan,tanggal_perolehan,harga_perolehan,umur_ekonomis_tahun,keterangan,lokasi_id,category_id,asal_pengadaan,status
+TEST.001,Test Asset 1,Test specifications,1,unit,2024-01-01,100000,5,Test asset,80,007bff87-0fd9-4ae1-8898-11487ca30bfd,pembelian,baik
+TEST.002,Test Asset 2,Test specifications 2,2,unit,2024-01-02,200000,5,Test asset 2,80,007bff87-0fd9-4ae1-8898-11487ca30bfd,pembelian,baik
