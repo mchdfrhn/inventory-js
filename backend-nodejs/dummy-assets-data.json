@@ -1,0 +1,169 @@
+{
+  "singleAssets": [
+    {
+      "kode": "PROJ001",
+      "nama": "Proyektor Epson EB-X41",
+      "spesifikasi": "Proyektor LCD 3600 lumens, resolusi XGA",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2023-04-01",
+      "harga_perolehan": 7500000,
+      "umur_ekonomis_tahun": 6,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 1875000,
+      "nilai_sisa": 5625000,
+      "keterangan": "Proyektor untuk presentasi ruang rapat",
+      "lokasi": "Ruang Rapat",
+      "asal_pengadaan": "Tender",
+      "status": "baik"
+    },
+    {
+      "kode": "SCAN001",
+      "nama": "Scanner Canon CanoScan",
+      "spesifikasi": "Scanner dokumen A4 dengan resolusi 4800x4800 dpi",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2022-06-15",
+      "harga_perolehan": 2500000,
+      "umur_ekonomis_tahun": 5,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 1250000,
+      "nilai_sisa": 1250000,
+      "keterangan": "Scanner untuk digitalisasi dokumen",
+      "lokasi": "Ruang Administrasi",
+      "asal_pengadaan": "Pembelian",
+      "status": "baik"
+    },
+    {
+      "kode": "SAFE001",
+      "nama": "Brankas Besi Tahan Api",
+      "spesifikasi": "Brankas ukuran 60x45x40cm dengan kunci kombinasi",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2021-01-01",
+      "harga_perolehan": 8000000,
+      "umur_ekonomis_tahun": 15,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 1866667,
+      "nilai_sisa": 6133333,
+      "keterangan": "Brankas untuk menyimpan dokumen penting",
+      "lokasi": "Ruang Direktur",
+      "asal_pengadaan": "Pembelian",
+      "status": "baik"
+    },
+    {
+      "kode": "WIFI001",
+      "nama": "Access Point TP-Link",
+      "spesifikasi": "TP-Link EAP245 AC1750 Wireless Gigabit",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2023-11-01",
+      "harga_perolehan": 1200000,
+      "umur_ekonomis_tahun": 4,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 200000,
+      "nilai_sisa": 1000000,
+      "keterangan": "Access point untuk koneksi wireless",
+      "lokasi": "Ruang IT",
+      "asal_pengadaan": "Tender",
+      "status": "baik"
+    },
+    {
+      "kode": "DISP001",
+      "nama": "Dispenser Air Minum",
+      "spesifikasi": "Dispenser dengan fitur panas dan dingin",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2022-11-01",
+      "harga_perolehan": 1500000,
+      "umur_ekonomis_tahun": 8,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 468750,
+      "nilai_sisa": 1031250,
+      "keterangan": "Dispenser untuk ruang tamu",
+      "lokasi": "Ruang Tamu",
+      "asal_pengadaan": "Pembelian",
+      "status": "baik"
+    },
+    {
+      "kode": "WHIT001",
+      "nama": "Whiteboard Magnetic",
+      "spesifikasi": "Whiteboard ukuran 120x80cm dengan frame aluminium",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2024-01-01",
+      "harga_perolehan": 750000,
+      "umur_ekonomis_tahun": 10,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 37500,
+      "nilai_sisa": 712500,
+      "keterangan": "Whiteboard untuk ruang rapat",
+      "lokasi": "Ruang Rapat",
+      "asal_pengadaan": "Pembelian",
+      "status": "baik"
+    },
+    {
+      "kode": "UPS001",
+      "nama": "UPS APC Smart-UPS",
+      "spesifikasi": "APC Smart-UPS 1500VA dengan battery backup",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2023-05-01",
+      "harga_perolehan": 3500000,
+      "umur_ekonomis_tahun": 6,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 680556,
+      "nilai_sisa": 2819444,
+      "keterangan": "UPS untuk backup power server",
+      "lokasi": "Ruang Server",
+      "asal_pengadaan": "Tender",
+      "status": "baik"
+    }
+  ],
+  "bulkAssets": [
+    {
+      "kode": "PHONE001",
+      "nama": "Telepon IP Yealink",
+      "spesifikasi": "Yealink T46G IP Phone dengan LCD display",
+      "quantity": 3,
+      "satuan": "unit",
+      "tanggal_perolehan": "2023-09-01",
+      "harga_perolehan": 1800000,
+      "umur_ekonomis_tahun": 5,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 300000,
+      "nilai_sisa": 1500000,
+      "keterangan": "Telepon IP untuk komunikasi kantor",
+      "lokasi": "Ruang Kantor",
+      "asal_pengadaan": "Tender",
+      "status": "baik",
+      "is_bulk": true,
+      "bulk_total_count": 3,
+      "bulk_details": [
+        {
+          "kode": "PHONE001",
+          "lokasi": "Ruang Direktur",
+          "status": "baik"
+        },
+        {
+          "kode": "PHONE002",
+          "lokasi": "Ruang Administrasi",
+          "status": "baik"
+        },
+        {
+          "kode": "PHONE003",
+          "lokasi": "Ruang IT",
+          "status": "rusak"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_assets": 10,
+    "single_assets": 7,
+    "bulk_sets": 1,
+    "bulk_units": 3,
+    "total_value": 30350000,
+    "currencies": "IDR"
+  }
+}

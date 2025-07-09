@@ -50,22 +50,46 @@ const formatStatus = (status: string): string => {
 
 // Helper function to calculate total acquisition price for bulk assets
 const getTotalHargaPerolehan = (asset: Asset): number => {
+  const hargaPerolehan = Number(asset.harga_perolehan) || 0;
+  
   // For bulk assets, multiply harga_perolehan by bulk_total_count
   if (asset.bulk_total_count && asset.bulk_total_count > 1) {
-    return asset.harga_perolehan * asset.bulk_total_count;
+    return hargaPerolehan * asset.bulk_total_count;
   }
   // For regular assets, return harga_perolehan as is
-  return asset.harga_perolehan;
+  return hargaPerolehan;
 };
 
 // Helper function to calculate total nilai sisa for bulk assets
 const getTotalNilaiSisa = (asset: Asset): number => {
+  let nilaiSisa = Number(asset.nilai_sisa) || 0;
+  
+  // If nilai_sisa is 0 or missing, calculate it from depreciation
+  if (nilaiSisa === 0 && asset.harga_perolehan) {
+    const hargaPerolehan = Number(asset.harga_perolehan);
+    let akumulasiPenyusutan = Number(asset.akumulasi_penyusutan) || 0;
+    
+    // If akumulasi_penyusutan is also 0, calculate it
+    if (akumulasiPenyusutan === 0 && asset.tanggal_perolehan) {
+      const acquisitionDate = new Date(asset.tanggal_perolehan);
+      const currentDate = new Date();
+      const monthsOld = Math.max(0, (currentDate.getTime() - acquisitionDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+      const economicLifeMonths = Math.max(12, (asset.umur_ekonomis_tahun || 5) * 12);
+      
+      // Simple straight-line depreciation calculation
+      const monthlyDepreciation = hargaPerolehan / economicLifeMonths;
+      akumulasiPenyusutan = Math.min(hargaPerolehan * 0.9, monthlyDepreciation * monthsOld); // Max 90% depreciation
+    }
+    
+    nilaiSisa = Math.max(0, hargaPerolehan - akumulasiPenyusutan);
+  }
+  
   // For bulk assets, multiply nilai_sisa by bulk_total_count
   if (asset.bulk_total_count && asset.bulk_total_count > 1) {
-    return asset.nilai_sisa * asset.bulk_total_count;
+    return nilaiSisa * asset.bulk_total_count;
   }
   // For regular assets, return nilai_sisa as is
-  return asset.nilai_sisa;
+  return nilaiSisa;
 };
 
 
@@ -168,18 +192,53 @@ export default function AssetsPage() {
   }, [searchParams]);
   const { data, isLoading, error } = useQuery({
     queryKey: ['assets', page, pageSize],
-    queryFn: () => assetApi.listWithBulk(page, pageSize),
+    queryFn: async () => {
+      try {
+        // Try listWithBulk first, fallback to regular list if it fails
+        const result = await assetApi.listWithBulk(page, pageSize);
+        console.log('Assets data fetched:', result);
+        return result;
+      } catch (error) {
+        console.error('Error with listWithBulk, trying regular list:', error);
+        // Fallback to regular list
+        const result = await assetApi.list(page, pageSize);
+        console.log('Assets data fetched (fallback):', result);
+        return result;
+      }
+    },
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
     // Fetch categories for filter
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ['categories_for_filter'],
-    queryFn: () => categoryApi.list(),
+    queryFn: async () => {
+      try {
+        const result = await categoryApi.list(1, 100);
+        console.log('Categories data fetched:', result);
+        return result;
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        throw error;
+      }
+    },
+    retry: 2,
   });
   
   // Fetch locations for filter
   const { data: locationsData, isLoading: locationsLoading, error: locationsError } = useQuery({
     queryKey: ['locations_for_filter'],
-    queryFn: () => locationApi.list(1, 100), // Get up to 100 locations
+    queryFn: async () => {
+      try {
+        const result = await locationApi.list(1, 100);
+        console.log('Locations data fetched:', result);
+        return result;
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+        throw error;
+      }
+    },
+    retry: 2,
   });  // Delete mutation - supports both single asset and bulk asset deletion
   const deleteMutation = useMutation({
     mutationFn: async (asset: Asset) => {
@@ -339,13 +398,31 @@ export default function AssetsPage() {
     URL.revokeObjectURL(url);
     addNotification('success', 'Template berhasil didownload');
   };
+  // Debug logging for data
+  useEffect(() => {
+    if (data) {
+      console.log('Assets query data:', data);
+      console.log('Assets array:', data.data);
+      console.log('Total assets:', data.data?.length);
+    }
+    if (error) {
+      console.error('Assets query error:', error);
+    }
+  }, [data, error]);
+
   // Filter and search functionality
   const filteredAssets = data?.data?.filter((asset: Asset) => {
+    // Debug log to see what data we're working with
+    if (!asset) {
+      console.warn('Found null/undefined asset in data');
+      return false;
+    }
+    
     // Text search
     const matchesSearch = searchTerm === '' || 
-      asset.nama.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      asset.kode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      asset.spesifikasi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      asset.nama?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      asset.kode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      asset.spesifikasi?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (asset.keterangan && asset.keterangan.toLowerCase().includes(searchTerm.toLowerCase()));
       
     // Status filter with compatibility for old values
@@ -361,8 +438,10 @@ export default function AssetsPage() {
     }
     
     // Depreciation percentage filter
-    const depreciationPercentage = asset.harga_perolehan > 0
-      ? Math.round((asset.akumulasi_penyusutan / asset.harga_perolehan) * 100)
+    const hargaPerolehan = Number(asset.harga_perolehan) || 0;
+    const akumulasiPenyusutan = Number(asset.akumulasi_penyusutan) || 0;
+    const depreciationPercentage = hargaPerolehan > 0
+      ? Math.round((akumulasiPenyusutan / hargaPerolehan) * 100)
       : 0;
     
     let matchesDepreciationFilter = true;
@@ -451,8 +530,13 @@ export default function AssetsPage() {
         bValue = getTotalNilaiSisa(b);
         break;
       case 'penyusutan':
-        aValue = a.harga_perolehan > 0 ? (a.akumulasi_penyusutan / a.harga_perolehan) * 100 : 0;
-        bValue = b.harga_perolehan > 0 ? (b.akumulasi_penyusutan / b.harga_perolehan) * 100 : 0;
+        const aHarga = Number(a.harga_perolehan) || 0;
+        const bHarga = Number(b.harga_perolehan) || 0;
+        const aAkumulasi = Number(a.akumulasi_penyusutan) || 0;
+        const bAkumulasi = Number(b.akumulasi_penyusutan) || 0;
+        
+        aValue = aHarga > 0 ? (aAkumulasi / aHarga) * 100 : 0;
+        bValue = bHarga > 0 ? (bAkumulasi / bHarga) * 100 : 0;
         break;
       case 'lokasi':
         aValue = a.location_info?.name || '';
@@ -484,6 +568,15 @@ export default function AssetsPage() {
     const comparison = aStr.localeCompare(bStr);
     return sortDirection === 'asc' ? comparison : -comparison;
   }) || [];
+
+  // Debug logging for filtered data
+  useEffect(() => {
+    console.log('Raw data:', data);
+    console.log('Filtered assets:', filteredAssets);
+    console.log('Filtered assets length:', filteredAssets?.length);
+    console.log('Filtered and sorted assets:', filteredAndSortedAssets);
+    console.log('Filtered and sorted length:', filteredAndSortedAssets?.length);
+  }, [data, filteredAssets, filteredAndSortedAssets]);
 
   // Handle table header clicks for sorting
   const handleSort = (field: string) => {
@@ -1213,8 +1306,22 @@ export default function AssetsPage() {
                   <ExclamationCircleIcon className="h-5 w-5 text-red-400" />
                 </div>              
                 <div className="ml-3">
-                  <p className="text-sm text-red-700">Error memuat aset. Silakan coba lagi.</p>
+                  <p className="text-sm text-red-700">Error memuat aset: {error ? String(error) : 'Terjadi kesalahan'}</p>
                 </div>
+              </div>
+            </div>
+          ) : isLoading ? (
+            <div className="p-8 text-center">
+              <Loader size="lg" message="Memuat data aset..." />
+            </div>
+          ) : !data?.data || data.data.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="text-gray-500">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m0 0v2a1 1 0 001 1h1m0-4H6a1 1 0 00-1 1v1h1z" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada aset</h3>
+                <p className="mt-1 text-sm text-gray-500">Mulai dengan menambahkan aset pertama Anda.</p>
               </div>
             </div>
           ) : (
@@ -1347,11 +1454,32 @@ export default function AssetsPage() {
                               minimumFractionDigits: 0
                             }).format(getTotalNilaiSisa(asset))}
                           </div>
+                          {/* Debug info */}
+                          {process.env.NODE_ENV === 'development' && (
+                            <div className="text-xs text-gray-400">
+                              Raw: {asset.nilai_sisa} | Calc: {getTotalNilaiSisa(asset)}
+                            </div>
+                          )}
                         </td>
                         <td className="whitespace-nowrap px-2 py-3">
                           {(() => {
-                            const depreciationPercentage = asset.harga_perolehan > 0
-                              ? Math.round((asset.akumulasi_penyusutan / asset.harga_perolehan) * 100)
+                            const hargaPerolehan = Number(asset.harga_perolehan) || 0;
+                            let akumulasiPenyusutan = Number(asset.akumulasi_penyusutan) || 0;
+                            
+                            // If akumulasi_penyusutan is 0, try to calculate it
+                            if (akumulasiPenyusutan === 0 && hargaPerolehan > 0 && asset.tanggal_perolehan) {
+                              const acquisitionDate = new Date(asset.tanggal_perolehan);
+                              const currentDate = new Date();
+                              const monthsOld = Math.max(0, (currentDate.getTime() - acquisitionDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+                              const economicLifeMonths = Math.max(12, (asset.umur_ekonomis_tahun || 5) * 12);
+                              
+                              // Simple straight-line depreciation calculation
+                              const monthlyDepreciation = hargaPerolehan / economicLifeMonths;
+                              akumulasiPenyusutan = Math.min(hargaPerolehan * 0.9, monthlyDepreciation * monthsOld); // Max 90% depreciation
+                            }
+                            
+                            const depreciationPercentage = hargaPerolehan > 0
+                              ? Math.round((akumulasiPenyusutan / hargaPerolehan) * 100)
                               : 0;
                             
                             // Color based on percentage
@@ -1366,6 +1494,12 @@ export default function AssetsPage() {
                                 <div className="w-full bg-gray-200 rounded-full h-1">
                                   <div className={`${barColor} h-1 rounded-full`} style={{ width: `${depreciationPercentage}%` }}></div>
                                 </div>
+                                {/* Debug info */}
+                                {process.env.NODE_ENV === 'development' && (
+                                  <div className="text-xs text-gray-400">
+                                    H:{hargaPerolehan} A:{akumulasiPenyusutan}
+                                  </div>
+                                )}
                               </div>
                             );
                           })()}
@@ -1374,8 +1508,14 @@ export default function AssetsPage() {
                           <div className="text-xs text-gray-900">
                             {asset.lokasi_id && asset.location_info ? 
                               `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
-                              : asset.lokasi || ''}
+                              : asset.lokasi || 'Lokasi tidak tersedia'}
                           </div>
+                          {/* Debug info */}
+                          {process.env.NODE_ENV === 'development' && (
+                            <div className="text-xs text-gray-400">
+                              ID:{asset.lokasi_id} | Info:{asset.location_info ? 'Yes' : 'No'} | Legacy:{asset.lokasi}
+                            </div>
+                          )}
                         </td>
                         <td className="whitespace-nowrap px-2 py-3">
                           <span className={`status-badge inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gradient-to-r ${statusGradients[asset.status] || 'from-gray-50 to-gray-100 border-gray-200'} shadow-sm transition-all duration-300 hover:scale-105 border`}>
@@ -1445,7 +1585,7 @@ export default function AssetsPage() {
               </tbody>
             </table>
           </div>
-        )}          {/* Pagination */}
+          )}          {/* Pagination */}
         {data?.pagination && filteredAndSortedAssets && (
           <Pagination
             pagination={{

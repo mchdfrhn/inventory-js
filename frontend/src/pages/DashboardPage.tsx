@@ -396,7 +396,10 @@ export default function DashboardPage() {
 
     const assets = assetData.data as Asset[];
     const totalAssets = assets.length;
-    const totalValue = assets.reduce((sum, asset) => sum + asset.harga_perolehan, 0);
+    const totalValue = assets.reduce((sum, asset) => {
+      const price = Number(asset.harga_perolehan) || 0;
+      return sum + price;
+    }, 0);
     
     // Count assets by status - use new status values
     const statusCounts: Record<string, number> = {
@@ -492,7 +495,10 @@ export default function DashboardPage() {
     categoryData.data.forEach(category => {
       const categoryAssets = assets.filter(asset => asset.category_id === category.id);
       const count = categoryAssets.length;
-      const value = categoryAssets.reduce((sum, asset) => sum + asset.harga_perolehan, 0);
+      const value = categoryAssets.reduce((sum, asset) => {
+        const price = Number(asset.harga_perolehan) || 0;
+        return sum + price;
+      }, 0);
       
       assetsByCategory.push({
         id: category.id,
@@ -776,7 +782,10 @@ export default function DashboardPage() {
           <GlassCard hover={true} className="p-3">
             <h3 className="text-sm font-semibold text-gray-900 mb-2">Kategori Teratas</h3>
             <div className="space-y-2">
-              {(stats?.assetsByCategory || []).slice(0, 4).map((category) => (
+              {(stats?.assetsByCategory || [])
+                .filter(category => !category.code.toUpperCase().includes('TEST') && !category.name.toUpperCase().includes('TEST'))
+                .slice(0, 4)
+                .map((category) => (
                 <div key={category.id} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="h-6 w-6 rounded bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center mr-2">
@@ -827,10 +836,19 @@ export default function DashboardPage() {
 
 // Helper functions for number formatting
 const formatRupiah = (amount: number): string => {
+  // Handle NaN, undefined, null, or invalid numbers
+  if (isNaN(amount) || amount === null || amount === undefined) {
+    return '0';
+  }
   return new Intl.NumberFormat('id-ID').format(Math.round(amount));
 };
 
 const formatToMillion = (amount: number): string => {
+  // Handle NaN, undefined, null, or invalid numbers
+  if (isNaN(amount) || amount === null || amount === undefined) {
+    return '0';
+  }
+  
   const millions = amount / 1000000;
   if (millions >= 1000) {
     return `${(millions / 1000).toFixed(1)} milyar`;
