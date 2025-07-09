@@ -6,10 +6,10 @@ const auditLogRoutes = require('./auditLogRoutes');
 
 const router = express.Router();
 
-// API routes
-router.use('/assets', assetRoutes);
-router.use('/categories', categoryRoutes);
-router.use('/locations', locationRoutes);
-router.use('/audit-logs', auditLogRoutes);
+// API v1 routes
+router.use('/v1/assets', assetRoutes);
+router.use('/v1/categories', categoryRoutes);
+router.use('/v1/locations', locationRoutes);
+router.use('/v1/audit-logs', auditLogRoutes);
 
 module.exports = router;

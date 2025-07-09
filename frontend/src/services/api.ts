@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// Temporarily adjust for local testing
-const API_URL = 'http://localhost:8080/api/v1';
+// Use environment variable for API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL 
+  ? `${import.meta.env.VITE_API_BASE_URL}/api/v1`
+  : 'http://localhost:3001/api/v1';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -367,7 +369,7 @@ export const locationApi = {
         
         // Debug logging for BAAK and BAUK locations
         if (location.name.includes('BAAK') || location.name.includes('BAUK')) {
-          console.log(`Location ${location.name} (ID: ${location.id}) has ${count} assets`);
+          console.log(`Location ${location.name} (D: ${location.id}) has ${count} assets`);
         }
         
         return {

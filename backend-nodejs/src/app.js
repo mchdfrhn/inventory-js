@@ -36,7 +36,7 @@ app.use(compression());
 // Rate limiting
 const limiter = rateLimit({
   windowMs: config.rateLimit?.windowMs || 15 * 60 * 1000, // 15 minutes
-  max: config.rateLimit?.max || 100, // 100 requests per windowMs
+  max: config.rateLimit?.max || 1000, // 1000 requests per windowMs for development
   message: {
     error: 'Too many requests from this IP, please try again later.',
     retryAfter: Math.ceil((config.rateLimit?.windowMs || 15 * 60 * 1000) / 1000),
