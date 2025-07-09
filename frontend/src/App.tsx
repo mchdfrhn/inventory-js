@@ -4,7 +4,6 @@ import Layout from './components/Layout'
 import AssetsPage from './pages/AssetsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import DashboardPage from './pages/DashboardPage'
-import DebugPage from './pages/DebugPage'
 import AssetForm from './pages/AssetForm'
 import AssetDetailsPage from './pages/AssetDetailsPage'
 import CategoryForm from './pages/CategoryForm'
@@ -13,10 +12,6 @@ import LocationForm from './pages/LocationForm'
 import AuditLogPage from './pages/AuditLogPage'
 import TemplateManagementPage from './pages/TemplateManagementPage'
 import ReportsPage from './pages/ReportsPage'
-import TestPage from './pages/TestPage'
-import SimpleTestPage from './pages/SimpleTestPage'
-import ConnectionTest from './pages/ConnectionTest'
-import WatermarkDemo from './pages/WatermarkDemo'
 import { NotificationProvider } from './context/NotificationContext'
 import ToastContainer from './components/ToastContainer'
 import './App.css'
@@ -66,19 +61,6 @@ function App() {
 
               {/* Template Management route */}
               <Route path="template-management" element={<TemplateManagementPage />} />
-
-              {/* Debug route */}
-              <Route path="debug" element={<DebugPage />} />
-              
-              {/* Test route */}
-              <Route path="test" element={<TestPage />} />
-              <Route path="simple-test" element={<SimpleTestPage />} />
-              
-              {/* Connection test route */}
-              <Route path="connection-test" element={<ConnectionTest />} />
-              
-              {/* Watermark Demo route */}
-              <Route path="watermark-demo" element={<WatermarkDemo />} />
             </Route>
           </Routes>
         </Router>
