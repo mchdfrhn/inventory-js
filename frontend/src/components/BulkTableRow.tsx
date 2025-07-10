@@ -151,7 +151,7 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
             <div className="font-medium truncate">{asset.location_info?.name || asset.lokasi || 'Lokasi tidak tersedia'}</div>
             {asset.location_info?.building && (
               <div className="text-gray-500 text-xs truncate">
-                {asset.location_info.building}
+                Gedung {asset.location_info.building}
                 {asset.location_info.floor && ` Lt. ${asset.location_info.floor}`}
                 {asset.location_info.room && ` ${asset.location_info.room}`}
               </div>
