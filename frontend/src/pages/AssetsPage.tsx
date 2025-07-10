@@ -45,7 +45,7 @@ const formatStatus = (status: string): string => {
   } else if (status === 'rusak') {
     return 'Rusak';
   } else if (status === 'tidak_memadai') {
-    return 'Tidak Memadai';
+    return 'Kurang';
   }
   return 'Baik'; // Default fallback
 };
@@ -982,7 +982,7 @@ export default function AssetsPage() {
                               setTempFilter('tidak_memadai');
                             }}
                           />
-                          <span className="ml-2 text-xs text-yellow-700">Tidak Memadai</span>
+                          <span className="ml-2 text-xs text-yellow-700">Kurang</span>
                         </label>
                       </div>
                     </div>                      {/* Depreciation Filter */}
