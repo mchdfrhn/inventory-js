@@ -90,7 +90,7 @@ const AssetPreview: React.FC<AssetPreviewProps> = ({ asset, className = '' }) =>
           <p className="text-sm font-medium">{asset.category?.name || 'Tidak Terkategori'}</p>
         </div>        <div className="bg-gray-50 p-3 rounded">          <p className="text-xs text-gray-500">Lokasi</p>          <p className="text-sm font-medium">
             {asset.lokasi_id && asset.location_info ? 
-              `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
+              `${asset.location_info.name} (Gedung ${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
               : asset.lokasi || ''}
           </p>
         </div>

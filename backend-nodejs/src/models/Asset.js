@@ -70,7 +70,7 @@ const Asset = sequelize.define('Asset', {
     defaultValue: 0,
     validate: {
       min: 0,
-      max: 11,
+      max: 600, // Allow up to 50 years (50*12=600 months)
     },
   },
   akumulasi_penyusutan: {

@@ -97,7 +97,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete, onDetailClick })
         </div>        <div className="mt-3">
           <p className="text-xs text-gray-500">Lokasi</p>
           <p className="text-sm truncate">            {asset.lokasi_id && asset.location_info ? 
-              `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
+              `${asset.location_info.name} (Gedung ${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
               : asset.lokasi || ''}
           </p>
         </div>

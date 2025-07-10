@@ -148,12 +148,14 @@ export interface PaginatedResponse<T> {
 
 export const assetApi = {
   list: async (page = 1, pageSize = 10) => {
-    const response = await api.get<PaginatedResponse<Asset>>(`/assets?page=${page}&pageSize=${pageSize}`);
+    const timestamp = Date.now();
+    const response = await api.get<PaginatedResponse<Asset>>(`/assets?page=${page}&pageSize=${pageSize}&_t=${timestamp}`);
     return response.data;
   },
 
   getById: async (id: string) => {
-    const response = await api.get<SingleResourceResponse<Asset>>(`/assets/${id}`);
+    const timestamp = Date.now();
+    const response = await api.get<SingleResourceResponse<Asset>>(`/assets/${id}?_t=${timestamp}`);
     return response.data;
   },
 
@@ -337,11 +339,12 @@ export const locationApi = {
       
       // The backend already supports pagination, so let's get just the locations from this page
       // Get count of assets first to determine how many to fetch
-      const countResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&pageSize=1`);
+      const timestamp = Date.now();
+      const countResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&pageSize=1&_t=${timestamp}`);
       const totalItems = countResponse.data.pagination.total;
       
       // Get assets for asset counts
-      const assetsResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&pageSize=${totalItems > 0 ? totalItems : 10}`);
+      const assetsResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&pageSize=${totalItems > 0 ? totalItems : 10}&_t=${timestamp}`);
       const allAssets = assetsResponse.data.data;
       
       console.log(`Total assets: ${totalItems}, fetched: ${allAssets.length}`);

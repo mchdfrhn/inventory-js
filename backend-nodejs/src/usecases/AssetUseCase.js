@@ -683,7 +683,8 @@ class AssetUseCase {
   async calculateDepreciationValues(assetData) {
     try {
       // Convert economic life from years to months
-      const umurEkonomisBulan = assetData.umur_ekonomis_tahun * 12;
+      const umurEkonomisTahun = assetData.umur_ekonomis_tahun || 0;
+      const umurEkonomisBulan = umurEkonomisTahun * 12;
       
       // Calculate months in use
       const now = new Date();
