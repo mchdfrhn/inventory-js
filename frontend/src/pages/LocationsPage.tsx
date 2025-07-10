@@ -223,11 +223,11 @@ export default function LocationsPage() {
     // Tanda * menunjukkan kolom yang wajib diisi (required)
     const templateData = [
       ['Kode*', 'Nama*', 'Gedung', 'Lantai', 'Ruangan', 'Deskripsi'],
-      ['L001', 'Ruang Kelas 1A', 'Gedung Utama', '1', 'A101', 'Ruang kelas untuk mata kuliah umum dan teori'],
-      ['L002', 'Laboratorium Komputer', 'Gedung Teknik', '2', 'B201', 'Lab untuk praktikum programming dan sistem informasi'],
-      ['L003', 'Perpustakaan', 'Gedung Utama', '1', 'C101', 'Ruang baca dan koleksi buku referensi'],
-      ['L004', 'Ruang Rapat Besar', 'Gedung Utama', '3', 'D301', 'Ruang rapat untuk acara besar dan seminar'],
-      ['L005', 'Kantor Dekan', 'Gedung Administrasi', '2', 'E201', 'Kantor pimpinan fakultas dan staf administrasi']
+      ['001', 'Ruang Kelas 1A', 'Gedung Utama', '1', 'A101', 'Ruang kelas untuk mata kuliah umum dan teori'],
+      ['002', 'Laboratorium Komputer', 'Gedung Teknik', '2', 'B201', 'Lab untuk praktikum programming dan sistem informasi'],
+      ['003', 'Perpustakaan', 'Gedung Utama', '1', 'C101', 'Ruang baca dan koleksi buku referensi'],
+      ['004', 'Ruang Rapat Besar', 'Gedung Utama', '3', 'D301', 'Ruang rapat untuk acara besar dan seminar'],
+      ['005', 'Kantor Dekan', 'Gedung Administrasi', '2', 'E201', 'Kantor pimpinan fakultas dan staf administrasi']
     ];
 
     // Create CSV content with proper escaping
@@ -681,7 +681,7 @@ export default function LocationsPage() {
                       
                       <div className="space-y-1">
                         <p><strong>Format file:</strong> Excel (.xlsx, .xls) atau CSV (.csv)</p>
-                        <p><strong>Kode Lokasi:</strong> Gunakan format 3 digit (001, 002, 003, dll)</p>
+                        <p><strong>Kode Lokasi:</strong> Gunakan format 3 digit (001, 002, 003, dst)</p>
                         <p><strong>Nama Lokasi:</strong> Nama unik untuk setiap lokasi</p>
                         <p><strong>Gedung & Lantai:</strong> Informasi opsional untuk detail lokasi</p>
                       </div>

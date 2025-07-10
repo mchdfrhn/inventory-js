@@ -164,34 +164,58 @@ class AssetCategoryController {
       const categories = [];
       const errors = [];
 
+      console.log('Starting CSV parsing for categories...');
+
       // Parse CSV file
-      const stream = fs.createReadStream(filePath)
-        .pipe(csv())
+      const stream = fs.createReadStream(filePath, { encoding: 'utf8' })
+        .pipe(csv({
+          skipEmptyLines: true,
+          skipLinesWithError: false,
+          trim: true,
+          strip_bom: true  // Remove BOM if present
+        }))
         .on('data', (row) => {
           try {
-            // Map CSV columns to category fields
+            console.log('Processing row:', row);
+            
+            // Map CSV columns to category fields - support multiple formats
             const categoryData = {
-              code: row.code || row.kode || row.Kode || row['Kode*'],
-              name: row.name || row.nama || row.Nama || row['Nama*'],
-              description: row.description || row.deskripsi || row.Deskripsi || row['Deskripsi'],
+              code: row.code || row.kode || row.Kode || row['Kode*'] || row['Kode'],
+              name: row.name || row.nama || row.Nama || row['Nama*'] || row['Nama'],
+              description: row.description || row.deskripsi || row.Deskripsi || row['Deskripsi'] || '',
             };
+
+            console.log('Mapped category data:', categoryData);
 
             // Basic validation
             if (!categoryData.code || !categoryData.name) {
-              throw new Error('Code and name are required');
+              throw new Error(`Code and name are required. Got code: "${categoryData.code}", name: "${categoryData.name}"`);
             }
+
+            // Trim whitespace
+            categoryData.code = categoryData.code.toString().trim();
+            categoryData.name = categoryData.name.toString().trim();
+            categoryData.description = categoryData.description ? categoryData.description.toString().trim() : '';
 
             categories.push(categoryData);
           } catch (error) {
+            console.error('Error processing row:', error.message);
             errors.push(`Row ${categories.length + 1}: ${error.message}`);
           }
         })
+        .on('error', (error) => {
+          console.error('CSV parsing error:', error);
+          errors.push(`CSV parsing error: ${error.message}`);
+        })
         .on('end', async () => {
           try {
+            console.log(`Parsed ${categories.length} categories with ${errors.length} errors`);
+            
             // Clean up uploaded file
             fs.unlinkSync(filePath);
 
             if (errors.length > 0) {
+              console.log('Errors found:', errors);
               return res.status(400).json({
                 success: false,
                 message: 'CSV parsing errors',

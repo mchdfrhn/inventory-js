@@ -274,11 +274,11 @@ export default function CategoriesPage() {
     // Tanda * menunjukkan kolom yang wajib diisi (required)
     const templateData = [
       ['Kode*', 'Nama*', 'Deskripsi'],
-      ['KAT001', 'Peralatan Komputer', 'Kategori untuk komputer desktop laptop printer scanner dan aksesoris IT'],
-      ['KAT002', 'Furniture Kantor', 'Kategori untuk meja kursi lemari filing cabinet dan furniture kantor lainnya'],
-      ['KAT003', 'Kendaraan', 'Kategori untuk mobil dinas motor operasional dan kendaraan transportasi'],
-      ['KAT004', 'Peralatan Audio Visual', 'Kategori untuk projector sound system microphone dan peralatan presentasi'],
-      ['KAT005', 'Peralatan Laboratorium', 'Kategori untuk alat ukur instrumen penelitian dan peralatan praktikum']
+      ['10', 'Peralatan Komputer', 'Kategori untuk komputer desktop laptop printer scanner dan aksesoris IT'],
+      ['20', 'Furniture Kantor', 'Kategori untuk meja kursi lemari filing cabinet dan furniture kantor lainnya'],
+      ['30', 'Kendaraan', 'Kategori untuk mobil dinas motor operasional dan kendaraan transportasi'],
+      ['40', 'Peralatan Audio Visual', 'Kategori untuk projector sound system microphone dan peralatan presentasi'],
+      ['50', 'Peralatan Laboratorium', 'Kategori untuk alat ukur instrumen penelitian dan peralatan praktikum']
     ];
 
     // Create CSV content with proper escaping
@@ -630,7 +630,7 @@ export default function CategoriesPage() {
                       
                       <div className="space-y-1">
                         <p><strong>Format file:</strong> Excel (.xlsx, .xls) atau CSV (.csv)</p>
-                        <p><strong>Kode Kategori:</strong> Gunakan format 2 digit (10, 20, 30, dll)</p>
+                        <p><strong>Kode Kategori:</strong> Gunakan format 2 digit (10, 20, 30, dst)</p>
                         <p><strong>Nama Kategori:</strong> Nama unik untuk setiap kategori</p>
                         <p><strong>Deskripsi:</strong> Informasi opsional untuk detail kategori</p>
                       </div>

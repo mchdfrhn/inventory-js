@@ -183,37 +183,64 @@ class LocationController {
       const locations = [];
       const errors = [];
 
+      console.log('Starting CSV parsing for locations...');
+
       // Parse CSV file
-      const stream = fs.createReadStream(filePath)
-        .pipe(csv())
+      const stream = fs.createReadStream(filePath, { encoding: 'utf8' })
+        .pipe(csv({
+          skipEmptyLines: true,
+          skipLinesWithError: false,
+          trim: true,
+          strip_bom: true  // Remove BOM if present
+        }))
         .on('data', (row) => {
           try {
-            // Map CSV columns to location fields
+            console.log('Processing row:', row);
+            
+            // Map CSV columns to location fields - support multiple formats
             const locationData = {
-              code: row.code || row.kode || row.Kode || row['Kode*'],
-              name: row.name || row.nama || row.Nama || row['Nama*'],
-              description: row.description || row.deskripsi || row.Deskripsi || row['Deskripsi'],
-              building: row.building || row.gedung || row.Gedung || row['Gedung*'],
-              floor: row.floor || row.lantai || row.Lantai || row['Lantai'],
-              room: row.room || row.ruangan || row.Ruangan || row['Ruangan'],
+              code: row.code || row.kode || row.Kode || row['Kode*'] || row['Kode'],
+              name: row.name || row.nama || row.Nama || row['Nama*'] || row['Nama'],
+              description: row.description || row.deskripsi || row.Deskripsi || row['Deskripsi'] || '',
+              building: row.building || row.gedung || row.Gedung || row['Gedung'] || '',
+              floor: row.floor || row.lantai || row.Lantai || row['Lantai'] || '',
+              room: row.room || row.ruangan || row.Ruangan || row['Ruangan'] || '',
             };
+
+            console.log('Mapped location data:', locationData);
 
             // Basic validation
             if (!locationData.code || !locationData.name) {
-              throw new Error('Code and name are required');
+              throw new Error(`Code and name are required. Got code: "${locationData.code}", name: "${locationData.name}"`);
             }
+
+            // Trim whitespace and convert to string
+            locationData.code = locationData.code.toString().trim();
+            locationData.name = locationData.name.toString().trim();
+            locationData.description = locationData.description ? locationData.description.toString().trim() : '';
+            locationData.building = locationData.building ? locationData.building.toString().trim() : '';
+            locationData.floor = locationData.floor ? locationData.floor.toString().trim() : '';
+            locationData.room = locationData.room ? locationData.room.toString().trim() : '';
 
             locations.push(locationData);
           } catch (error) {
+            console.error('Error processing row:', error.message);
             errors.push(`Row ${locations.length + 1}: ${error.message}`);
           }
         })
+        .on('error', (error) => {
+          console.error('CSV parsing error:', error);
+          errors.push(`CSV parsing error: ${error.message}`);
+        })
         .on('end', async () => {
           try {
+            console.log(`Parsed ${locations.length} locations with ${errors.length} errors`);
+            
             // Clean up uploaded file
             fs.unlinkSync(filePath);
 
             if (errors.length > 0) {
+              console.log('Errors found:', errors);
               return res.status(400).json({
                 success: false,
                 message: 'CSV parsing errors',
