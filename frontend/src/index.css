@@ -54,6 +54,54 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  
+  /* Table responsiveness utilities */
+  @media (max-width: 768px) {
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -1rem; /* Extend to screen edges on mobile */
+      padding: 0 1rem;
+    }
+    
+    .table-responsive table {
+      min-width: 900px; /* Ensure minimum width */
+    }
+    
+    /* Hide text on mobile for action buttons */
+    .mobile-hide-text {
+      display: none;
+    }
+    
+    /* Adjust table column widths on mobile */
+    .table-responsive th:first-child,
+    .table-responsive td:first-child {
+      min-width: 80px;
+    }
+    
+    .table-responsive th:last-child,
+    .table-responsive td:last-child {
+      min-width: 80px;
+      position: sticky;
+      right: 0;
+      background: inherit;
+      z-index: 1;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .mobile-hide-text {
+      display: inline;
+    }
+  }
+  
+  /* Sticky action column helper */
+  .sticky-action-col {
+    position: sticky;
+    right: 0;
+    background: inherit;
+    z-index: 1;
+  }
 }
 
 /* Custom dropdown styling - only apply to selects not in CustomSelect component */
