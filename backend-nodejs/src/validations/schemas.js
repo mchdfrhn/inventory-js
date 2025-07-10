@@ -123,7 +123,7 @@ const paginationSchema = Joi.object({
 const assetFilterSchema = paginationSchema.keys({
   category_id: Joi.string().uuid().optional(),
   lokasi_id: Joi.number().integer().positive().optional(),
-  status: Joi.string().valid('baik', 'rusak', 'dalam_perbaikan', 'tidak_aktif').optional(),
+  status: Joi.string().valid('baik', 'rusak', 'tidak_memadai').optional(),
   from_date: Joi.date().optional(),
   to_date: Joi.date().min(Joi.ref('from_date')).optional(),
   min_price: Joi.number().min(0).optional(),

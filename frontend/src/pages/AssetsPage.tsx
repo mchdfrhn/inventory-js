@@ -18,13 +18,15 @@ import { Dialog, Transition } from '@headlessui/react';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
 import Loader from '../components/Loader';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
+import { InlineLoadingState, InlineErrorState } from '../components/InlineStates';
 import ExportButton from '../components/ExportButton';
 import BulkTableRow from '../components/BulkTableRow';
 import AssetDetailPopup from '../components/AssetDetailPopup';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import Pagination from '../components/Pagination';
 import { useNotification } from '../context/NotificationContext';
-import FuturisticLoader from '../components/FuturisticLoader';
 import InlineLoader from '../components/InlineLoader';
 
 // Status styling with gradient backgrounds for a more modern look
@@ -734,39 +736,17 @@ export default function AssetsPage() {
   }, [data, queryClient, page, pageSize]);
   
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <GlassCard hover={false} className="p-10 text-center">
-          <Loader size="lg" message="Memuat aset..." />
-        </GlassCard>
-      </div>
-    );
+    return <LoadingState message="Memuat aset..." size="lg" />;
   }
 
   if (error) {
     return (
-      <GlassCard hover={false} className="p-6 border-l-4 border-red-500">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <ExclamationCircleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
-          </div>
-          <div className="ml-3">
-            <h3 className="text-lg font-medium text-red-800">Error memuat aset</h3>
-            <div className="mt-2 text-sm text-red-700">
-              {error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diharapkan'}
-            </div>
-            <div className="mt-4">
-              <GradientButton 
-                variant="danger"
-                size="sm"
-                onClick={() => window.location.reload()}
-              >
-                Coba lagi
-              </GradientButton>
-            </div>
-          </div>
-        </div>
-      </GlassCard>
+      <ErrorState
+        title="Error memuat aset"
+        error={error}
+        onRetry={() => window.location.reload()}
+        retryLabel="Coba lagi"
+      />
     );
   }  return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
@@ -1138,14 +1118,9 @@ export default function AssetsPage() {
                         Kategori
                       </h3>
                       {categoriesLoading ? (
-                        <div className="text-center py-3">
-                          <FuturisticLoader size="sm" variant="primary" text="Memuat kategori..." />
-                        </div>
+                        <InlineLoadingState message="Memuat kategori..." />
                       ) : categoriesError ? (
-                        <div className="text-center py-2 text-xs text-red-600">
-                          <ExclamationCircleIcon className="h-3.5 w-3.5 inline mr-1" />
-                          Gagal memuat data kategori
-                        </div>
+                        <InlineErrorState message="Gagal memuat data kategori" />
                       ) : (
                         <div className="relative">
                           <select 
@@ -1177,14 +1152,9 @@ export default function AssetsPage() {
                         Lokasi
                       </h3>
                       {locationsLoading ? (
-                        <div className="text-center py-3">
-                          <FuturisticLoader size="sm" variant="accent" text="Memuat lokasi..." />
-                        </div>
+                        <InlineLoadingState message="Memuat lokasi..." variant="accent" />
                       ) : locationsError ? (
-                        <div className="text-center py-2 text-xs text-red-600">
-                          <ExclamationCircleIcon className="h-3.5 w-3.5 inline mr-1" />
-                          Gagal memuat data lokasi
-                        </div>
+                        <InlineErrorState message="Gagal memuat data lokasi" />
                       ) : (
                         <div className="relative">
                           <select 

@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { assetApi, categoryApi, locationApi } from '../services/api';
 import type { Asset } from '../services/api';
 import { 
-  ExclamationCircleIcon,
   CheckCircleIcon,
   ArrowUpIcon,
   ArrowDownIcon,
@@ -11,8 +10,8 @@ import {
   ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline';
 import GlassCard from '../components/GlassCard';
-import Loader from '../components/Loader';
-import GradientButton from '../components/GradientButton';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 
 // Fungsi helper untuk mendapatkan data 6 bulan terakhir
 const getRecentMonthsData = () => {
@@ -612,37 +611,18 @@ export default function DashboardPage() {
       assetsWithoutDate
     };
   }, [assetData, categoryData, locationData]);  if (assetsLoading || categoriesLoading || locationsLoading) {
+    return <LoadingState message="Memuat dashboard..." size="lg" />;
+  }
+
+  if (assetsError || categoriesError || locationsError || !stats) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <GlassCard hover={false} className="p-10 text-center">
-          <Loader size="lg" message="Memuat dashboard" />
-        </GlassCard>
-      </div>
-    );
-  }  if (assetsError || categoriesError || locationsError || !stats) {
-    return (
-      <GlassCard hover={false} className="p-6 border-l-4 border-red-500">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <ExclamationCircleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
-          </div>
-          <div className="ml-3">
-            <h3 className="text-lg font-medium text-red-800">Gagal memuat dashboard</h3>
-            <div className="mt-2 text-sm text-red-700">
-              Tidak dapat mengambil data yang diperlukan. Silakan periksa koneksi Anda dan coba lagi.
-            </div>
-            <div className="mt-4">
-              <GradientButton 
-                variant="danger"
-                size="sm"
-                onClick={() => window.location.reload()}
-              >
-                Segarkan halaman
-              </GradientButton>
-            </div>
-          </div>
-        </div>
-      </GlassCard>
+      <ErrorState
+        title="Gagal memuat dashboard"
+        message="Tidak dapat mengambil data yang diperlukan. Silakan periksa koneksi Anda dan coba lagi."
+        error={assetsError || categoriesError || locationsError}
+        onRetry={() => window.location.reload()}
+        retryLabel="Segarkan halaman"
+      />
     );
   }
 

@@ -66,7 +66,7 @@ export default function AuditLogPage() {
     queryFn: () => auditLogApi.list({
       ...filters,
       page,
-      page_size: pageSize
+      pageSize: pageSize
     }),
   });
 

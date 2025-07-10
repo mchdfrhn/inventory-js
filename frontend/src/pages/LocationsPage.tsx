@@ -14,9 +14,10 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import GlassCard from '../components/GlassCard';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 import Pagination from '../components/Pagination';
 import { useNotification } from '../context/NotificationContext';
-import PageLoader from '../components/PageLoader';
 import InlineLoader from '../components/InlineLoader';
   
 export default function LocationsPage() {
@@ -220,33 +221,19 @@ export default function LocationsPage() {
   });
 
   if (isLoading) {
-    return <PageLoader text="Memuat data lokasi..." />;
+    return <LoadingState message="Memuat data lokasi..." size="lg" />;
   }
 
   if (error) {
     return (
-      <GlassCard hover={false} className="p-6 border-l-4 border-red-500">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <ExclamationCircleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
-          </div>
-          <div className="ml-3">
-            <h3 className="text-lg font-medium text-red-800">Error memuat lokasi</h3>
-            <div className="mt-2 text-sm text-red-700">
-              {error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diharapkan'}
-            </div>
-            <div className="mt-4">
-              <button 
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border shadow-sm text-xs font-medium bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:-translate-y-0.5 transition-all duration-300"
-                onClick={() => window.location.reload()}
-              >
-                Coba lagi
-              </button>
-            </div>
-          </div>
-        </div>
-      </GlassCard>
-    );  }
+      <ErrorState
+        title="Error memuat lokasi"
+        error={error}
+        onRetry={() => window.location.reload()}
+        retryLabel="Coba lagi"
+      />
+    );
+  }
   
   return (
     <div className={`transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>

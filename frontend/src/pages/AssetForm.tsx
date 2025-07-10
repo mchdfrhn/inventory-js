@@ -10,6 +10,7 @@ import {   XCircleIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import { useNotification } from '../context/NotificationContext';
+import LoadingState from '../components/LoadingState';
 import BulkConfirmationModal from '../components/BulkConfirmationModal';
 import BulkUpdateConfirmationModal from '../components/BulkUpdateConfirmationModal';
 
@@ -485,11 +486,7 @@ export default function AssetForm() {
   };
 
   if (isLoadingAsset || isLoadingCategories || isLoadingLocations) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500 border-r-2 border-b-2 border-gray-200"></div>
-      </div>
-    );
+    return <LoadingState message="Memuat form aset..." size="lg" />;
   }
 
   return (

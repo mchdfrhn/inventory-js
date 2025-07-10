@@ -148,7 +148,7 @@ export interface PaginatedResponse<T> {
 
 export const assetApi = {
   list: async (page = 1, pageSize = 10) => {
-    const response = await api.get<PaginatedResponse<Asset>>(`/assets?page=${page}&page_size=${pageSize}`);
+    const response = await api.get<PaginatedResponse<Asset>>(`/assets?page=${page}&pageSize=${pageSize}`);
     return response.data;
   },
 
@@ -201,7 +201,7 @@ export const assetApi = {
 
   // New: List assets with bulk grouping
   listWithBulk: async (page = 1, pageSize = 25, categoryId?: string) => {
-    let url = `/assets/with-bulk?page=${page}&page_size=${pageSize}`;
+    let url = `/assets/with-bulk?page=${page}&pageSize=${pageSize}`;
     if (categoryId) {
       url += `&category_id=${categoryId}`;
     }
@@ -212,13 +212,13 @@ export const assetApi = {
 
 export const categoryApi = {
   list: async (page = 1, pageSize = 10) => {
-    const response = await api.get<PaginatedResponse<Category>>(`/categories?page=${page}&page_size=${pageSize}`);
+    const response = await api.get<PaginatedResponse<Category>>(`/categories?page=${page}&pageSize=${pageSize}`);
     return response.data;
   },
   search: async (query: string, page = 1, pageSize = 10) => {
     // Server-side search with pagination
     const response = await api.get<PaginatedResponse<Category>>(
-      `/categories?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(query)}`
+      `/categories?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(query)}`
     );
     return response.data;
   },
@@ -246,7 +246,7 @@ export const categoryApi = {
   listWithAssetCounts: async (page = 1, pageSize = 10) => {
     try {
       // Get categories with server-side pagination
-      const categoriesResponse = await api.get<PaginatedResponse<Category>>(`/categories?page=${page}&page_size=${pageSize}`);
+      const categoriesResponse = await api.get<PaginatedResponse<Category>>(`/categories?page=${page}&pageSize=${pageSize}`);
       const categories = categoriesResponse.data.data;
       
       // For each category, get the assets count
@@ -284,7 +284,7 @@ export const categoryApi = {
 
 export const locationApi = {
   list: async (page = 1, pageSize = 10) => {
-    const response = await api.get<PaginatedResponse<Location>>(`/locations?page=${page}&page_size=${pageSize}`);
+    const response = await api.get<PaginatedResponse<Location>>(`/locations?page=${page}&pageSize=${pageSize}`);
     return response.data;
   },
 
@@ -310,7 +310,7 @@ export const locationApi = {
   search: async (query: string, page = 1, pageSize = 10) => {
     // Server-side search with pagination
     const response = await api.get<PaginatedResponse<Location>>(
-      `/locations/search?query=${encodeURIComponent(query)}&page=${page}&page_size=${pageSize}`
+      `/locations/search?query=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}`
     );
     return response.data;
   },
@@ -332,16 +332,16 @@ export const locationApi = {
   listWithAssetCounts: async (page = 1, pageSize = 10) => {
     try {
       // Get locations with pagination
-      const locationsResponse = await api.get<PaginatedResponse<Location>>(`/locations?page=${page}&page_size=${pageSize}`);
+      const locationsResponse = await api.get<PaginatedResponse<Location>>(`/locations?page=${page}&pageSize=${pageSize}`);
       const locations = locationsResponse.data.data;
       
       // The backend already supports pagination, so let's get just the locations from this page
       // Get count of assets first to determine how many to fetch
-      const countResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&page_size=1`);
+      const countResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&pageSize=1`);
       const totalItems = countResponse.data.pagination.total;
       
       // Get assets for asset counts
-      const assetsResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&page_size=${totalItems > 0 ? totalItems : 10}`);
+      const assetsResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&pageSize=${totalItems > 0 ? totalItems : 10}`);
       const allAssets = assetsResponse.data.data;
       
       console.log(`Total assets: ${totalItems}, fetched: ${allAssets.length}`);
@@ -404,7 +404,7 @@ export const auditLogApi = {
     from_date?: string;
     to_date?: string;
     page?: number;
-    page_size?: number;
+    pageSize?: number;
   }) => {
     const queryParams = new URLSearchParams();
     
@@ -416,7 +416,7 @@ export const auditLogApi = {
       if (params.from_date) queryParams.append('from_date', params.from_date);
       if (params.to_date) queryParams.append('to_date', params.to_date);
       if (params.page) queryParams.append('page', params.page.toString());
-      if (params.page_size) queryParams.append('page_size', params.page_size.toString());
+      if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
     }
     
     const response = await api.get<PaginatedResponse<AuditLog>>(`/audit-logs?${queryParams.toString()}`);

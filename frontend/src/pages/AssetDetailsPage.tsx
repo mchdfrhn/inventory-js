@@ -5,7 +5,8 @@ import { assetApi } from '../services/api';
 import AssetDetailView from '../components/AssetDetailView';
 import DepreciationChart from '../components/DepreciationChart';
 import AssetHistory from '../components/AssetHistory';
-import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 
 export default function AssetDetailsPage() {
   const { id } = useParams();
@@ -18,35 +19,17 @@ export default function AssetDetailsPage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
-        <span className="sr-only">Memuat...</span>
-      </div>
-    );
+    return <LoadingState message="Memuat detail aset..." size="lg" />;
   }
 
   if (error || !data?.data) {
     return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-red-600">Error</h2>
-        </div>
-        <div className="p-6">
-          <div className="flex items-center">
-            <ExclamationCircleIcon className="h-6 w-6 text-red-500 mr-2" />
-            <p className="text-gray-700">Gagal memuat data aset. Aset tidak ditemukan atau terjadi kesalahan.</p>
-          </div>
-          <div className="mt-4">
-            <Link
-              to="/assets"
-              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-            >
-              Kembali ke Daftar Aset
-            </Link>
-          </div>
-        </div>
-      </div>
+      <ErrorState 
+        title="Aset Tidak Ditemukan"
+        message="Gagal memuat data aset. Aset tidak ditemukan atau terjadi kesalahan."
+        error={error}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 

@@ -122,7 +122,7 @@ const Asset = sequelize.define('Asset', {
     allowNull: false,
     defaultValue: 'baik',
     validate: {
-      isIn: [['baik', 'rusak', 'dalam_perbaikan', 'tidak_aktif']],
+      isIn: [['baik', 'rusak', 'tidak_memadai']],
     },
   },
   // Bulk asset fields

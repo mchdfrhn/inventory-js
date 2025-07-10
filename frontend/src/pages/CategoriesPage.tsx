@@ -15,7 +15,8 @@ import {
 import type { Category } from '../services/api';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
-import Loader from '../components/Loader';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 import Pagination from '../components/Pagination';
 import { useNotification } from '../context/NotificationContext';
 
@@ -211,39 +212,17 @@ export default function CategoriesPage() {
   };
   
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <GlassCard hover={false} className="p-10 text-center">
-          <Loader size="lg" message="Memuat kategori..." />
-        </GlassCard>
-      </div>
-    );
+    return <LoadingState message="Memuat kategori..." size="lg" />;
   }
 
   if (error) {
     return (
-      <GlassCard hover={false} className="p-6 border-l-4 border-red-500">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <ExclamationCircleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
-          </div>
-          <div className="ml-3">
-            <h3 className="text-lg font-medium text-red-800">Error memuat kategori</h3>
-            <div className="mt-2 text-sm text-red-700">
-              {error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diharapkan'}
-            </div>
-            <div className="mt-4">
-              <GradientButton 
-                variant="danger"
-                size="sm"
-                onClick={() => window.location.reload()}
-              >
-                Coba lagi
-              </GradientButton>
-            </div>
-          </div>
-        </div>
-      </GlassCard>
+      <ErrorState
+        title="Error memuat kategori"
+        error={error}
+        onRetry={() => window.location.reload()}
+        retryLabel="Coba lagi"
+      />
     );
   }
 

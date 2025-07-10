@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
   DocumentTextIcon, 
-  ExclamationCircleIcon, 
   XMarkIcon,
   CheckCircleIcon,
   AdjustmentsHorizontalIcon
@@ -15,8 +14,8 @@ import { useAssetFilters, type Asset } from '../hooks/useAssetFilters';
 import { assetApi } from '../services/api';
 import FilterSummary from '../components/FilterSummary';
 import GlassCard from '../components/GlassCard';
-import GradientButton from '../components/GradientButton';
-import Loader from '../components/Loader';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 
 const ReportsPage = () => {
   const navigate = useNavigate();
@@ -613,47 +612,17 @@ const ReportsPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader 
-          message="Loading inventory data" 
-          showWatermark={true}
-          size="lg" 
-        />
-      </div>
-    );
+    return <LoadingState message="Loading inventory data..." size="lg" />;
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <GlassCard hover={false} className="max-w-lg w-full text-center">
-          <div className="p-8">
-            <ExclamationCircleIcon className="mx-auto h-12 w-12 text-red-500 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Backend Server Tidak Dapat Diakses</h3>
-            <p className="text-sm text-gray-500 mb-4">{error}</p>
-            
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-left">
-              <h4 className="text-sm font-medium text-yellow-800 mb-2">💡 Panduan Troubleshooting:</h4>
-              <ul className="text-xs text-yellow-700 space-y-1">
-                <li>• Pastikan backend Go server berjalan di port 8080</li>
-                <li>• Cek apakah endpoint `/api/assets` tersedia</li>
-                <li>• Verifikasi database connection</li>
-                <li>• Pastikan CORS sudah dikonfigurasi dengan benar</li>
-              </ul>
-            </div>
-            
-            <div className="flex flex-col space-y-2">
-              <GradientButton variant="primary" onClick={loadData}>
-                Coba Lagi
-              </GradientButton>
-              <p className="text-xs text-gray-400">
-                Sistem akan mencoba beberapa port: 8080, 3001, 5000
-              </p>
-            </div>
-          </div>
-        </GlassCard>
-      </div>
+      <ErrorState
+        title="Backend Server Tidak Dapat Diakses"
+        message={error}
+        onRetry={loadData}
+        retryLabel="Coba Lagi"
+      />
     );
   }
 
@@ -1178,7 +1147,7 @@ const ReportsPage = () => {
                             >
                               {isGenerating ? (
                                 <>
-                                  <Loader size="sm" className="mr-1.5" />
+                                  <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-white border-r-2 border-b-2 border-transparent mr-1.5"></div>
                                   Membuat PDF...
                                 </>
                               ) : (
