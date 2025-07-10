@@ -3,6 +3,7 @@ const { Op, fn, col } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
 
+// Updated asset repository with proper location fields
 class AssetRepository {
   async create(assetData) {
     try {
@@ -176,7 +177,7 @@ class AssetRepository {
           {
             model: Location,
             as: 'location_info',
-            attributes: ['id', 'code', 'name'],
+            attributes: ['id', 'code', 'name', 'building', 'floor', 'room'],
           },
         ],
       });
@@ -207,7 +208,7 @@ class AssetRepository {
           {
             model: Location,
             as: 'location_info',
-            attributes: ['id', 'code', 'name'],
+            attributes: ['id', 'code', 'name', 'building', 'floor', 'room'],
           },
         ],
         distinct: true, // For accurate count when using includes
@@ -246,6 +247,7 @@ class AssetRepository {
           'bulk_id',
           'is_bulk_parent',
           'bulk_total_count',
+          'lokasi_id',
           'created_at',
           [fn('COUNT', col('bulk_id')), 'bulk_count'],
         ],
@@ -263,7 +265,7 @@ class AssetRepository {
           {
             model: Location,
             as: 'location_info',
-            attributes: ['id', 'code', 'name'],
+            attributes: ['id', 'code', 'name', 'building', 'floor', 'room'],
           },
         ],
       });

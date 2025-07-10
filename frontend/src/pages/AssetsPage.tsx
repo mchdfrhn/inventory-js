@@ -94,6 +94,31 @@ const getTotalNilaiSisa = (asset: Asset): number => {
   return nilaiSisa;
 };
 
+// Helper function to calculate total accumulated depreciation for bulk assets
+const getTotalAkumulasiPenyusutan = (asset: Asset): number => {
+  let akumulasiPenyusutan = Number(asset.akumulasi_penyusutan) || 0;
+  
+  // If akumulasi_penyusutan is 0 or missing, calculate it
+  if (akumulasiPenyusutan === 0 && asset.harga_perolehan && asset.tanggal_perolehan) {
+    const hargaPerolehan = Number(asset.harga_perolehan);
+    const acquisitionDate = new Date(asset.tanggal_perolehan);
+    const currentDate = new Date();
+    const monthsOld = Math.max(0, (currentDate.getTime() - acquisitionDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+    const economicLifeMonths = Math.max(12, (asset.umur_ekonomis_tahun || 5) * 12);
+    
+    // Simple straight-line depreciation calculation
+    const monthlyDepreciation = hargaPerolehan / economicLifeMonths;
+    akumulasiPenyusutan = Math.min(hargaPerolehan * 0.9, monthlyDepreciation * monthsOld); // Max 90% depreciation
+  }
+  
+  // For bulk assets, multiply akumulasi_penyusutan by bulk_total_count
+  if (asset.bulk_total_count && asset.bulk_total_count > 1) {
+    return akumulasiPenyusutan * asset.bulk_total_count;
+  }
+  // For regular assets, return akumulasi_penyusutan as is
+  return akumulasiPenyusutan;
+};
+
 
 
 export default function AssetsPage() {  
@@ -440,10 +465,10 @@ export default function AssetsPage() {
     }
     
     // Depreciation percentage filter
-    const hargaPerolehan = Number(asset.harga_perolehan) || 0;
-    const akumulasiPenyusutan = Number(asset.akumulasi_penyusutan) || 0;
-    const depreciationPercentage = hargaPerolehan > 0
-      ? Math.round((akumulasiPenyusutan / hargaPerolehan) * 100)
+    const totalHargaPerolehan = getTotalHargaPerolehan(asset);
+    const totalAkumulasiPenyusutan = getTotalAkumulasiPenyusutan(asset);
+    const depreciationPercentage = totalHargaPerolehan > 0
+      ? Math.round((totalAkumulasiPenyusutan / totalHargaPerolehan) * 100)
       : 0;
     
     let matchesDepreciationFilter = true;
@@ -532,13 +557,13 @@ export default function AssetsPage() {
         bValue = getTotalNilaiSisa(b);
         break;
       case 'penyusutan':
-        const aHarga = Number(a.harga_perolehan) || 0;
-        const bHarga = Number(b.harga_perolehan) || 0;
-        const aAkumulasi = Number(a.akumulasi_penyusutan) || 0;
-        const bAkumulasi = Number(b.akumulasi_penyusutan) || 0;
+        const aTotalHarga = getTotalHargaPerolehan(a);
+        const bTotalHarga = getTotalHargaPerolehan(b);
+        const aTotalAkumulasi = getTotalAkumulasiPenyusutan(a);
+        const bTotalAkumulasi = getTotalAkumulasiPenyusutan(b);
         
-        aValue = aHarga > 0 ? (aAkumulasi / aHarga) * 100 : 0;
-        bValue = bHarga > 0 ? (bAkumulasi / bHarga) * 100 : 0;
+        aValue = aTotalHarga > 0 ? (aTotalAkumulasi / aTotalHarga) * 100 : 0;
+        bValue = bTotalHarga > 0 ? (bTotalAkumulasi / bTotalHarga) * 100 : 0;
         break;
       case 'lokasi':
         aValue = a.location_info?.name || '';
@@ -1383,6 +1408,7 @@ export default function AssetsPage() {
                         formatStatus={formatStatus}
                         getTotalHargaPerolehan={getTotalHargaPerolehan}
                         getTotalNilaiSisa={getTotalNilaiSisa}
+                        getTotalAkumulasiPenyusutan={getTotalAkumulasiPenyusutan}
                       />
                     ) : (
                       <tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">
@@ -1427,23 +1453,11 @@ export default function AssetsPage() {
                         </td>
                         <td className="whitespace-nowrap px-2 py-3">
                           {(() => {
-                            const hargaPerolehan = Number(asset.harga_perolehan) || 0;
-                            let akumulasiPenyusutan = Number(asset.akumulasi_penyusutan) || 0;
+                            const totalHargaPerolehan = getTotalHargaPerolehan(asset);
+                            const totalAkumulasiPenyusutan = getTotalAkumulasiPenyusutan(asset);
                             
-                            // If akumulasi_penyusutan is 0, try to calculate it
-                            if (akumulasiPenyusutan === 0 && hargaPerolehan > 0 && asset.tanggal_perolehan) {
-                              const acquisitionDate = new Date(asset.tanggal_perolehan);
-                              const currentDate = new Date();
-                              const monthsOld = Math.max(0, (currentDate.getTime() - acquisitionDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
-                              const economicLifeMonths = Math.max(12, (asset.umur_ekonomis_tahun || 5) * 12);
-                              
-                              // Simple straight-line depreciation calculation
-                              const monthlyDepreciation = hargaPerolehan / economicLifeMonths;
-                              akumulasiPenyusutan = Math.min(hargaPerolehan * 0.9, monthlyDepreciation * monthsOld); // Max 90% depreciation
-                            }
-                            
-                            const depreciationPercentage = hargaPerolehan > 0
-                              ? Math.round((akumulasiPenyusutan / hargaPerolehan) * 100)
+                            const depreciationPercentage = totalHargaPerolehan > 0
+                              ? Math.round((totalAkumulasiPenyusutan / totalHargaPerolehan) * 100)
                               : 0;
                             
                             // Color based on percentage
@@ -1465,7 +1479,7 @@ export default function AssetsPage() {
                         <td className="whitespace-nowrap px-2 py-3">
                           <div className="text-xs text-gray-900">
                             {asset.lokasi_id && asset.location_info ? 
-                              `${asset.location_info.building || asset.location_info.name}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''}` 
+                              `${asset.location_info.name}${asset.location_info.building ? ` (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` : ''}` 
                               : asset.lokasi || 'Lokasi tidak tersedia'}
                           </div>
                         </td>

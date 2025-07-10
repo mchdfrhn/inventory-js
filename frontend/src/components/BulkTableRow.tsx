@@ -20,6 +20,7 @@ interface BulkTableRowProps {
   formatStatus: (status: string) => string;
   getTotalHargaPerolehan: (asset: Asset) => number;
   getTotalNilaiSisa: (asset: Asset) => number;
+  getTotalAkumulasiPenyusutan: (asset: Asset) => number;
 }
 
 const BulkTableRow: React.FC<BulkTableRowProps> = ({ 
@@ -28,7 +29,8 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
   onDetailClick,
   formatStatus,
   getTotalHargaPerolehan,
-  getTotalNilaiSisa 
+  getTotalNilaiSisa,
+  getTotalAkumulasiPenyusutan
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -57,9 +59,14 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
     return 'baik';
   };
 
-  const depreciationPercentage = asset.harga_perolehan > 0
-    ? Math.round((asset.akumulasi_penyusutan / asset.harga_perolehan) * 100)
-    : 0;
+  const depreciationPercentage = (() => {
+    const totalHargaPerolehan = getTotalHargaPerolehan(asset);
+    const totalAkumulasiPenyusutan = getTotalAkumulasiPenyusutan(asset);
+    
+    return totalHargaPerolehan > 0
+      ? Math.round((totalAkumulasiPenyusutan / totalHargaPerolehan) * 100)
+      : 0;
+  })();
   
   // Color based on percentage
   let barColor = "bg-green-500";
@@ -142,8 +149,8 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
         <td className="whitespace-nowrap px-2 py-3">
           <div className="text-xs text-gray-900">
             {asset.lokasi_id && asset.location_info ? 
-              `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
-              : asset.lokasi || ''}
+              `${asset.location_info.name}${asset.location_info.building ? ` (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` : ''}` 
+              : asset.lokasi || 'Lokasi tidak tersedia'}
           </div>
         </td>
         <td className="whitespace-nowrap px-2 py-3">
