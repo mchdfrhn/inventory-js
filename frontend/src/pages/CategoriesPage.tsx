@@ -168,6 +168,25 @@ export default function CategoriesPage() {
     setDeleteError(null);
   };
 
+  // Handle delete confirmation
+  const confirmDelete = () => {
+    if (categoryToDelete) {
+      deleteMutation.mutate(categoryToDelete.id);
+    }
+  };
+
+  // Handle Enter key press for delete confirmation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (deleteModalOpen && event.key === 'Enter' && !deleteMutation.isPending) {
+        confirmDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [deleteModalOpen, deleteMutation.isPending]);
+
   // Handle file selection for import
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -529,7 +548,7 @@ export default function CategoriesPage() {
                   <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">                    <GradientButton
                       variant="danger"
                       className="w-full sm:ml-3 sm:w-auto"
-                      onClick={() => categoryToDelete && deleteMutation.mutate(categoryToDelete.id)}
+                      onClick={confirmDelete}
                       disabled={deleteMutation.isPending}
                       autoFocus
                     >

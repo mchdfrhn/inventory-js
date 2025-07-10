@@ -17,6 +17,7 @@ import GlassCard from '../components/GlassCard';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import Pagination from '../components/Pagination';
+import GradientButton from '../components/GradientButton';
 import { useNotification } from '../context/NotificationContext';
 import InlineLoader from '../components/InlineLoader';
   
@@ -91,6 +92,18 @@ export default function LocationsPage() {
       deleteMutation.mutate(locationToDelete.id);
     }
   };
+
+  // Handle Enter key press for delete confirmation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (deleteModalOpen && event.key === 'Enter' && !deleteMutation.isPending) {
+        confirmDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [deleteModalOpen, deleteMutation.isPending]);
 
   // Handle file selection for import
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -583,17 +596,21 @@ export default function LocationsPage() {
                     </div>
                   </div>
                   <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                    <button
-                      className="w-full sm:ml-3 sm:w-auto flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border shadow-sm text-xs font-medium bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    <GradientButton
+                      variant="danger"
+                      className="w-full sm:ml-3 sm:w-auto"
                       onClick={confirmDelete}
                       disabled={deleteMutation.isPending}
                       autoFocus
                     >
                       {deleteMutation.isPending && (
-                        <InlineLoader size="sm" variant="secondary" />
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
                       )}
                       {deleteMutation.isPending ? 'Menghapus...' : 'Hapus'}
-                    </button>
+                    </GradientButton>
                     <button
                       type="button"
                       className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm transition-all duration-200 hover:-translate-y-0.5"
