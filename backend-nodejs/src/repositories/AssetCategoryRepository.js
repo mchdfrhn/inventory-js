@@ -95,7 +95,7 @@ class AssetCategoryRepository {
   async list() {
     try {
       const categories = await AssetCategory.findAll({
-        order: [['name', 'ASC']],
+        order: [['code', 'ASC']],
         include: [
           {
             association: 'assets',
@@ -123,7 +123,7 @@ class AssetCategoryRepository {
 
       const { count, rows } = await AssetCategory.findAndCountAll({
         where: whereClause,
-        order: [['name', 'ASC']],
+        order: [['code', 'ASC']],
         limit: pageSize,
         offset,
         include: [

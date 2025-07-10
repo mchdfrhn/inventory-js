@@ -29,7 +29,13 @@ export default function CategoriesPage() {
     // Try to get pageSize from localStorage, default to 10 if not found
     const savedPageSize = localStorage.getItem('categoryPageSize');
     return savedPageSize ? parseInt(savedPageSize, 10) : 10;
-  });  const [currentPage, setCurrentPage] = useState(1);
+  });  
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Sorting states
+  const [sortField, setSortField] = useState<string>('code');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  
   const { addNotification } = useNotification();
   
   // Import states
@@ -74,7 +80,38 @@ export default function CategoriesPage() {
       addNotification('error', errorMessage);
       console.error('Delete error:', err);
     }
-  });  // Use the data directly from the API, then apply client-side filtering like AssetsPage
+  });  
+
+  // Handle table header clicks for sorting
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // If clicking the same field, toggle direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking a different field, set new field and default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Render sort icon for table headers
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return null;
+    }
+    
+    return sortDirection === 'asc' ? (
+      <svg className="w-4 h-4 ml-1 inline" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+      </svg>
+    ) : (
+      <svg className="w-4 h-4 ml-1 inline" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    );
+  };
+
+  // Use the data directly from the API, then apply client-side filtering and sorting like AssetsPage
   const filteredCategories = data?.data?.filter((category: Category) => {
     // Text search - check if searchTerm matches any relevant fields
     const matchesSearch = searchTerm === '' || 
@@ -83,6 +120,45 @@ export default function CategoriesPage() {
       (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()));
       
     return matchesSearch;
+  });
+
+  // Sorting functionality for categories
+  const filteredAndSortedCategories = filteredCategories?.sort((a: Category, b: Category) => {
+    let aValue: any, bValue: any;
+    
+    switch (sortField) {
+      case 'code':
+        // Convert code to number for proper sorting (10, 20, 30, etc.)
+        aValue = parseInt(a.code) || 0;
+        bValue = parseInt(b.code) || 0;
+        break;
+      case 'name':
+        aValue = a.name;
+        bValue = b.name;
+        break;
+      case 'asset_count':
+        aValue = a.asset_count || 0;
+        bValue = b.asset_count || 0;
+        break;
+      default:
+        aValue = parseInt(a.code) || 0;
+        bValue = parseInt(b.code) || 0;
+    }
+    
+    // Handle string comparison
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+      return sortDirection === 'asc' ? comparison : -comparison;
+    }
+    
+    // Handle numeric comparison
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    // Fallback comparison
+    const comparison = String(aValue).toLowerCase().localeCompare(String(bValue).toLowerCase());
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
 
     // Open delete confirmation modal
@@ -274,16 +350,34 @@ export default function CategoriesPage() {
               <thead className="bg-gray-50/70">
                 <tr>
                   <th scope="col" className="w-20 py-2 pl-4 pr-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Kode
+                    <button 
+                      onClick={() => handleSort('code')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Kode
+                      {renderSortIcon('code')}
+                    </button>
                   </th>
                   <th scope="col" className="w-32 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nama
+                    <button 
+                      onClick={() => handleSort('name')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Nama
+                      {renderSortIcon('name')}
+                    </button>
                   </th>
                   <th scope="col" className="w-80 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Deskripsi
                   </th>
                   <th scope="col" className="w-24 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Jumlah Aset
+                    <button 
+                      onClick={() => handleSort('asset_count')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Jumlah Aset
+                      {renderSortIcon('asset_count')}
+                    </button>
                   </th>
                   <th scope="col" className="sticky-action-col w-28 py-2 pl-2 pr-4 bg-white/80 backdrop-blur-sm">
                     <span className="sr-only">Actions</span>
@@ -291,8 +385,8 @@ export default function CategoriesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200/50">
-                {filteredCategories && filteredCategories.length > 0 ? (
-                  filteredCategories.map((category: Category) => (
+                {filteredAndSortedCategories && filteredAndSortedCategories.length > 0 ? (
+                  filteredAndSortedCategories.map((category: Category) => (
                     <tr key={category.id} className="table-row-hover hover:bg-blue-50/30 transition-all">
                       <td className="w-20 whitespace-nowrap py-3 pl-4 pr-2 text-xs font-mono text-gray-700">
                         {category.code}
@@ -368,7 +462,7 @@ export default function CategoriesPage() {
             </table>
           </div>
         </div>        {/* Pagination controls */}
-        {data?.pagination && filteredCategories && (
+        {data?.pagination && filteredAndSortedCategories && (
           <Pagination
             pagination={{
               total_items: data.pagination.total,

@@ -33,18 +33,18 @@ app.use(cors({
 // Compression middleware
 app.use(compression());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: config.rateLimit?.windowMs || 15 * 60 * 1000, // 15 minutes
-  max: config.rateLimit?.max || 1000, // 1000 requests per windowMs for development
-  message: {
-    error: 'Too many requests from this IP, please try again later.',
-    retryAfter: Math.ceil((config.rateLimit?.windowMs || 15 * 60 * 1000) / 1000),
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
+// Rate limiting - DISABLED FOR DEVELOPMENT
+// const limiter = rateLimit({
+//   windowMs: config.rateLimit?.windowMs || 15 * 60 * 1000, // 15 minutes
+//   max: config.rateLimit?.max || 1000, // 1000 requests per windowMs for development
+//   message: {
+//     error: 'Too many requests from this IP, please try again later.',
+//     retryAfter: Math.ceil((config.rateLimit?.windowMs || 15 * 60 * 1000) / 1000),
+//   },
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
+// app.use(limiter);
 
 // Request logging
 if (config.env !== 'test' && config.nodeEnv !== 'test') {

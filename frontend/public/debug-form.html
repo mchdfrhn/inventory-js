@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Location Form Debug</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+</head>
+<body>
+    <h1>Location Form Debug Test</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        async function testLocationFormAPI() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                // Test the same API call that the React form would make
+                const response = await fetch('/api/v1/locations?page=1&pageSize=100');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const locations = data.data;
+                    
+                    // Test generateNextCode logic (same as in LocationForm.tsx)
+                    const numericCodes = locations
+                        .map(location => {
+                            let match = location.code.match(/^(\d+)$/);
+                            if (match) {
+                                const num = parseInt(match[1], 10);
+                                console.log(`Pure numeric code "${location.code}" -> ${num}`);
+                                return num;
+                            }
+                            return null;
+                        })
+                        .filter(code => code !== null)
+                        .sort((a, b) => b - a);
+
+                    const highestCode = numericCodes.length > 0 ? numericCodes[0] : 0;
+                    const nextCode = (highestCode + 1).toString().padStart(3, '0');
+                    
+                    resultsDiv.innerHTML = `
+                        <h2>✅ Test Results</h2>
+                        <p><strong>API Success:</strong> ${data.success}</p>
+                        <p><strong>Total Locations:</strong> ${data.pagination.total}</p>
+                        <p><strong>Fetched:</strong> ${locations.length}</p>
+                        <p><strong>Highest Code:</strong> ${highestCode}</p>
+                        <p><strong>Generated Next Code:</strong> ${nextCode}</p>
+                        <p><strong>Expected:</strong> 053</p>
+                        <p><strong>Result:</strong> ${nextCode === '053' ? '✅ CORRECT' : '❌ WRONG'}</p>
+                        <p><strong>Location codes:</strong> ${locations.map(l => l.code).slice(-10).join(', ')} (last 10)</p>
+                    `;
+                    
+                    console.log('Form should display code:', nextCode);
+                } else {
+                    resultsDiv.innerHTML = '<p>❌ API call failed</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = `<p>❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Auto-run test when page loads
+        window.addEventListener('load', testLocationFormAPI);
+    </script>
+</body>
+</html>

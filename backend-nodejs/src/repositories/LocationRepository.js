@@ -97,7 +97,7 @@ class LocationRepository {
       const offset = (page - 1) * pageSize;
       
       const { count, rows } = await Location.findAndCountAll({
-        order: [['name', 'ASC']],
+        order: [['code', 'ASC']],
         limit: pageSize,
         offset,
         include: [
@@ -137,7 +137,7 @@ class LocationRepository {
 
       const { count, rows } = await Location.findAndCountAll({
         where: whereClause,
-        order: [['name', 'ASC']],
+        order: [['code', 'ASC']],
         limit: pageSize,
         offset,
         include: [

@@ -27,10 +27,15 @@ export default function LocationsPage() {
     const savedPageSize = localStorage.getItem('locationPageSize');
     return savedPageSize ? parseInt(savedPageSize, 10) : 10;
   });
-  const [searchTerm, setSearchTerm] = useState('');  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');  
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  
+  // Sorting states
+  const [sortField, setSortField] = useState<string>('code');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   // Import states
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -169,7 +174,38 @@ export default function LocationsPage() {
     } finally {
       setImportLoading(false);
     }
-  };  // Download template Excel file
+  };
+
+  // Handle table header clicks for sorting
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // If clicking the same field, toggle direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking a different field, set new field and default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Render sort icon for table headers
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return null;
+    }
+    
+    return sortDirection === 'asc' ? (
+      <svg className="w-4 h-4 ml-1 inline" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+      </svg>
+    ) : (
+      <svg className="w-4 h-4 ml-1 inline" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    );
+  };
+
+  // Download template Excel file
   const downloadTemplate = () => {    // Create template data with Indonesian headers
     // Tanda * menunjukkan kolom yang wajib diisi (required)
     const templateData = [
@@ -206,7 +242,7 @@ export default function LocationsPage() {
       addNotification('success', 'Template berhasil didownload');
   };
 
-// Use the data directly from the API, then apply client-side filtering like AssetsPage
+// Use the data directly from the API, then apply client-side filtering and sorting like AssetsPage
   const filteredLocations = data?.data?.filter((location: Location) => {
     // Text search - check if searchTerm matches any relevant fields
     const matchesSearch = searchTerm === '' || 
@@ -218,6 +254,56 @@ export default function LocationsPage() {
       (location.room && location.room.toLowerCase().includes(searchTerm.toLowerCase()));
       
     return matchesSearch;
+  });
+
+  // Sorting functionality for locations
+  const filteredAndSortedLocations = filteredLocations?.sort((a: Location, b: Location) => {
+    let aValue: any, bValue: any;
+    
+    switch (sortField) {
+      case 'code':
+        aValue = a.code;
+        bValue = b.code;
+        break;
+      case 'name':
+        aValue = a.name;
+        bValue = b.name;
+        break;
+      case 'building':
+        aValue = a.building || '';
+        bValue = b.building || '';
+        break;
+      case 'floor':
+        aValue = a.floor || '';
+        bValue = b.floor || '';
+        break;
+      case 'room':
+        aValue = a.room || '';
+        bValue = b.room || '';
+        break;
+      case 'asset_count':
+        aValue = a.asset_count || 0;
+        bValue = b.asset_count || 0;
+        break;
+      default:
+        aValue = a.code;
+        bValue = b.code;
+    }
+    
+    // Handle string comparison
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+      return sortDirection === 'asc' ? comparison : -comparison;
+    }
+    
+    // Handle numeric comparison
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    // Fallback comparison
+    const comparison = String(aValue).toLowerCase().localeCompare(String(bValue).toLowerCase());
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
 
   if (isLoading) {
@@ -284,25 +370,61 @@ export default function LocationsPage() {
               <thead className="bg-gray-50/70">
                 <tr>
                   <th scope="col" className="py-1.5 pl-4 pr-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                    Kode
+                    <button 
+                      onClick={() => handleSort('code')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Kode
+                      {renderSortIcon('code')}
+                    </button>
                   </th>
                   <th scope="col" className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                    Nama
+                    <button 
+                      onClick={() => handleSort('name')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Nama
+                      {renderSortIcon('name')}
+                    </button>
                   </th>
                   <th scope="col" className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                    Gedung
+                    <button 
+                      onClick={() => handleSort('building')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Gedung
+                      {renderSortIcon('building')}
+                    </button>
                   </th>
                   <th scope="col" className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                    Lantai
+                    <button 
+                      onClick={() => handleSort('floor')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Lantai
+                      {renderSortIcon('floor')}
+                    </button>
                   </th>
                   <th scope="col" className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                    Ruangan
+                    <button 
+                      onClick={() => handleSort('room')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Ruangan
+                      {renderSortIcon('room')}
+                    </button>
                   </th>
                   <th scope="col" className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                     Deskripsi
                   </th>
                   <th scope="col" className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                    Jumlah Aset
+                    <button 
+                      onClick={() => handleSort('asset_count')}
+                      className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+                    >
+                      Jumlah Aset
+                      {renderSortIcon('asset_count')}
+                    </button>
                   </th>
                   <th scope="col" className="relative py-1.5 pl-2 pr-4 w-24 sticky-action-col">
                     <span className="sr-only">Actions</span>
@@ -310,8 +432,8 @@ export default function LocationsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200/50">
-                {filteredLocations && filteredLocations.length > 0 ? (
-                  filteredLocations.map((location: Location) => (
+                {filteredAndSortedLocations && filteredAndSortedLocations.length > 0 ? (
+                  filteredAndSortedLocations.map((location: Location) => (
                     <tr 
                       key={location.id} 
                       className="table-row-hover hover:bg-blue-50/30 transition-all"
@@ -395,7 +517,7 @@ export default function LocationsPage() {
             </table>
           </div>
             {/* Pagination controls */}
-          {data?.pagination && filteredLocations && (
+          {data?.pagination && filteredAndSortedLocations && (
             <Pagination
               pagination={{
                 total_items: data.pagination.total,
