@@ -118,6 +118,125 @@
       "lokasi": "Ruang Server",
       "asal_pengadaan": "Tender",
       "status": "baik"
+    },
+    {
+      "kode": "PRINTER001",
+      "nama": "Printer HP LaserJet Pro",
+      "spesifikasi": "HP LaserJet Pro MFP M428fdw, Print/Scan/Copy/Fax",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2024-03-15",
+      "harga_perolehan": 4200000,
+      "umur_ekonomis_tahun": 5,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 280000,
+      "nilai_sisa": 3920000,
+      "keterangan": "Printer multifungsi untuk kantor",
+      "lokasi": "Ruang Administrasi",
+      "asal_pengadaan": "Pembelian",
+      "status": "baik"
+    },
+    {
+      "kode": "AC001",
+      "nama": "AC Split Daikin",
+      "spesifikasi": "Daikin Inverter 1.5 PK, R32 Refrigerant",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2023-08-20",
+      "harga_perolehan": 5500000,
+      "umur_ekonomis_tahun": 8,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 916667,
+      "nilai_sisa": 4583333,
+      "keterangan": "AC untuk ruang direktur",
+      "lokasi": "Ruang Direktur",
+      "asal_pengadaan": "Tender",
+      "status": "baik"
+    },
+    {
+      "kode": "CCTV001",
+      "nama": "Kamera CCTV Hikvision",
+      "spesifikasi": "Hikvision DS-2CE16D0T-IR, 2MP 1080p",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2024-01-10",
+      "harga_perolehan": 850000,
+      "umur_ekonomis_tahun": 6,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 70833,
+      "nilai_sisa": 779167,
+      "keterangan": "Kamera CCTV untuk keamanan pintu masuk",
+      "lokasi": "Pintu Masuk",
+      "asal_pengadaan": "Pembelian",
+      "status": "baik"
+    },
+    {
+      "kode": "DESK001",
+      "nama": "Meja Kerja Executive",
+      "spesifikasi": "Meja kerja kayu jati ukuran 160x80cm dengan laci",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2022-12-01",
+      "harga_perolehan": 3200000,
+      "umur_ekonomis_tahun": 10,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 533333,
+      "nilai_sisa": 2666667,
+      "keterangan": "Meja kerja untuk ruang direktur",
+      "lokasi": "Ruang Direktur",
+      "asal_pengadaan": "Pembelian",
+      "status": "baik"
+    },
+    {
+      "kode": "CHAIR001",
+      "nama": "Kursi Executive Ergonomis",
+      "spesifikasi": "Kursi direktur dengan bahan kulit sintetis dan roda",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2022-12-01",
+      "harga_perolehan": 2800000,
+      "umur_ekonomis_tahun": 8,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 583333,
+      "nilai_sisa": 2216667,
+      "keterangan": "Kursi executive untuk direktur",
+      "lokasi": "Ruang Direktur",
+      "asal_pengadaan": "Pembelian",
+      "status": "baik"
+    },
+    {
+      "kode": "SERVER001",
+      "nama": "Server Dell PowerEdge",
+      "spesifikasi": "Dell PowerEdge T340, Intel Xeon E-2224, 16GB RAM, 1TB HDD",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2023-02-15",
+      "harga_perolehan": 25000000,
+      "umur_ekonomis_tahun": 5,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 8333333,
+      "nilai_sisa": 16666667,
+      "keterangan": "Server utama untuk aplikasi inventory",
+      "lokasi": "Ruang Server",
+      "asal_pengadaan": "Tender",
+      "status": "baik"
+    },
+    {
+      "kode": "SWITCH001",
+      "nama": "Network Switch TP-Link",
+      "spesifikasi": "TP-Link TL-SG1024D 24-Port Gigabit Desktop Switch",
+      "quantity": 1,
+      "satuan": "unit",
+      "tanggal_perolehan": "2023-02-15",
+      "harga_perolehan": 1800000,
+      "umur_ekonomis_tahun": 5,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 600000,
+      "nilai_sisa": 1200000,
+      "keterangan": "Switch jaringan untuk konektifitas kantor",
+      "lokasi": "Ruang IT",
+      "asal_pengadaan": "Tender",
+      "status": "baik"
     }
   ],
   "bulkAssets": [
@@ -156,14 +275,121 @@
           "status": "rusak"
         }
       ]
+    },
+    {
+      "kode": "MONITOR001",
+      "nama": "Monitor LED Samsung",
+      "spesifikasi": "Samsung 24 inch LED Monitor Full HD 1920x1080",
+      "quantity": 5,
+      "satuan": "unit",
+      "tanggal_perolehan": "2024-02-01",
+      "harga_perolehan": 2200000,
+      "umur_ekonomis_tahun": 6,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 183333,
+      "nilai_sisa": 2016667,
+      "keterangan": "Monitor untuk workstation karyawan",
+      "lokasi": "Ruang Kantor",
+      "asal_pengadaan": "Tender",
+      "status": "baik",
+      "is_bulk": true,
+      "bulk_total_count": 5,
+      "bulk_details": [
+        {
+          "kode": "MONITOR001",
+          "lokasi": "Ruang Administrasi",
+          "status": "baik"
+        },
+        {
+          "kode": "MONITOR002",
+          "lokasi": "Ruang Administrasi",
+          "status": "baik"
+        },
+        {
+          "kode": "MONITOR003",
+          "lokasi": "Ruang IT",
+          "status": "baik"
+        },
+        {
+          "kode": "MONITOR004",
+          "lokasi": "Ruang IT",
+          "status": "baik"
+        },
+        {
+          "kode": "MONITOR005",
+          "lokasi": "Ruang Direktur",
+          "status": "tidak_memadai"
+        }
+      ]
+    },
+    {
+      "kode": "CHAIR002",
+      "nama": "Kursi Kantor Staff",
+      "spesifikasi": "Kursi kantor dengan sandaran punggung dan lengan",
+      "quantity": 8,
+      "satuan": "unit",
+      "tanggal_perolehan": "2023-07-15",
+      "harga_perolehan": 1200000,
+      "umur_ekonomis_tahun": 7,
+      "umur_ekonomis_bulan": 0,
+      "akumulasi_penyusutan": 171429,
+      "nilai_sisa": 1028571,
+      "keterangan": "Kursi untuk staff administrasi",
+      "lokasi": "Ruang Kantor",
+      "asal_pengadaan": "Pembelian",
+      "status": "baik",
+      "is_bulk": true,
+      "bulk_total_count": 8,
+      "bulk_details": [
+        {
+          "kode": "CHAIR002",
+          "lokasi": "Ruang Administrasi",
+          "status": "baik"
+        },
+        {
+          "kode": "CHAIR003",
+          "lokasi": "Ruang Administrasi",
+          "status": "baik"
+        },
+        {
+          "kode": "CHAIR004",
+          "lokasi": "Ruang Administrasi",
+          "status": "baik"
+        },
+        {
+          "kode": "CHAIR005",
+          "lokasi": "Ruang Administrasi",
+          "status": "rusak"
+        },
+        {
+          "kode": "CHAIR006",
+          "lokasi": "Ruang IT",
+          "status": "baik"
+        },
+        {
+          "kode": "CHAIR007",
+          "lokasi": "Ruang IT",
+          "status": "baik"
+        },
+        {
+          "kode": "CHAIR008",
+          "lokasi": "Ruang Rapat",
+          "status": "baik"
+        },
+        {
+          "kode": "CHAIR009",
+          "lokasi": "Ruang Rapat",
+          "status": "baik"
+        }
+      ]
     }
   ],
   "summary": {
-    "total_assets": 10,
-    "single_assets": 7,
-    "bulk_sets": 1,
-    "bulk_units": 3,
-    "total_value": 30350000,
+    "total_assets": 26,
+    "single_assets": 15,
+    "bulk_sets": 3,
+    "bulk_units": 16,
+    "total_value": 75950000,
     "currencies": "IDR"
   }
 }

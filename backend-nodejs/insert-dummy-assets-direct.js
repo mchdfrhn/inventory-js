@@ -160,6 +160,125 @@ async function insertDummyAssets() {
         lokasi: 'Ruang Server',
         asal_pengadaan: 'Tender',
         status: 'baik'
+      },
+      {
+        kode: 'PRINTER001',
+        nama: 'Printer HP LaserJet Pro',
+        spesifikasi: 'HP LaserJet Pro MFP M428fdw, Print/Scan/Copy/Fax',
+        quantity: 1,
+        satuan: 'unit',
+        tanggal_perolehan: '2024-03-15',
+        harga_perolehan: 4200000,
+        umur_ekonomis_tahun: 5,
+        umur_ekonomis_bulan: 0,
+        akumulasi_penyusutan: 280000,
+        nilai_sisa: 3920000,
+        keterangan: 'Printer multifungsi untuk kantor',
+        lokasi: 'Ruang Administrasi',
+        asal_pengadaan: 'Pembelian',
+        status: 'baik'
+      },
+      {
+        kode: 'AC001',
+        nama: 'AC Split Daikin',
+        spesifikasi: 'Daikin Inverter 1.5 PK, R32 Refrigerant',
+        quantity: 1,
+        satuan: 'unit',
+        tanggal_perolehan: '2023-08-20',
+        harga_perolehan: 5500000,
+        umur_ekonomis_tahun: 8,
+        umur_ekonomis_bulan: 0,
+        akumulasi_penyusutan: 916667,
+        nilai_sisa: 4583333,
+        keterangan: 'AC untuk ruang direktur',
+        lokasi: 'Ruang Direktur',
+        asal_pengadaan: 'Tender',
+        status: 'baik'
+      },
+      {
+        kode: 'CCTV001',
+        nama: 'Kamera CCTV Hikvision',
+        spesifikasi: 'Hikvision DS-2CE16D0T-IR, 2MP 1080p',
+        quantity: 1,
+        satuan: 'unit',
+        tanggal_perolehan: '2024-01-10',
+        harga_perolehan: 850000,
+        umur_ekonomis_tahun: 6,
+        umur_ekonomis_bulan: 0,
+        akumulasi_penyusutan: 70833,
+        nilai_sisa: 779167,
+        keterangan: 'Kamera CCTV untuk keamanan pintu masuk',
+        lokasi: 'Pintu Masuk',
+        asal_pengadaan: 'Pembelian',
+        status: 'baik'
+      },
+      {
+        kode: 'DESK001',
+        nama: 'Meja Kerja Executive',
+        spesifikasi: 'Meja kerja kayu jati ukuran 160x80cm dengan laci',
+        quantity: 1,
+        satuan: 'unit',
+        tanggal_perolehan: '2022-12-01',
+        harga_perolehan: 3200000,
+        umur_ekonomis_tahun: 10,
+        umur_ekonomis_bulan: 0,
+        akumulasi_penyusutan: 533333,
+        nilai_sisa: 2666667,
+        keterangan: 'Meja kerja untuk ruang direktur',
+        lokasi: 'Ruang Direktur',
+        asal_pengadaan: 'Pembelian',
+        status: 'baik'
+      },
+      {
+        kode: 'CHAIR001',
+        nama: 'Kursi Executive Ergonomis',
+        spesifikasi: 'Kursi direktur dengan bahan kulit sintetis dan roda',
+        quantity: 1,
+        satuan: 'unit',
+        tanggal_perolehan: '2022-12-01',
+        harga_perolehan: 2800000,
+        umur_ekonomis_tahun: 8,
+        umur_ekonomis_bulan: 0,
+        akumulasi_penyusutan: 583333,
+        nilai_sisa: 2216667,
+        keterangan: 'Kursi executive untuk direktur',
+        lokasi: 'Ruang Direktur',
+        asal_pengadaan: 'Pembelian',
+        status: 'baik'
+      },
+      {
+        kode: 'SERVER001',
+        nama: 'Server Dell PowerEdge',
+        spesifikasi: 'Dell PowerEdge T340, Intel Xeon E-2224, 16GB RAM, 1TB HDD',
+        quantity: 1,
+        satuan: 'unit',
+        tanggal_perolehan: '2023-02-15',
+        harga_perolehan: 25000000,
+        umur_ekonomis_tahun: 5,
+        umur_ekonomis_bulan: 0,
+        akumulasi_penyusutan: 8333333,
+        nilai_sisa: 16666667,
+        keterangan: 'Server utama untuk aplikasi inventory',
+        lokasi: 'Ruang Server',
+        asal_pengadaan: 'Tender',
+        status: 'baik'
+      },
+      {
+        kode: 'SWITCH001',
+        nama: 'Network Switch TP-Link',
+        spesifikasi: 'TP-Link TL-SG1024D 24-Port Gigabit Desktop Switch',
+        quantity: 1,
+        satuan: 'unit',
+        tanggal_perolehan: '2023-02-15',
+        harga_perolehan: 1800000,
+        umur_ekonomis_tahun: 5,
+        umur_ekonomis_bulan: 0,
+        akumulasi_penyusutan: 600000,
+        nilai_sisa: 1200000,
+        keterangan: 'Switch jaringan untuk konektifitas kantor',
+        lokasi: 'Ruang IT',
+        asal_pengadaan: 'Tender',
+        status: 'baik'
       }
     ];
 
@@ -217,7 +336,7 @@ async function insertDummyAssets() {
     }
 
     // Insert bulk assets (IP Phones)
-    const bulkId = uuidv4();
+    const bulkIdPhones = uuidv4();
     const phoneAssets = [
       { kode: 'PHONE001', lokasi: 'Ruang Direktur', status: 'baik', sequence: 1, isParent: true },
       { kode: 'PHONE002', lokasi: 'Ruang Administrasi', status: 'baik', sequence: 2, isParent: false },
@@ -264,7 +383,7 @@ async function insertDummyAssets() {
           randomCategory.id,
           randomLocation.id,
           phone.status,
-          bulkId,
+          bulkIdPhones,
           phone.sequence,
           phone.isParent,
           3,
@@ -277,6 +396,141 @@ async function insertDummyAssets() {
         insertedCount++;
       } catch (error) {
         console.error(`❌ Failed to insert ${phone.kode}:`, error.message);
+      }
+    }
+
+    // Insert bulk assets (Monitors)
+    const bulkIdMonitors = uuidv4();
+    const monitorAssets = [
+      { kode: 'MONITOR001', lokasi: 'Ruang Administrasi', status: 'baik', sequence: 1, isParent: true },
+      { kode: 'MONITOR002', lokasi: 'Ruang Administrasi', status: 'baik', sequence: 2, isParent: false },
+      { kode: 'MONITOR003', lokasi: 'Ruang IT', status: 'baik', sequence: 3, isParent: false },
+      { kode: 'MONITOR004', lokasi: 'Ruang IT', status: 'baik', sequence: 4, isParent: false },
+      { kode: 'MONITOR005', lokasi: 'Ruang Direktur', status: 'tidak_memadai', sequence: 5, isParent: false }
+    ];
+
+    for (const monitor of monitorAssets) {
+      try {
+        // Check if asset already exists
+        const existingAsset = await client.query('SELECT id FROM assets WHERE kode = $1', [monitor.kode]);
+        if (existingAsset.rows.length > 0) {
+          console.log(`⚠️  Asset ${monitor.kode} already exists, skipping...`);
+          continue;
+        }
+
+        const insertQuery = `
+          INSERT INTO assets (
+            id, kode, nama, spesifikasi, quantity, satuan, 
+            tanggal_perolehan, harga_perolehan, umur_ekonomis_tahun, umur_ekonomis_bulan,
+            akumulasi_penyusutan, nilai_sisa, keterangan, lokasi, asal_pengadaan,
+            category_id, lokasi_id, status, bulk_id, bulk_sequence, is_bulk_parent, bulk_total_count,
+            created_at, updated_at
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
+          )
+        `;
+
+        const values = [
+          uuidv4(),
+          monitor.kode,
+          'Monitor LED Samsung',
+          'Samsung 24 inch LED Monitor Full HD 1920x1080',
+          1,
+          'unit',
+          '2024-02-01',
+          2200000,
+          6,
+          0,
+          183333,
+          2016667,
+          'Monitor untuk workstation karyawan',
+          monitor.lokasi,
+          'Tender',
+          randomCategory.id,
+          randomLocation.id,
+          monitor.status,
+          bulkIdMonitors,
+          monitor.sequence,
+          monitor.isParent,
+          5,
+          new Date(),
+          new Date()
+        ];
+
+        await client.query(insertQuery, values);
+        console.log(`🖥️  Created bulk asset: ${monitor.kode}`);
+        insertedCount++;
+      } catch (error) {
+        console.error(`❌ Failed to insert ${monitor.kode}:`, error.message);
+      }
+    }
+
+    // Insert bulk assets (Office Chairs)
+    const bulkIdChairs = uuidv4();
+    const chairAssets = [
+      { kode: 'CHAIR002', lokasi: 'Ruang Administrasi', status: 'baik', sequence: 1, isParent: true },
+      { kode: 'CHAIR003', lokasi: 'Ruang Administrasi', status: 'baik', sequence: 2, isParent: false },
+      { kode: 'CHAIR004', lokasi: 'Ruang Administrasi', status: 'baik', sequence: 3, isParent: false },
+      { kode: 'CHAIR005', lokasi: 'Ruang Administrasi', status: 'rusak', sequence: 4, isParent: false },
+      { kode: 'CHAIR006', lokasi: 'Ruang IT', status: 'baik', sequence: 5, isParent: false },
+      { kode: 'CHAIR007', lokasi: 'Ruang IT', status: 'baik', sequence: 6, isParent: false },
+      { kode: 'CHAIR008', lokasi: 'Ruang Rapat', status: 'baik', sequence: 7, isParent: false },
+      { kode: 'CHAIR009', lokasi: 'Ruang Rapat', status: 'baik', sequence: 8, isParent: false }
+    ];
+
+    for (const chair of chairAssets) {
+      try {
+        // Check if asset already exists
+        const existingAsset = await client.query('SELECT id FROM assets WHERE kode = $1', [chair.kode]);
+        if (existingAsset.rows.length > 0) {
+          console.log(`⚠️  Asset ${chair.kode} already exists, skipping...`);
+          continue;
+        }
+
+        const insertQuery = `
+          INSERT INTO assets (
+            id, kode, nama, spesifikasi, quantity, satuan, 
+            tanggal_perolehan, harga_perolehan, umur_ekonomis_tahun, umur_ekonomis_bulan,
+            akumulasi_penyusutan, nilai_sisa, keterangan, lokasi, asal_pengadaan,
+            category_id, lokasi_id, status, bulk_id, bulk_sequence, is_bulk_parent, bulk_total_count,
+            created_at, updated_at
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
+          )
+        `;
+
+        const values = [
+          uuidv4(),
+          chair.kode,
+          'Kursi Kantor Staff',
+          'Kursi kantor dengan sandaran punggung dan lengan',
+          1,
+          'unit',
+          '2023-07-15',
+          1200000,
+          7,
+          0,
+          171429,
+          1028571,
+          'Kursi untuk staff administrasi',
+          chair.lokasi,
+          'Pembelian',
+          randomCategory.id,
+          randomLocation.id,
+          chair.status,
+          bulkIdChairs,
+          chair.sequence,
+          chair.isParent,
+          8,
+          new Date(),
+          new Date()
+        ];
+
+        await client.query(insertQuery, values);
+        console.log(`🪑 Created bulk asset: ${chair.kode}`);
+        insertedCount++;
+      } catch (error) {
+        console.error(`❌ Failed to insert ${chair.kode}:`, error.message);
       }
     }
 
@@ -297,7 +551,13 @@ async function insertDummyAssets() {
           ELSE 'Single Asset'
         END as asset_type
       FROM assets 
-      WHERE kode IN ('PROJ001', 'SCAN001', 'SAFE001', 'WIFI001', 'DISP001', 'WHIT001', 'UPS001', 'PHONE001', 'PHONE002', 'PHONE003')
+      WHERE kode IN (
+        'PROJ001', 'SCAN001', 'SAFE001', 'WIFI001', 'DISP001', 'WHIT001', 'UPS001',
+        'PRINTER001', 'AC001', 'CCTV001', 'DESK001', 'CHAIR001', 'SERVER001', 'SWITCH001',
+        'PHONE001', 'PHONE002', 'PHONE003',
+        'MONITOR001', 'MONITOR002', 'MONITOR003', 'MONITOR004', 'MONITOR005',
+        'CHAIR002', 'CHAIR003', 'CHAIR004', 'CHAIR005', 'CHAIR006', 'CHAIR007', 'CHAIR008', 'CHAIR009'
+      )
       ORDER BY kode
     `;
 
@@ -305,6 +565,19 @@ async function insertDummyAssets() {
     
     console.log('\n📊 Inserted Assets:');
     console.table(result.rows);
+
+    // Show summary
+    const totalValue = result.rows.reduce((sum, row) => sum + parseFloat(row.harga_perolehan), 0);
+    const singleAssets = result.rows.filter(row => row.asset_type === 'Single Asset').length;
+    const bulkParents = result.rows.filter(row => row.asset_type === 'Bulk Parent').length;
+    const bulkChildren = result.rows.filter(row => row.asset_type === 'Bulk Child').length;
+    
+    console.log('\n📈 Summary:');
+    console.log(`Total Assets Inserted: ${result.rows.length}`);
+    console.log(`- Single Assets: ${singleAssets}`);
+    console.log(`- Bulk Asset Sets: ${bulkParents} (${bulkChildren + bulkParents} total units)`);
+    console.log(`Total Value: Rp ${totalValue.toLocaleString('id-ID')}`);
+    console.log(`\n✅ All assets inserted successfully!`);
 
   } catch (error) {
     console.error('❌ Error inserting dummy assets:', error);
