@@ -1,5 +1,5 @@
-const { sequelize } = require('../connection');
-const logger = require('../../utils/logger');
+const { sequelize } = require('./connection');
+const logger = require('../utils/logger');
 
 class MigrationManager {
   constructor() {

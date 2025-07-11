@@ -16,7 +16,7 @@ class AuditLogUseCase {
 
       const auditData = {
         entity_type: entityType,
-        entity_id: entityId,
+        entity_id: entityId.toString(), // Convert to string
         action,
         changes,
         old_values: oldValues,

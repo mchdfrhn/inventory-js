@@ -117,9 +117,9 @@ export interface AuditLog {
   entity_type: string;
   entity_id: string;
   action: string;
-  changes?: any;
-  old_values?: any;
-  new_values?: any;
+  changes?: Record<string, unknown>;
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
   user_id?: string;
   ip_address?: string;
   user_agent?: string;
