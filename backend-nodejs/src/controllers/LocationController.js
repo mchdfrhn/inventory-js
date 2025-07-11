@@ -182,50 +182,121 @@ class LocationController {
       const filePath = req.file.path;
       const locations = [];
       const errors = [];
+      let processedCount = 0;
 
-      console.log('Starting CSV parsing for locations...');
+      console.log('Starting enhanced CSV parsing for locations...');
+
+      // Read and clean file content
+      let content = fs.readFileSync(filePath, 'utf8');
+      
+      // Remove BOM if present
+      if (content.charCodeAt(0) === 0xFEFF) {
+        content = content.slice(1);
+      }
+
+      // Detect delimiter
+      const delimiters = [',', ';', '\t', '|'];
+      const firstLine = content.split('\n')[0];
+      let detectedDelimiter = ',';
+      let maxDelimiterCount = 0;
+      
+      delimiters.forEach(delimiter => {
+        const count = (firstLine.match(new RegExp('\\' + delimiter, 'g')) || []).length;
+        if (count > maxDelimiterCount) {
+          maxDelimiterCount = count;
+          detectedDelimiter = delimiter;
+        }
+      });
+
+      console.log(`Detected delimiter: "${detectedDelimiter}"`);
+
+      // Create temporary file with cleaned content
+      const path = require('path');
+      const tempFile = path.join(__dirname, '../temp/locations_import.csv');
+      
+      // Ensure temp directory exists
+      const tempDir = path.dirname(tempFile);
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      
+      fs.writeFileSync(tempFile, content);
+
+      // Enhanced field mapping function
+      const getFieldValue = (row, fieldNames) => {
+        for (const fieldName of fieldNames) {
+          if (row[fieldName] !== undefined && row[fieldName] !== null && row[fieldName] !== '') {
+            return row[fieldName].toString().trim();
+          }
+        }
+        return '';
+      };
 
       // Parse CSV file
-      const stream = fs.createReadStream(filePath, { encoding: 'utf8' })
+      const stream = fs.createReadStream(tempFile, { encoding: 'utf8' })
         .pipe(csv({
+          separator: detectedDelimiter,
           skipEmptyLines: true,
           skipLinesWithError: false,
-          trim: true,
-          strip_bom: true  // Remove BOM if present
+          strip_bom: true,
+          trim: true
         }))
         .on('data', (row) => {
           try {
-            console.log('Processing row:', row);
+            processedCount++;
+            console.log(`Processing row ${processedCount}:`, row);
             
-            // Map CSV columns to location fields - support multiple formats
+            // Enhanced field mapping - support multiple column name variations
             const locationData = {
-              code: row.code || row.kode || row.Kode || row['Kode*'] || row['Kode'],
-              name: row.name || row.nama || row.Nama || row['Nama*'] || row['Nama'],
-              description: row.description || row.deskripsi || row.Deskripsi || row['Deskripsi'] || '',
-              building: row.building || row.gedung || row.Gedung || row['Gedung'] || '',
-              floor: row.floor || row.lantai || row.Lantai || row['Lantai'] || '',
-              room: row.room || row.ruangan || row.Ruangan || row['Ruangan'] || '',
+              code: getFieldValue(row, ['code', 'kode', 'Kode', 'Kode*', 'CODE', 'Code']),
+              name: getFieldValue(row, ['name', 'nama', 'Nama', 'Nama*', 'NAME', 'Name', 'location', 'lokasi']),
+              description: getFieldValue(row, ['description', 'deskripsi', 'Deskripsi', 'DESCRIPTION', 'Description', 'desc']) || '',
+              building: getFieldValue(row, ['building', 'gedung', 'Gedung', 'BUILDING', 'Building', 'bangunan']) || '',
+              floor: getFieldValue(row, ['floor', 'lantai', 'Lantai', 'FLOOR', 'Floor', 'tingkat']) || '',
+              room: getFieldValue(row, ['room', 'ruangan', 'Ruangan', 'ROOM', 'Room', 'ruang']) || '',
             };
 
             console.log('Mapped location data:', locationData);
 
-            // Basic validation
+            // Enhanced validation
             if (!locationData.code || !locationData.name) {
               throw new Error(`Code and name are required. Got code: "${locationData.code}", name: "${locationData.name}"`);
             }
 
-            // Trim whitespace and convert to string
-            locationData.code = locationData.code.toString().trim();
-            locationData.name = locationData.name.toString().trim();
-            locationData.description = locationData.description ? locationData.description.toString().trim() : '';
-            locationData.building = locationData.building ? locationData.building.toString().trim() : '';
-            locationData.floor = locationData.floor ? locationData.floor.toString().trim() : '';
-            locationData.room = locationData.room ? locationData.room.toString().trim() : '';
+            if (locationData.code.length > 50) {
+              throw new Error('Code must be 50 characters or less');
+            }
+
+            if (locationData.name.length > 255) {
+              throw new Error('Name must be 255 characters or less');
+            }
+
+            if (locationData.building && locationData.building.length > 255) {
+              throw new Error('Building must be 255 characters or less');
+            }
+
+            if (locationData.floor && locationData.floor.length > 50) {
+              throw new Error('Floor must be 50 characters or less');
+            }
+
+            if (locationData.room && locationData.room.length > 100) {
+              throw new Error('Room must be 100 characters or less');
+            }
+
+            // Check for duplicates within the CSV
+            const isDuplicate = locations.some(loc => 
+              loc.code.toLowerCase() === locationData.code.toLowerCase() || 
+              loc.name.toLowerCase() === locationData.name.toLowerCase()
+            );
+            
+            if (isDuplicate) {
+              throw new Error('Duplicate code or name found in CSV');
+            }
 
             locations.push(locationData);
           } catch (error) {
-            console.error('Error processing row:', error.message);
-            errors.push(`Row ${locations.length + 1}: ${error.message}`);
+            console.error(`Error processing row ${processedCount}:`, error.message);
+            errors.push(`Row ${processedCount}: ${error.message}`);
           }
         })
         .on('error', (error) => {
@@ -236,8 +307,11 @@ class LocationController {
           try {
             console.log(`Parsed ${locations.length} locations with ${errors.length} errors`);
             
-            // Clean up uploaded file
+            // Clean up files
             fs.unlinkSync(filePath);
+            if (fs.existsSync(tempFile)) {
+              fs.unlinkSync(tempFile);
+            }
 
             if (errors.length > 0) {
               console.log('Errors found:', errors);
@@ -245,10 +319,12 @@ class LocationController {
                 success: false,
                 message: 'CSV parsing errors',
                 errors,
+                processed_rows: processedCount,
+                valid_rows: locations.length
               });
             }
 
-            // Import locations
+            // Import locations with enhanced error handling
             const importedLocations = [];
             const importErrors = [];
 
@@ -257,7 +333,12 @@ class LocationController {
                 const location = await this.locationUseCase.create(locations[i], req.metadata);
                 importedLocations.push(location);
               } catch (error) {
-                importErrors.push(`Row ${i + 1}: ${error.message}`);
+                // Handle specific error types
+                if (error.message.includes('already exists')) {
+                  importErrors.push(`Row ${i + 1}: ${error.message} (skipped)`);
+                } else {
+                  importErrors.push(`Row ${i + 1}: ${error.message}`);
+                }
               }
             }
 
@@ -266,9 +347,16 @@ class LocationController {
               message: `Import completed. ${importedLocations.length} locations imported successfully`,
               imported_count: importedLocations.length,
               total_rows: locations.length,
+              processed_rows: processedCount,
               data: {
                 imported: importedLocations.length,
                 errors: importErrors,
+                summary: {
+                  total_processed: processedCount,
+                  valid_data: locations.length,
+                  successfully_imported: importedLocations.length,
+                  failed_imports: importErrors.length
+                }
               },
             });
           } catch (error) {

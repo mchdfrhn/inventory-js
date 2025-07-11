@@ -163,44 +163,106 @@ class AssetCategoryController {
       const filePath = req.file.path;
       const categories = [];
       const errors = [];
+      let processedCount = 0;
 
-      console.log('Starting CSV parsing for categories...');
+      console.log('Starting enhanced CSV parsing for categories...');
+
+      // Read and clean file content
+      let content = fs.readFileSync(filePath, 'utf8');
+      
+      // Remove BOM if present
+      if (content.charCodeAt(0) === 0xFEFF) {
+        content = content.slice(1);
+      }
+
+      // Detect delimiter
+      const delimiters = [',', ';', '\t', '|'];
+      const firstLine = content.split('\n')[0];
+      let detectedDelimiter = ',';
+      let maxDelimiterCount = 0;
+      
+      delimiters.forEach(delimiter => {
+        const count = (firstLine.match(new RegExp('\\' + delimiter, 'g')) || []).length;
+        if (count > maxDelimiterCount) {
+          maxDelimiterCount = count;
+          detectedDelimiter = delimiter;
+        }
+      });
+
+      console.log(`Detected delimiter: "${detectedDelimiter}"`);
+
+      // Create temporary file with cleaned content
+      const path = require('path');
+      const tempFile = path.join(__dirname, '../temp/categories_import.csv');
+      
+      // Ensure temp directory exists
+      const tempDir = path.dirname(tempFile);
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      
+      fs.writeFileSync(tempFile, content);
+
+      // Enhanced field mapping function
+      const getFieldValue = (row, fieldNames) => {
+        for (const fieldName of fieldNames) {
+          if (row[fieldName] !== undefined && row[fieldName] !== null && row[fieldName] !== '') {
+            return row[fieldName].toString().trim();
+          }
+        }
+        return '';
+      };
 
       // Parse CSV file
-      const stream = fs.createReadStream(filePath, { encoding: 'utf8' })
+      const stream = fs.createReadStream(tempFile, { encoding: 'utf8' })
         .pipe(csv({
+          separator: detectedDelimiter,
           skipEmptyLines: true,
           skipLinesWithError: false,
-          trim: true,
-          strip_bom: true  // Remove BOM if present
+          strip_bom: true,
+          trim: true
         }))
         .on('data', (row) => {
           try {
-            console.log('Processing row:', row);
+            processedCount++;
+            console.log(`Processing row ${processedCount}:`, row);
             
-            // Map CSV columns to category fields - support multiple formats
+            // Enhanced field mapping - support multiple column name variations
             const categoryData = {
-              code: row.code || row.kode || row.Kode || row['Kode*'] || row['Kode'],
-              name: row.name || row.nama || row.Nama || row['Nama*'] || row['Nama'],
-              description: row.description || row.deskripsi || row.Deskripsi || row['Deskripsi'] || '',
+              code: getFieldValue(row, ['code', 'kode', 'Kode', 'Kode*', 'CODE', 'Code']),
+              name: getFieldValue(row, ['name', 'nama', 'Nama', 'Nama*', 'NAME', 'Name']),
+              description: getFieldValue(row, ['description', 'deskripsi', 'Deskripsi', 'DESCRIPTION', 'Description', 'desc']) || '',
             };
 
             console.log('Mapped category data:', categoryData);
 
-            // Basic validation
+            // Enhanced validation
             if (!categoryData.code || !categoryData.name) {
               throw new Error(`Code and name are required. Got code: "${categoryData.code}", name: "${categoryData.name}"`);
             }
 
-            // Trim whitespace
-            categoryData.code = categoryData.code.toString().trim();
-            categoryData.name = categoryData.name.toString().trim();
-            categoryData.description = categoryData.description ? categoryData.description.toString().trim() : '';
+            if (categoryData.code.length > 50) {
+              throw new Error('Code must be 50 characters or less');
+            }
+
+            if (categoryData.name.length > 255) {
+              throw new Error('Name must be 255 characters or less');
+            }
+
+            // Check for duplicates within the CSV
+            const isDuplicate = categories.some(cat => 
+              cat.code.toLowerCase() === categoryData.code.toLowerCase() || 
+              cat.name.toLowerCase() === categoryData.name.toLowerCase()
+            );
+            
+            if (isDuplicate) {
+              throw new Error('Duplicate code or name found in CSV');
+            }
 
             categories.push(categoryData);
           } catch (error) {
-            console.error('Error processing row:', error.message);
-            errors.push(`Row ${categories.length + 1}: ${error.message}`);
+            console.error(`Error processing row ${processedCount}:`, error.message);
+            errors.push(`Row ${processedCount}: ${error.message}`);
           }
         })
         .on('error', (error) => {
@@ -211,8 +273,11 @@ class AssetCategoryController {
           try {
             console.log(`Parsed ${categories.length} categories with ${errors.length} errors`);
             
-            // Clean up uploaded file
+            // Clean up files
             fs.unlinkSync(filePath);
+            if (fs.existsSync(tempFile)) {
+              fs.unlinkSync(tempFile);
+            }
 
             if (errors.length > 0) {
               console.log('Errors found:', errors);
@@ -220,10 +285,12 @@ class AssetCategoryController {
                 success: false,
                 message: 'CSV parsing errors',
                 errors,
+                processed_rows: processedCount,
+                valid_rows: categories.length
               });
             }
 
-            // Import categories
+            // Import categories with enhanced error handling
             const importedCategories = [];
             const importErrors = [];
 
@@ -232,7 +299,12 @@ class AssetCategoryController {
                 const category = await this.categoryUseCase.createCategory(categories[i], req.metadata);
                 importedCategories.push(category);
               } catch (error) {
-                importErrors.push(`Row ${i + 1}: ${error.message}`);
+                // Handle specific error types
+                if (error.message.includes('already exists')) {
+                  importErrors.push(`Row ${i + 1}: ${error.message} (skipped)`);
+                } else {
+                  importErrors.push(`Row ${i + 1}: ${error.message}`);
+                }
               }
             }
 
@@ -241,9 +313,16 @@ class AssetCategoryController {
               message: `Import completed. ${importedCategories.length} categories imported successfully`,
               imported_count: importedCategories.length,
               total_rows: categories.length,
+              processed_rows: processedCount,
               data: {
                 imported: importedCategories.length,
                 errors: importErrors,
+                summary: {
+                  total_processed: processedCount,
+                  valid_data: categories.length,
+                  successfully_imported: importedCategories.length,
+                  failed_imports: importErrors.length
+                }
               },
             });
           } catch (error) {
