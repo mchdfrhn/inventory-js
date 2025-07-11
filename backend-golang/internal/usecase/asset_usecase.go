@@ -26,14 +26,14 @@ func NewAssetUsecase(assetRepo domain.AssetRepository, categoryRepo domain.Asset
 	}
 }
 
-// Key fix for sequence issue
+// Key fix for sequence issue - Always increment from highest sequence
 func (u *assetUsecase) GetNextAvailableSequenceRange(count int) (int, error) {
 	allAssets, err := u.assetRepo.List(map[string]interface{}{})
 	if err != nil {
 		return 0, err
 	}
 
-	existingSequences := make(map[int]bool)
+	var existingSequences []int
 	for _, asset := range allAssets {
 		code := asset.Kode
 		// Parse asset code format: 001.10.1.24.001
@@ -42,26 +42,27 @@ func (u *assetUsecase) GetNextAvailableSequenceRange(count int) (int, error) {
 			if len(parts) == 5 {
 				// Last part is the sequence number
 				if sequence, err := strconv.Atoi(parts[4]); err == nil {
-					existingSequences[sequence] = true
+					existingSequences = append(existingSequences, sequence)
 				}
 			}
 		}
 	}
 
-	start := 1
-	for {
-		canAllocate := true
-		for i := 0; i < count; i++ {
-			if existingSequences[start+i] {
-				canAllocate = false
-				break
-			}
-		}
-		if canAllocate {
-			return start, nil
-		}
-		start++
+	// If no existing sequences, start from 1
+	if len(existingSequences) == 0 {
+		return 1, nil
 	}
+
+	// Find max sequence and increment
+	maxSequence := 0
+	for _, seq := range existingSequences {
+		if seq > maxSequence {
+			maxSequence = seq
+		}
+	}
+
+	// Always return next sequence after max
+	return maxSequence + 1, nil
 }
 
 func (u *assetUsecase) CreateAssetWithSequence(asset *domain.Asset, sequence int) error {

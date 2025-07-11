@@ -297,7 +297,7 @@ class AssetRepository {
         order: [['created_at', 'ASC']],
       });
 
-      const existingSequences = new Set();
+      const existingSequences = [];
       for (const asset of allAssets) {
         const code = asset.kode;
         if (code && code.includes('.')) {
@@ -306,19 +306,20 @@ class AssetRepository {
             // Last part is the sequence number
             const sequence = parseInt(parts[4]);
             if (!isNaN(sequence)) {
-              existingSequences.add(sequence);
+              existingSequences.push(sequence);
             }
           }
         }
       }
 
-      // Find the first available sequence starting from 1
-      let sequence = 1;
-      while (existingSequences.has(sequence)) {
-        sequence++;
+      // If no existing sequences, start from 1
+      if (existingSequences.length === 0) {
+        return 1;
       }
 
-      return sequence;
+      // Find the highest sequence and increment by 1
+      const maxSequence = Math.max(...existingSequences);
+      return maxSequence + 1;
     } catch (error) {
       logger.error('Error getting next available sequence:', error);
       return 1;
@@ -333,7 +334,7 @@ class AssetRepository {
         order: [['created_at', 'ASC']],
       });
 
-      const existingSequences = new Set();
+      const existingSequences = [];
       for (const asset of allAssets) {
         const code = asset.kode;
         if (code && code.includes('.')) {
@@ -342,36 +343,28 @@ class AssetRepository {
             // Last part is the sequence number
             const sequence = parseInt(parts[4]);
             if (!isNaN(sequence)) {
-              existingSequences.add(sequence);
+              existingSequences.push(sequence);
             }
           }
         }
       }
 
-      // Find the first available range starting from 1
-      let start = 1;
-      const maxIterations = 1000000; // Reasonable limit
-      let iterations = 0;
-      while (iterations < maxIterations) {
-        let canAllocate = true;
-        for (let i = 0; i < count; i++) {
-          if (existingSequences.has(start + i)) {
-            canAllocate = false;
-            break;
-          }
-        }
-        if (canAllocate) {
-          return {
-            start: start,
-            end: start + count - 1,
-          };
-        }
-        start++;
-        iterations++;
+      // If no existing sequences, start from 1
+      if (existingSequences.length === 0) {
+        return {
+          start: 1,
+          end: count,
+        };
       }
 
-      // If we've exhausted reasonable range, throw error
-      throw new Error('Unable to find available sequence range');
+      // Find the highest sequence and start from there + 1
+      const maxSequence = Math.max(...existingSequences);
+      const nextStart = maxSequence + 1;
+      
+      return {
+        start: nextStart,
+        end: nextStart + count - 1,
+      };
     } catch (error) {
       logger.error('Error getting next available sequence range:', error);
       throw error;
