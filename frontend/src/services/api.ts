@@ -9,7 +9,7 @@ const API_URL = import.meta.env.VITE_API_BASE_URL
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json', 
   },
 });
 
@@ -166,6 +166,11 @@ export const assetApi = {
 
   update: async (id: string, asset: Omit<Asset, 'id' | 'created_at' | 'updated_at'>) => {
     const response = await api.put<SingleResourceResponse<Asset>>(`/assets/${id}`, asset);
+    return response.data;
+  },
+
+  updateBulk: async (bulkId: string, asset: Omit<Asset, 'id' | 'created_at' | 'updated_at'>) => {
+    const response = await api.put<SingleResourceResponse<Asset[]>>(`/assets/bulk/${bulkId}`, asset);
     return response.data;
   },
 

@@ -270,6 +270,38 @@ export default function AssetForm() {
     },
   });
 
+  // Update bulk asset mutation
+  const updateBulkMutation = useMutation({
+    mutationFn: (data: { bulkId: string; asset: AssetFormData }) => {
+      return assetApi.updateBulk(data.bulkId, data.asset as unknown as Omit<Asset, 'id' | 'created_at' | 'updated_at'>);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      const bulkCount = assetData?.data?.bulk_total_count || 1;
+      const message = `Bulk aset berhasil diperbarui! ${bulkCount} unit telah diupdate.`;
+      addNotification('success', message);
+      navigate('/assets');
+    },
+    onError: (err: Error & { response?: { data?: { errors?: Array<{ field: string; message: string }>; message?: string } } }) => {
+      let errorMessage = 'Gagal memperbarui bulk aset';
+      
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        const validationErrors = err.response.data.errors;
+        const errorDetails = validationErrors.map((error) => `${error.field}: ${error.message}`).join(', ');
+        errorMessage = `Gagal memperbarui bulk aset: ${errorDetails}`;
+      } else if (err.response?.data?.message) {
+        errorMessage = `Gagal memperbarui bulk aset: ${err.response.data.message}`;
+      } else if (err.message) {
+        errorMessage = `Gagal memperbarui bulk aset: ${err.message}`;
+      }
+      
+      setError(errorMessage);
+      addNotification('error', errorMessage);
+      console.error('Bulk asset update error:', err);
+      setIsSubmitting(false);
+    },
+  });
+
   // Create category and location mutations are currently disabled
   // TODO: Implement modal dialogs for creating new categories and locations
 
@@ -301,8 +333,12 @@ export default function AssetForm() {
       } else if (status === 'baik') {
         mappedStatus = 'baik';
       } else {
-        // Fallback for any unexpected status values
-        mappedStatus = 'baik';
+        // Fallback for any unexpected status values from backend (dalam_perbaikan -> tidak_memadai, tidak_aktif -> tidak_memadai)
+        if (status === 'dalam_perbaikan' || status === 'tidak_aktif') {
+          mappedStatus = 'tidak_memadai';
+        } else {
+          mappedStatus = 'baik';
+        }
       }
       
       // Ensure lokasi_id is a number or undefined, not a string
@@ -468,7 +504,17 @@ export default function AssetForm() {
     }
 
     if (isEditMode) {
-      updateMutation.mutate({ id: id as string, asset: finalDataToSubmit as AssetFormData });
+      // Check if this is a bulk asset
+      const isBulkAsset = assetData?.data?.is_bulk_parent;
+      const bulkId = assetData?.data?.bulk_id;
+      
+      if (isBulkAsset && bulkId) {
+        // Use bulk update for bulk assets
+        updateBulkMutation.mutate({ bulkId, asset: finalDataToSubmit as AssetFormData });
+      } else {
+        // Use regular update for individual assets
+        updateMutation.mutate({ id: id as string, asset: finalDataToSubmit as AssetFormData });
+      }
     } else {
       // Only create bulk for eligible units
       const bulkEligibleUnits = ['unit', 'pcs', 'set', 'buah'];

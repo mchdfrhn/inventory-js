@@ -45,7 +45,13 @@ const formatStatus = (status: string): string => {
   } else if (status === 'rusak') {
     return 'Rusak';
   } else if (status === 'tidak_memadai') {
-    return 'Kurang';
+    return 'Tidak Memadai';
+  } else if (status === 'dalam_perbaikan') {
+    // Map backend 'dalam_perbaikan' to frontend 'tidak_memadai'
+    return 'Tidak Memadai';
+  } else if (status === 'tidak_aktif') {
+    // Map backend 'tidak_aktif' to frontend 'tidak_memadai'
+    return 'Tidak Memadai';
   }
   return 'Baik'; // Default fallback
 };

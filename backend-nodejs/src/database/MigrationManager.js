@@ -74,7 +74,7 @@ class MigrationManager {
           lokasi_id INTEGER REFERENCES locations(id),
           asal_pengadaan VARCHAR(255),
           category_id UUID NOT NULL REFERENCES asset_categories(id),
-          status VARCHAR(20) NOT NULL DEFAULT 'baik' CHECK (status IN ('baik', 'rusak', 'dalam_perbaikan', 'tidak_aktif')),
+          status VARCHAR(20) NOT NULL DEFAULT 'baik' CHECK (status IN ('baik', 'rusak', 'tidak_memadai')),
           bulk_id UUID,
           bulk_sequence INTEGER NOT NULL DEFAULT 1,
           is_bulk_parent BOOLEAN NOT NULL DEFAULT false,

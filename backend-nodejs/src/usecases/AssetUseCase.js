@@ -519,7 +519,7 @@ class AssetUseCase {
     }
 
     // Status validation
-    const validStatuses = ['baik', 'rusak', 'dalam_perbaikan', 'tidak_aktif'];
+    const validStatuses = ['baik', 'rusak', 'tidak_memadai'];
     if (assetData.status && !validStatuses.includes(assetData.status)) {
       throw new Error(`Status must be one of: ${validStatuses.join(', ')}`);
     }
