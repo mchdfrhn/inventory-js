@@ -42,10 +42,10 @@ const getRecentMonthsData = () => {
 };
 
 // Status styling with gradients (updated to match new status values)
-const statusColors = {
-  baik: 'from-green-400/80 to-green-500/80 text-green-800',
-  rusak: 'from-red-400/80 to-red-500/80 text-red-800',
-  tidak_memadai: 'from-yellow-400/80 to-yellow-500/80 text-yellow-800',
+const statusColors: Record<"baik" | "rusak" | "tidak_memadai", string> = {
+  baik: 'from-green-400 to-green-600',
+  rusak: 'from-red-400 to-red-600',
+  tidak_memadai: 'from-yellow-400 to-yellow-600',
 };
 
 // Label yang lebih baik untuk status dalam bahasa Indonesia

@@ -119,7 +119,7 @@ const ReportsPage = () => {
       console.log(`[ReportsPage] 📊 Total data dimuat: ${allAssets.length} aset`);
       
       // Transform API data to match our Asset interface
-      const transformedAssets: Asset[] = allAssets.map((asset: any) => ({
+      const transformedAssets: Asset[] = allAssets.map((asset: unknown) => ({
         id: asset.id,
         kode: asset.kode,
         nama: asset.nama,

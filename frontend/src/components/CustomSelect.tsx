@@ -17,7 +17,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   helpText,
   icon,
   isFloatingLabel = false,
-  placeholder,
   className, 
   ...props 
 }) => {

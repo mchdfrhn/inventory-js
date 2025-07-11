@@ -1,8 +1,21 @@
 import type { Asset } from '../services/api';
 
+interface ReportTemplate {
+  name: string;
+  includeHeader: boolean;
+  includeFilters: boolean;
+  includeStats: boolean;
+  includeChart: boolean;
+  includeFooter: boolean;
+  includeQRCode: boolean;
+  headerColor: string;
+  fontSize: number;
+  columns: string[];
+}
+
 interface ReportPreviewProps {
   assets: Asset[];
-  template: any;
+  template: ReportTemplate;
 }
 
 export default function ReportPreview({ assets, template }: ReportPreviewProps) {
@@ -75,11 +88,12 @@ export default function ReportPreview({ assets, template }: ReportPreviewProps) 
         return asset.lokasi_id && asset.location_info 
           ? `${asset.location_info.name}`
           : asset.lokasi || '';
-      case 'status':
+      case 'status': {
         const status = asset.status === 'baik' ? 'Baik' :
                       asset.status === 'rusak' ? 'Rusak' :
                       asset.status === 'tidak_memadai' ? 'Tidak Memadai' : 'Baik';
         return status;
+      }
       case 'harga_perolehan':
         return formatCurrency(asset.harga_perolehan);
       case 'nilai_sisa':

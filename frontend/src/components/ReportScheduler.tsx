@@ -16,8 +16,16 @@ interface ScheduledReport {
   createdAt: string;
 }
 
+
+interface ScheduleData {
+  type: string;
+  frequency: string;
+  [key: string]: unknown;
+}
+
 interface ReportSchedulerProps {
-  availableTemplates: any[];
+  schedule: ScheduleData;
+  onScheduleChange: (schedule: ScheduleData) => void;
 }
 
 const STORAGE_KEY = 'sttpu_scheduled_reports';
@@ -68,7 +76,7 @@ export default function ReportScheduler({ availableTemplates }: ReportSchedulerP
   const calculateNextRun = (frequency: string, time: string, dayOfWeek?: number, dayOfMonth?: number): string => {
     const now = new Date();
     const [hours, minutes] = time.split(':').map(Number);
-    let nextRun = new Date();
+    const nextRun = new Date();
     nextRun.setHours(hours, minutes, 0, 0);
 
     switch (frequency) {

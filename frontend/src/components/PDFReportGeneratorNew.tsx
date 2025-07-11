@@ -3,6 +3,12 @@ import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+// Extend jsPDF type to include autoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: unknown) => void;
+  lastAutoTable: { finalY: number };
+}
+
 interface Asset {
   id: number;
   kode: string;
@@ -201,11 +207,12 @@ const PDFReportGenerator: React.FC<PDFReportGeneratorProps> = ({
         return asset.lokasi_id && asset.location_info 
           ? `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})`
           : asset.lokasi || '';
-      case 'status':
+      case 'status': {
         const status = asset.status === 'baik' ? 'Baik' :
                       asset.status === 'rusak' ? 'Rusak' :
                       asset.status === 'tidak_memadai' ? 'Tidak Memadai' : 'Baik';
         return status;
+      }
       case 'harga_perolehan':
         return formatCurrency(asset.harga_perolehan);
       case 'nilai_sisa':
@@ -315,7 +322,7 @@ const PDFReportGenerator: React.FC<PDFReportGeneratorProps> = ({
           ['Status Tidak Memadai', (stats.statusCounts.tidak_memadai || 0).toString()]
         ];
         
-        (doc as any).autoTable({
+        (doc as jsPDFWithAutoTable).autoTable({
           startY: yPosition,
           head: [['Kategori', 'Nilai']],
           body: statsData,
@@ -335,7 +342,7 @@ const PDFReportGenerator: React.FC<PDFReportGeneratorProps> = ({
           margin: { left: margin }
         });
         
-        yPosition = (doc as any).lastAutoTable.finalY + 15;
+        yPosition = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15;
       }
 
       // Assets table
@@ -358,7 +365,7 @@ const PDFReportGenerator: React.FC<PDFReportGeneratorProps> = ({
       
       yPosition += 10;
 
-      (doc as any).autoTable({
+      (doc as jsPDFWithAutoTable).autoTable({
         startY: yPosition,
         head: [headers],
         body: tableData,
@@ -383,12 +390,12 @@ const PDFReportGenerator: React.FC<PDFReportGeneratorProps> = ({
             styles[index] = { halign: 'right' };
           }
           return styles;
-        }, {} as any)
+        }, {} as Record<string, unknown>)
       });
 
       // Footer
       if (template.includeFooter) {
-        const finalY = (doc as any).lastAutoTable.finalY;
+        const finalY = (doc as jsPDFWithAutoTable).lastAutoTable.finalY;
         const footerY = Math.max(finalY + 20, pageHeight - 30);
         
         doc.setDrawColor(200);

@@ -68,7 +68,7 @@ export const numberToIndonesianWords = (num: number): string => {
   };
 
   let result = '';
-  let digitGroups: number[] = [];
+  const digitGroups: number[] = [];
   
   // Split the number into groups of 3 digits
   let n = num;

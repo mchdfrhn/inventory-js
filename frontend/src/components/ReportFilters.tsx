@@ -81,7 +81,7 @@ const ReportFilters: React.FC<ReportFiltersProps> = ({
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [isApplyingFilter, setIsApplyingFilter] = useState(false);
 
-  const updateFilter = (key: keyof FilterOptions, value: any) => {
+  const updateFilter = (key: keyof FilterOptions, value: unknown) => {
     const newFilters = { ...filters, [key]: value };
     onFiltersChange(newFilters);
   };

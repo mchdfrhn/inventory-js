@@ -1,6 +1,7 @@
 const { sequelize } = require('./connection');
 async function runMigration() {
   try {
+    // eslint-disable-next-line no-console
     console.log('🔄 Running migration to change entity_id type...');
 
     // Drop existing constraint if exists
@@ -15,9 +16,11 @@ async function runMigration() {
     // Add comment explaining the change
     await sequelize.query('COMMENT ON COLUMN audit_logs.entity_id IS \'Entity ID that can be UUID, INTEGER, or other types stored as VARCHAR\'');
 
+    // eslint-disable-next-line no-console
     console.log('✅ Migration completed successfully!');
     process.exit(0);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('❌ Migration failed:', error);
     process.exit(1);
   }

@@ -53,7 +53,7 @@ const Toast: React.FC<ToastProps> = ({ notification, onClose }) => {
     const enterTimeout = setTimeout(() => setIsVisible(true), 50);
     
     // Progress bar animation
-    let startTime = Date.now();
+    const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsedTime = Date.now() - startTime;
       const remainingPercent = Math.max(0, 100 - (elapsedTime / duration) * 100);

@@ -3,28 +3,29 @@ const { sequelize } = require('../database/connection');
 
 // Helper function to safely stringify objects (remove circular references)
 function safeJSONStringify(obj) {
-  if (!obj) return null;
-  
+  if (!obj) {return null;}
+
   try {
     return JSON.stringify(obj, (key, value) => {
       // Skip Sequelize instance properties that cause circular references
       if (key === 'parent' || key === 'include' || key === 'sequelize' || key === 'dialect') {
         return undefined;
       }
-      
+
       // Skip functions and undefined values
       if (typeof value === 'function' || value === undefined) {
         return undefined;
       }
-      
+
       // For Sequelize model instances, convert to plain object
       if (value && typeof value.toJSON === 'function') {
         return value.toJSON();
       }
-      
+
       return value;
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error stringifying object:', error);
     return JSON.stringify({ error: 'Unable to serialize object' });
   }

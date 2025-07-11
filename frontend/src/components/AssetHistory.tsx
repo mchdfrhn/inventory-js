@@ -88,7 +88,7 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
         hour: '2-digit',
         minute: '2-digit'
       });
-    } catch (error) {
+    } catch {
       return dateString;
     }
   };
@@ -103,23 +103,26 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
         <div className="mt-1 p-1.5 bg-gray-50 rounded-lg">
           <h4 className="text-xs font-medium text-gray-900 mb-0.5">Perubahan:</h4>
           <div className="space-y-0.5">
-            {Object.entries(changes).map(([field, change]: [string, any]) => (
-              <div key={field} className="text-xs">
-                <span className="font-medium text-gray-700">{field}:</span>
-                <div className="ml-1 text-gray-600">
-                  {change.from !== null && (
-                    <div>Dari: <span className="text-red-600">{JSON.stringify(change.from)}</span></div>
-                  )}
-                  {change.to !== null && (
-                    <div>Ke: <span className="text-green-600">{JSON.stringify(change.to)}</span></div>
-                  )}
+            {Object.entries(changes).map(([field, change]) => {
+              const changeObj = change as { from: unknown; to: unknown };
+              return (
+                <div key={field} className="text-xs">
+                  <span className="font-medium text-gray-700">{field}:</span>
+                  <div className="ml-1 text-gray-600">
+                    {changeObj.from !== null && (
+                      <div>Dari: <span className="text-red-600">{JSON.stringify(changeObj.from)}</span></div>
+                    )}
+                    {changeObj.to !== null && (
+                      <div>Ke: <span className="text-green-600">{JSON.stringify(changeObj.to)}</span></div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       );
-    } catch (error) {
+    } catch {
       return (
         <div className="mt-1 p-1.5 bg-gray-50 rounded-lg">
           <p className="text-xs text-gray-500">Data perubahan tidak dapat ditampilkan</p>

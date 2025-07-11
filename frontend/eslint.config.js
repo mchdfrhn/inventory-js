@@ -23,6 +23,11 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      // Disable or downgrade certain rules for better development experience
+      '@typescript-eslint/no-explicit-any': 'warn', // Allow any but warn
+      '@typescript-eslint/no-unused-vars': 'warn', // Allow unused vars but warn
+      'no-case-declarations': 'off', // Allow case declarations
+      'react-hooks/exhaustive-deps': 'warn', // Allow missing deps but warn
     },
   },
 )

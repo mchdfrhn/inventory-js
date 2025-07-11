@@ -177,7 +177,7 @@ export default function AuditLogPage() {
         hour: '2-digit',
         minute: '2-digit'
       });
-    } catch (error) {
+    } catch {
       return dateString;
     }
   };
@@ -192,7 +192,7 @@ export default function AuditLogPage() {
         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
           <h4 className="text-[11px] font-medium text-gray-900 mb-2">Perubahan:</h4>
           <div className="space-y-2">
-            {Object.entries(changes).map(([field, change]: [string, any]) => (
+            {Object.entries(changes).map(([field, change]: [string, { from: unknown; to: unknown }]) => (
               <div key={field} className="text-[10px]">
                 <span className="font-medium text-gray-700">{field}:</span>
                 <div className="ml-2 text-gray-600">
@@ -208,7 +208,7 @@ export default function AuditLogPage() {
           </div>
         </div>
       );
-    } catch (error) {
+    } catch {
       return (
         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
           <p className="text-[10px] text-gray-500">Data perubahan tidak dapat ditampilkan</p>
