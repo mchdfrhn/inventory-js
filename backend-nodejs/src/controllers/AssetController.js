@@ -3,7 +3,6 @@ const csv = require('csv-parser');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
 
 class AssetController {
@@ -199,22 +198,22 @@ class AssetController {
       } = req.query;
 
       const filter = {};
-      if (search) filter.search = search;
-      if (category_id) filter.category_id = category_id;
-      if (lokasi_id) filter.lokasi_id = parseInt(lokasi_id);
-      if (status) filter.status = status;
-      if (from_date) filter.from_date = new Date(from_date);
-      if (to_date) filter.to_date = new Date(to_date);
-      if (min_price) filter.min_price = parseFloat(min_price);
-      if (max_price) filter.max_price = parseFloat(max_price);
-      if (bulk_id) filter.bulk_id = bulk_id;
-      if (is_bulk_parent !== undefined) filter.is_bulk_parent = is_bulk_parent === 'true';
+      if (search) {filter.search = search;}
+      if (category_id) {filter.category_id = category_id;}
+      if (lokasi_id) {filter.lokasi_id = parseInt(lokasi_id);}
+      if (status) {filter.status = status;}
+      if (from_date) {filter.from_date = new Date(from_date);}
+      if (to_date) {filter.to_date = new Date(to_date);}
+      if (min_price) {filter.min_price = parseFloat(min_price);}
+      if (max_price) {filter.max_price = parseFloat(max_price);}
+      if (bulk_id) {filter.bulk_id = bulk_id;}
+      if (is_bulk_parent !== undefined) {filter.is_bulk_parent = is_bulk_parent === 'true';}
 
       if (page && pageSize) {
         const result = await this.assetUseCase.listAssetsPaginated(
           filter,
           parseInt(page),
-          parseInt(pageSize)
+          parseInt(pageSize),
         );
 
         res.status(200).json({
@@ -260,19 +259,19 @@ class AssetController {
       } = req.query;
 
       const filter = {};
-      if (search) filter.search = search;
-      if (category_id) filter.category_id = category_id;
-      if (lokasi_id) filter.lokasi_id = parseInt(lokasi_id);
-      if (status) filter.status = status;
-      if (from_date) filter.from_date = new Date(from_date);
-      if (to_date) filter.to_date = new Date(to_date);
-      if (min_price) filter.min_price = parseFloat(min_price);
-      if (max_price) filter.max_price = parseFloat(max_price);
+      if (search) {filter.search = search;}
+      if (category_id) {filter.category_id = category_id;}
+      if (lokasi_id) {filter.lokasi_id = parseInt(lokasi_id);}
+      if (status) {filter.status = status;}
+      if (from_date) {filter.from_date = new Date(from_date);}
+      if (to_date) {filter.to_date = new Date(to_date);}
+      if (min_price) {filter.min_price = parseFloat(min_price);}
+      if (max_price) {filter.max_price = parseFloat(max_price);}
 
       const result = await this.assetUseCase.listAssetsWithBulk(
         filter,
         parseInt(page),
-        parseInt(pageSize)
+        parseInt(pageSize),
       );
 
       res.status(200).json({
@@ -311,7 +310,7 @@ class AssetController {
       const fileContent = fs.readFileSync(filePath, 'utf8');
       const lines = fileContent.split('\n');
       const firstLine = lines[0];
-      
+
       // Auto-detect separator: prioritize semicolon if found, otherwise use comma
       let delimiter = ',';
       if (firstLine.includes(';')) {
@@ -319,7 +318,7 @@ class AssetController {
       }
 
       // Parse CSV file with detected delimiter
-      const stream = fs.createReadStream(filePath)
+      fs.createReadStream(filePath)
         .pipe(csv({ separator: delimiter }))
         .on('data', (row) => {
           try {
@@ -327,16 +326,16 @@ class AssetController {
             const assetData = {
               nama: row['Nama Aset*'] || row['Asset Name*'] || row.nama || row.name,
               category_code: row['Kode Kategori*'] || row['Category Code*'] || row.category_code,
-              spesifikasi: row['Spesifikasi'] || row['Specification'] || row.spesifikasi || row.specification,
+              spesifikasi: row.Spesifikasi || row.Specification || row.spesifikasi || row.specification,
               tanggal_perolehan: this.parseFlexibleDate(row['Tanggal Perolehan*'] || row['Acquisition Date*'] || row.tanggal_perolehan || row.acquisition_date),
               quantity: parseInt(row['Jumlah*'] || row['Quantity*'] || row.quantity) || 1,
-              satuan: row['Satuan'] || row['Unit'] || row.satuan || row.unit || 'unit',
+              satuan: row.Satuan || row.Unit || row.satuan || row.unit || 'unit',
               harga_perolehan: parseFloat(row['Harga Perolehan*'] || row['Acquisition Price*'] || row.harga_perolehan || row.acquisition_price),
               umur_ekonomis_tahun: parseInt(row['Umur Ekonomis'] || row['Economic Life'] || row.umur_ekonomis_tahun || row.economic_life_years) || 0,
               lokasi_code: row['Kode Lokasi*'] || row['Location Code*'] || row.lokasi_code || row.location_code,
               asal_pengadaan: row['ID Asal Pengadaan*'] || row['Procurement Source*'] || row.asal_pengadaan || row.procurement_source,
-              status: row['Status'] || row.status || 'baik',
-              keterangan: row['Keterangan'] || row['Description'] || row.keterangan || row.description,
+              status: row.Status || row.status || 'baik',
+              keterangan: row.Keterangan || row.Description || row.keterangan || row.description,
             };
 
             assets.push(assetData);
@@ -361,25 +360,6 @@ class AssetController {
             const importedAssets = [];
             const importErrors = [];
 
-            // Get starting sequence for the entire import batch
-            let totalAssetCount = 0;
-            for (const asset of assets) {
-              if (asset.quantity > 1) {
-                // Check if satuan is eligible for bulk creation
-                const bulkEligibleUnits = ['unit', 'pcs', 'set', 'buah'];
-                const isEligible = bulkEligibleUnits.some(unit => 
-                  asset.satuan?.toLowerCase() === unit.toLowerCase()
-                );
-                if (isEligible) {
-                  totalAssetCount += asset.quantity; // Bulk assets count as quantity
-                } else {
-                  totalAssetCount += 1; // Non-bulk eligible, treat as single
-                }
-              } else {
-                totalAssetCount += 1; // Single asset
-              }
-            }
-
             // Reserve sequence range for the entire batch
             const startSequence = await this.assetUseCase.getNextAvailableSequence();
             let currentSequence = startSequence;
@@ -388,7 +368,7 @@ class AssetController {
             for (let i = 0; i < assets.length; i++) {
               try {
                 const asset = assets[i];
-                
+
                 // Resolve category and location by code
                 const category = await this.assetUseCase.getCategoryByCode(asset.category_code);
                 if (!category) {
@@ -413,8 +393,8 @@ class AssetController {
                 if (asset.quantity > 1) {
                   // Check if satuan is eligible for bulk creation
                   const bulkEligibleUnits = ['unit', 'pcs', 'set', 'buah'];
-                  const isEligible = bulkEligibleUnits.some(unit => 
-                    asset.satuan?.toLowerCase() === unit.toLowerCase()
+                  const isEligible = bulkEligibleUnits.some(unit =>
+                    asset.satuan?.toLowerCase() === unit.toLowerCase(),
                   );
 
                   if (isEligible) {
@@ -466,8 +446,8 @@ class AssetController {
   }
 
   parseFlexibleDate(dateStr) {
-    if (!dateStr) return null;
-    
+    if (!dateStr) {return null;}
+
     dateStr = dateStr.trim();
 
     // Try YYYY-MM-DD format first

@@ -28,17 +28,17 @@ const categories = [];
 fs.createReadStream(categoryFile)
   .pipe(csv({
     skipEmptyLines: true,
-    trim: true
+    trim: true,
   }))
   .on('data', (row) => {
     console.log('Raw row:', row);
-    
+
     const categoryData = {
-      code: row.code || row.kode || row.Kode || row['Kode*'] || row['Kode'],
-      name: row.name || row.nama || row.Nama || row['Nama*'] || row['Nama'],
-      description: row.description || row.deskripsi || row.Deskripsi || row['Deskripsi'] || '',
+      code: row.code || row.kode || row.Kode || row['Kode*'] || row.Kode,
+      name: row.name || row.nama || row.Nama || row['Nama*'] || row.Nama,
+      description: row.description || row.deskripsi || row.Deskripsi || row.Deskripsi || '',
     };
-    
+
     console.log('Mapped category:', categoryData);
     categories.push(categoryData);
   })
@@ -47,28 +47,28 @@ fs.createReadStream(categoryFile)
     categories.forEach((cat, i) => {
       console.log(`${i + 1}. Code: "${cat.code}", Name: "${cat.name}"`);
     });
-    
+
     console.log('\n\nTesting Location CSV Parsing...');
     console.log('===============================');
-    
+
     const locations = [];
     fs.createReadStream(locationFile)
       .pipe(csv({
         skipEmptyLines: true,
-        trim: true
+        trim: true,
       }))
       .on('data', (row) => {
         console.log('Raw row:', row);
-        
+
         const locationData = {
-          code: row.code || row.kode || row.Kode || row['Kode*'] || row['Kode'],
-          name: row.name || row.nama || row.Nama || row['Nama*'] || row['Nama'],
-          description: row.description || row.deskripsi || row.Deskripsi || row['Deskripsi'] || '',
-          building: row.building || row.gedung || row.Gedung || row['Gedung'] || '',
-          floor: row.floor || row.lantai || row.Lantai || row['Lantai'] || '',
-          room: row.room || row.ruangan || row.Ruangan || row['Ruangan'] || '',
+          code: row.code || row.kode || row.Kode || row['Kode*'] || row.Kode,
+          name: row.name || row.nama || row.Nama || row['Nama*'] || row.Nama,
+          description: row.description || row.deskripsi || row.Deskripsi || row.Deskripsi || '',
+          building: row.building || row.gedung || row.Gedung || row.Gedung || '',
+          floor: row.floor || row.lantai || row.Lantai || row.Lantai || '',
+          room: row.room || row.ruangan || row.Ruangan || row.Ruangan || '',
         };
-        
+
         console.log('Mapped location:', locationData);
         locations.push(locationData);
       })
@@ -77,11 +77,11 @@ fs.createReadStream(categoryFile)
         locations.forEach((loc, i) => {
           console.log(`${i + 1}. Code: "${loc.code}", Name: "${loc.name}"`);
         });
-        
+
         // Clean up test files
         fs.unlinkSync(categoryFile);
         fs.unlinkSync(locationFile);
-        
+
         console.log('\nTest completed successfully!');
       })
       .on('error', (error) => {

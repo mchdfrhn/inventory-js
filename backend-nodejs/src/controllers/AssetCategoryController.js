@@ -121,7 +121,7 @@ class AssetCategoryController {
         const result = await this.categoryUseCase.listCategoriesPaginated(
           parseInt(page),
           parseInt(pageSize),
-          search || ''
+          search || '',
         );
 
         res.status(200).json({
@@ -165,11 +165,13 @@ class AssetCategoryController {
       const errors = [];
       let processedCount = 0;
 
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log('Starting enhanced CSV parsing for categories...');
 
       // Read and clean file content
       let content = fs.readFileSync(filePath, 'utf8');
-      
+
       // Remove BOM if present
       if (content.charCodeAt(0) === 0xFEFF) {
         content = content.slice(1);
@@ -180,7 +182,7 @@ class AssetCategoryController {
       const firstLine = content.split('\n')[0];
       let detectedDelimiter = ',';
       let maxDelimiterCount = 0;
-      
+
       delimiters.forEach(delimiter => {
         const count = (firstLine.match(new RegExp('\\' + delimiter, 'g')) || []).length;
         if (count > maxDelimiterCount) {
@@ -189,18 +191,19 @@ class AssetCategoryController {
         }
       });
 
+      // eslint-disable-next-line no-console
       console.log(`Detected delimiter: "${detectedDelimiter}"`);
 
       // Create temporary file with cleaned content
       const path = require('path');
       const tempFile = path.join(__dirname, '../temp/categories_import.csv');
-      
+
       // Ensure temp directory exists
       const tempDir = path.dirname(tempFile);
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true });
       }
-      
+
       fs.writeFileSync(tempFile, content);
 
       // Enhanced field mapping function
@@ -214,19 +217,20 @@ class AssetCategoryController {
       };
 
       // Parse CSV file
-      const stream = fs.createReadStream(tempFile, { encoding: 'utf8' })
+      fs.createReadStream(tempFile, { encoding: 'utf8' })
         .pipe(csv({
           separator: detectedDelimiter,
           skipEmptyLines: true,
           skipLinesWithError: false,
           strip_bom: true,
-          trim: true
+          trim: true,
         }))
         .on('data', (row) => {
           try {
             processedCount++;
+            // eslint-disable-next-line no-console
             console.log(`Processing row ${processedCount}:`, row);
-            
+
             // Enhanced field mapping - support multiple column name variations
             const categoryData = {
               code: getFieldValue(row, ['code', 'kode', 'Kode', 'Kode*', 'CODE', 'Code']),
@@ -234,6 +238,7 @@ class AssetCategoryController {
               description: getFieldValue(row, ['description', 'deskripsi', 'Deskripsi', 'DESCRIPTION', 'Description', 'desc']) || '',
             };
 
+            // eslint-disable-next-line no-console
             console.log('Mapped category data:', categoryData);
 
             // Enhanced validation
@@ -250,29 +255,32 @@ class AssetCategoryController {
             }
 
             // Check for duplicates within the CSV
-            const isDuplicate = categories.some(cat => 
-              cat.code.toLowerCase() === categoryData.code.toLowerCase() || 
-              cat.name.toLowerCase() === categoryData.name.toLowerCase()
+            const isDuplicate = categories.some(cat =>
+              cat.code.toLowerCase() === categoryData.code.toLowerCase() ||
+              cat.name.toLowerCase() === categoryData.name.toLowerCase(),
             );
-            
+
             if (isDuplicate) {
               throw new Error('Duplicate code or name found in CSV');
             }
 
             categories.push(categoryData);
           } catch (error) {
+            // eslint-disable-next-line no-console
             console.error(`Error processing row ${processedCount}:`, error.message);
             errors.push(`Row ${processedCount}: ${error.message}`);
           }
         })
         .on('error', (error) => {
+          // eslint-disable-next-line no-console
           console.error('CSV parsing error:', error);
           errors.push(`CSV parsing error: ${error.message}`);
         })
         .on('end', async () => {
           try {
+            // eslint-disable-next-line no-console
             console.log(`Parsed ${categories.length} categories with ${errors.length} errors`);
-            
+
             // Clean up files
             fs.unlinkSync(filePath);
             if (fs.existsSync(tempFile)) {
@@ -280,13 +288,14 @@ class AssetCategoryController {
             }
 
             if (errors.length > 0) {
+              // eslint-disable-next-line no-console
               console.log('Errors found:', errors);
               return res.status(400).json({
                 success: false,
                 message: 'CSV parsing errors',
                 errors,
                 processed_rows: processedCount,
-                valid_rows: categories.length
+                valid_rows: categories.length,
               });
             }
 
@@ -321,8 +330,8 @@ class AssetCategoryController {
                   total_processed: processedCount,
                   valid_data: categories.length,
                   successfully_imported: importedCategories.length,
-                  failed_imports: importErrors.length
-                }
+                  failed_imports: importErrors.length,
+                },
               },
             });
           } catch (error) {

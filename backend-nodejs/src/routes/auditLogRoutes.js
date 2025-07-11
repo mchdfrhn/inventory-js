@@ -9,20 +9,20 @@ const auditLogController = new AuditLogController();
 // Get activity history for specific entity
 router.get(
   '/history/:entityType/:entityId',
-  auditLogController.getActivityHistory.bind(auditLogController)
+  auditLogController.getActivityHistory.bind(auditLogController),
 );
 
 // Get activity logs with filtering
 router.get(
   '/',
   validate(auditLogFilterSchema, 'query'),
-  auditLogController.getActivityLogs.bind(auditLogController)
+  auditLogController.getActivityLogs.bind(auditLogController),
 );
 
 // Cleanup old logs (admin endpoint)
 router.post(
   '/cleanup',
-  auditLogController.cleanupOldLogs.bind(auditLogController)
+  auditLogController.cleanupOldLogs.bind(auditLogController),
 );
 
 module.exports = router;

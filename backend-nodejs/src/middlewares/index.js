@@ -10,10 +10,10 @@ const logger = require('../utils/logger');
 const security = helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      defaultSrc: ['\'self\''],
+      styleSrc: ['\'self\'', '\'unsafe-inline\''],
+      scriptSrc: ['\'self\''],
+      imgSrc: ['\'self\'', 'data:', 'https:'],
     },
   },
 });
@@ -50,19 +50,19 @@ const compressionMiddleware = compression({
 // Morgan logging middleware
 const loggingMiddleware = morgan('combined', {
   stream: logger.stream,
-  skip: (req, res) => {
+  skip: (req, _res) => {
     // Skip logging for health checks and other non-essential endpoints
     return req.url === '/health' || req.url === '/favicon.ico';
   },
 });
 
 // Error handling middleware
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, _next) => {
   logger.error('Unhandled error:', err);
 
   // Don't leak error details in production
   const isDevelopment = config.env === 'development';
-  
+
   res.status(err.status || 500).json({
     success: false,
     message: err.message || 'Internal server error',

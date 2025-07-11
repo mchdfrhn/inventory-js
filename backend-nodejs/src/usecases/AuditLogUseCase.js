@@ -72,19 +72,19 @@ class AuditLogUseCase {
 
   calculateChanges(oldValues, newValues) {
     const changes = {};
-    
+
     // Compare all keys from both objects
     const allKeys = new Set([...Object.keys(oldValues), ...Object.keys(newValues)]);
-    
+
     for (const key of allKeys) {
       const oldValue = oldValues[key];
       const newValue = newValues[key];
-      
+
       // Skip timestamps and IDs that shouldn't be tracked
       if (['created_at', 'updated_at', 'id'].includes(key)) {
         continue;
       }
-      
+
       if (oldValue !== newValue) {
         changes[key] = {
           from: oldValue,
@@ -92,7 +92,7 @@ class AuditLogUseCase {
         };
       }
     }
-    
+
     return Object.keys(changes).length > 0 ? changes : null;
   }
 
@@ -105,7 +105,7 @@ class AuditLogUseCase {
       null,
       asset,
       `Asset created: ${asset.nama} (${asset.kode})`,
-      metadata
+      metadata,
     );
   }
 
@@ -117,7 +117,7 @@ class AuditLogUseCase {
       oldAsset,
       newAsset,
       `Asset updated: ${newAsset.nama} (${newAsset.kode})`,
-      metadata
+      metadata,
     );
   }
 
@@ -129,7 +129,7 @@ class AuditLogUseCase {
       asset,
       null,
       `Asset deleted: ${asset.nama} (${asset.kode})`,
-      metadata
+      metadata,
     );
   }
 
@@ -141,7 +141,7 @@ class AuditLogUseCase {
       null,
       category,
       `Category created: ${category.name} (${category.code})`,
-      metadata
+      metadata,
     );
   }
 
@@ -153,7 +153,7 @@ class AuditLogUseCase {
       oldCategory,
       newCategory,
       `Category updated: ${newCategory.name} (${newCategory.code})`,
-      metadata
+      metadata,
     );
   }
 
@@ -165,7 +165,7 @@ class AuditLogUseCase {
       category,
       null,
       `Category deleted: ${category.name} (${category.code})`,
-      metadata
+      metadata,
     );
   }
 
@@ -177,7 +177,7 @@ class AuditLogUseCase {
       null,
       location,
       `Location created: ${location.name} (${location.code})`,
-      metadata
+      metadata,
     );
   }
 
@@ -189,7 +189,7 @@ class AuditLogUseCase {
       oldLocation,
       newLocation,
       `Location updated: ${newLocation.name} (${newLocation.code})`,
-      metadata
+      metadata,
     );
   }
 
@@ -201,13 +201,13 @@ class AuditLogUseCase {
       location,
       null,
       `Location deleted: ${location.name} (${location.code})`,
-      metadata
+      metadata,
     );
   }
 
   async logBulkAssetCreated(assets, metadata = {}) {
-    if (assets.length === 0) return null;
-    
+    if (assets.length === 0) {return null;}
+
     const bulkId = assets[0].bulk_id;
     return this.logActivity(
       'asset',
@@ -216,7 +216,7 @@ class AuditLogUseCase {
       null,
       { bulk_count: assets.length, assets },
       `Bulk assets created: ${assets.length} items`,
-      metadata
+      metadata,
     );
   }
 
@@ -228,7 +228,7 @@ class AuditLogUseCase {
       { assets: oldAssets },
       { assets: newAssets },
       `Bulk assets updated: ${newAssets.length} items`,
-      metadata
+      metadata,
     );
   }
 
@@ -240,7 +240,7 @@ class AuditLogUseCase {
       { assets },
       null,
       `Bulk assets deleted: ${assets.length} items`,
-      metadata
+      metadata,
     );
   }
 }

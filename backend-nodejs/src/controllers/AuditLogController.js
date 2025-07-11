@@ -40,18 +40,18 @@ class AuditLogController {
       } = req.query;
 
       const filter = {};
-      if (entity_type) filter.entity_type = entity_type;
-      if (entity_id) filter.entity_id = entity_id;
-      if (action) filter.action = action;
-      if (user_id) filter.user_id = user_id;
-      if (from_date) filter.from_date = new Date(from_date);
-      if (to_date) filter.to_date = new Date(to_date);
-      if (search) filter.search = search;
+      if (entity_type) {filter.entity_type = entity_type;}
+      if (entity_id) {filter.entity_id = entity_id;}
+      if (action) {filter.action = action;}
+      if (user_id) {filter.user_id = user_id;}
+      if (from_date) {filter.from_date = new Date(from_date);}
+      if (to_date) {filter.to_date = new Date(to_date);}
+      if (search) {filter.search = search;}
 
       const result = await this.auditLogUseCase.getActivityLogs(
         filter,
         parseInt(page),
-        parseInt(pageSize)
+        parseInt(pageSize),
       );
 
       res.status(200).json({

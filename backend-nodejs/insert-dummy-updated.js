@@ -12,7 +12,7 @@ const dbConfig = {
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'inventaris',
   user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '123'
+  password: process.env.DB_PASSWORD || '123',
 };
 
 async function insertAllDummyAssets() {
@@ -39,7 +39,7 @@ async function insertAllDummyAssets() {
     const elektronikCategory = categoriesResult.rows.find(cat => cat.name === 'Elektronik');
     const furnitureCategory = categoriesResult.rows.find(cat => cat.name === 'Furniture');
     const peralatanCategory = categoriesResult.rows.find(cat => cat.name === 'Peralatan');
-    
+
     // Use the first category as fallback
     const defaultCategory = categoriesResult.rows[0];
 
@@ -65,7 +65,7 @@ async function insertAllDummyAssets() {
 
         // Determine category based on asset type
         let categoryId = defaultCategory.id;
-        if (elektronikCategory && (asset.nama.includes('Proyektor') || asset.nama.includes('Scanner') || 
+        if (elektronikCategory && (asset.nama.includes('Proyektor') || asset.nama.includes('Scanner') ||
             asset.nama.includes('Access Point') || asset.nama.includes('UPS') || asset.nama.includes('Printer') ||
             asset.nama.includes('AC') || asset.nama.includes('CCTV') || asset.nama.includes('Server') ||
             asset.nama.includes('Switch'))) {
@@ -108,7 +108,7 @@ async function insertAllDummyAssets() {
           defaultLocation.id,
           asset.status,
           new Date(),
-          new Date()
+          new Date(),
         ];
 
         await client.query(insertQuery, values);
@@ -123,7 +123,7 @@ async function insertAllDummyAssets() {
     console.log('\n📦 Inserting Bulk Assets...');
     for (const bulkSet of bulkAssets) {
       const bulkId = uuidv4();
-      
+
       // Determine category
       let categoryId = defaultCategory.id;
       if (elektronikCategory && (bulkSet.nama.includes('Telepon') || bulkSet.nama.includes('Monitor'))) {
@@ -133,30 +133,23 @@ async function insertAllDummyAssets() {
       }
 
       console.log(`\n📋 Creating bulk set: ${bulkSet.nama} (${bulkSet.quantity} units)`);
-      
+
       for (let i = 0; i < bulkSet.quantity; i++) {
         try {
           let assetKode;
           let lokasi = bulkSet.lokasi;
           let status = bulkSet.status;
-          
+
           // Generate individual asset codes and set specific locations/status
           if (bulkSet.kode.startsWith('PHONE')) {
             assetKode = `PHONE${String(i + 1).padStart(3, '0')}`;
-            if (i === 0) lokasi = 'Ruang Direktur';
-            else if (i === 1) lokasi = 'Ruang Administrasi';
-            else if (i === 2) { lokasi = 'Ruang IT'; status = 'rusak'; }
+            if (i === 0) {lokasi = 'Ruang Direktur';} else if (i === 1) {lokasi = 'Ruang Administrasi';} else if (i === 2) { lokasi = 'Ruang IT'; status = 'rusak'; }
           } else if (bulkSet.kode.startsWith('MONITOR')) {
             assetKode = `MONITOR${String(i + 1).padStart(3, '0')}`;
-            if (i === 0 || i === 1) lokasi = 'Ruang Administrasi';
-            else if (i === 2 || i === 3) lokasi = 'Ruang IT';
-            else if (i === 4) { lokasi = 'Ruang Direktur'; status = 'tidak_memadai'; }
+            if (i === 0 || i === 1) {lokasi = 'Ruang Administrasi';} else if (i === 2 || i === 3) {lokasi = 'Ruang IT';} else if (i === 4) { lokasi = 'Ruang Direktur'; status = 'tidak_memadai'; }
           } else if (bulkSet.kode.startsWith('CHAIR')) {
             assetKode = `CHAIR${String(i + 2).padStart(3, '0')}`; // Start from CHAIR002
-            if (i < 3) lokasi = 'Ruang Administrasi';
-            else if (i === 3) { lokasi = 'Ruang Administrasi'; status = 'rusak'; }
-            else if (i === 4 || i === 5) lokasi = 'Ruang IT';
-            else if (i === 6 || i === 7) lokasi = 'Ruang Rapat';
+            if (i < 3) {lokasi = 'Ruang Administrasi';} else if (i === 3) { lokasi = 'Ruang Administrasi'; status = 'rusak'; } else if (i === 4 || i === 5) {lokasi = 'Ruang IT';} else if (i === 6 || i === 7) {lokasi = 'Ruang Rapat';}
           }
 
           // Check if asset already exists
@@ -202,12 +195,12 @@ async function insertAllDummyAssets() {
             i === 0, // is_bulk_parent (true for first item)
             bulkSet.quantity, // bulk_total_count
             new Date(),
-            new Date()
+            new Date(),
           ];
 
           await client.query(insertQuery, values);
-          const icon = bulkSet.nama.includes('Telepon') ? '📞' : 
-                      bulkSet.nama.includes('Monitor') ? '🖥️' : '🪑';
+          const icon = bulkSet.nama.includes('Telepon') ? '📞' :
+            bulkSet.nama.includes('Monitor') ? '🖥️' : '🪑';
           console.log(`${icon} Created bulk asset: ${assetKode} (${i === 0 ? 'Parent' : 'Child'}) - ${status}`);
           insertedCount++;
         } catch (error) {
@@ -260,7 +253,7 @@ async function insertAllDummyAssets() {
     `;
 
     const result = await client.query(verifyQuery);
-    
+
     console.log('\n📊 Inserted Assets:');
     console.table(result.rows);
 
@@ -269,40 +262,40 @@ async function insertAllDummyAssets() {
     const singleAssets = result.rows.filter(row => row.asset_type === 'Single Asset').length;
     const bulkParents = result.rows.filter(row => row.asset_type === 'Bulk Parent').length;
     const bulkChildren = result.rows.filter(row => row.asset_type === 'Bulk Child').length;
-    
+
     console.log('\n📈 Summary:');
     console.log(`Total Assets Inserted: ${result.rows.length}`);
     console.log(`- Single Assets: ${singleAssets}`);
     console.log(`- Bulk Asset Sets: ${bulkParents} (${bulkChildren + bulkParents} total units)`);
     console.log(`Total Value: Rp ${totalValue.toLocaleString('id-ID')}`);
-    
+
     // Show bulk asset groups
     console.log('\n📦 Bulk Asset Groups:');
     const phoneGroup = result.rows.filter(row => row.kode.startsWith('PHONE'));
     const monitorGroup = result.rows.filter(row => row.kode.startsWith('MONITOR'));
     const chairGroup = result.rows.filter(row => row.kode.startsWith('CHAIR') && row.kode !== 'CHAIR001');
-    
+
     if (phoneGroup.length > 0) {
       console.log(`📞 IP Phones: ${phoneGroup.length} units`);
       phoneGroup.forEach(phone => console.log(`   ${phone.kode} - ${phone.lokasi} (${phone.status})`));
     }
-    
+
     if (monitorGroup.length > 0) {
       console.log(`🖥️  Monitors: ${monitorGroup.length} units`);
       monitorGroup.forEach(monitor => console.log(`   ${monitor.kode} - ${monitor.lokasi} (${monitor.status})`));
     }
-    
+
     if (chairGroup.length > 0) {
       console.log(`🪑 Office Chairs: ${chairGroup.length} units`);
       chairGroup.forEach(chair => console.log(`   ${chair.kode} - ${chair.lokasi} (${chair.status})`));
     }
-    
+
     console.log(`\n✅ All ${result.rows.length} assets inserted and verified successfully!`);
-    console.log(`\n💡 You can now access the inventory system to view these assets.`);
+    console.log('\n💡 You can now access the inventory system to view these assets.');
 
   } catch (error) {
     console.error('❌ Error inserting dummy assets:', error);
-    
+
     if (error.code === '28P01') {
       console.log('\n💡 Authentication failed. Please check your database password in the .env file.');
       console.log('   Current password setting: DB_PASSWORD=123');

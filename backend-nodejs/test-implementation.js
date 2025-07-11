@@ -1,23 +1,26 @@
 const AssetUseCase = require('./src/usecases/AssetUseCase');
-const AssetCategoryRepository = require('./src/repositories/AssetCategoryRepository');
-const LocationRepository = require('./src/repositories/LocationRepository');
+// Unused imports - repositories not needed for testing use case logic
+// const AssetCategoryRepository = require('./src/repositories/AssetCategoryRepository');
+// const LocationRepository = require('./src/repositories/LocationRepository');
 
 async function testImplementation() {
+  // eslint-disable-next-line no-console
   console.log('🧪 Testing Node.js Backend Implementation...\n');
 
   try {
     const assetUseCase = new AssetUseCase();
-    const categoryRepo = new AssetCategoryRepository();
-    const locationRepo = new LocationRepository();
+    // Unused variables commented out
+    // const categoryRepo = new AssetCategoryRepository();
+    // const locationRepo = new LocationRepository();
 
     // Test 1: Asset Code Generation
     console.log('📋 Test 1: Asset Code Generation');
     const testAssetData = {
       lokasi_id: 1,
       asal_pengadaan: 'pembelian',
-      tanggal_perolehan: new Date('2024-01-15')
+      tanggal_perolehan: new Date('2024-01-15'),
     };
-    
+
     const mockCategoryId = 'test-category-id';
     try {
       const generatedCode = await assetUseCase.generateAssetCode(mockCategoryId, testAssetData);
@@ -40,9 +43,9 @@ async function testImplementation() {
     const testAssetForDepreciation = {
       harga_perolehan: 10000000, // 10 million
       umur_ekonomis_tahun: 5,
-      tanggal_perolehan: new Date('2020-01-01') // 5 years ago
+      tanggal_perolehan: new Date('2020-01-01'), // 5 years ago
     };
-    
+
     const calculatedAsset = await assetUseCase.calculateDepreciationValues(testAssetForDepreciation);
     console.log('✅ Depreciation Calculation Result:');
     console.log('   - Harga Perolehan:', calculatedAsset.harga_perolehan);

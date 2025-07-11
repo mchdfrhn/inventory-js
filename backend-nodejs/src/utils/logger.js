@@ -12,30 +12,30 @@ if (!fs.existsSync(logsDir)) {
 // Define log format
 const logFormat = winston.format.combine(
   winston.format.timestamp({
-    format: 'YYYY-MM-DD HH:mm:ss'
+    format: 'YYYY-MM-DD HH:mm:ss',
   }),
   winston.format.errors({ stack: true }),
-  winston.format.json()
+  winston.format.json(),
 );
 
 // Define console format for development
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({
-    format: 'YYYY-MM-DD HH:mm:ss'
+    format: 'YYYY-MM-DD HH:mm:ss',
   }),
   winston.format.printf(({ timestamp, level, message, stack }) => {
     return `${timestamp} [${level}]: ${stack || message}`;
-  })
+  }),
 );
 
 // Create logger
 const logger = winston.createLogger({
   level: config.logging.level,
   format: logFormat,
-  defaultMeta: { 
+  defaultMeta: {
     service: config.app.name,
-    version: config.app.version 
+    version: config.app.version,
   },
   transports: [
     // Write to file
@@ -57,7 +57,7 @@ const logger = winston.createLogger({
 // Add console transport for development
 if (config.env === 'development') {
   logger.add(new winston.transports.Console({
-    format: consoleFormat
+    format: consoleFormat,
   }));
 }
 
@@ -65,7 +65,7 @@ if (config.env === 'development') {
 logger.stream = {
   write: (message) => {
     logger.info(message.trim());
-  }
+  },
 };
 
 module.exports = logger;

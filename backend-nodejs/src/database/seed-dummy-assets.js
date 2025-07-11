@@ -6,6 +6,7 @@ const moment = require('moment');
 
 async function seedDummyAssets() {
   try {
+    // eslint-disable-next-line no-console
     console.log('🌱 Starting dummy assets seeding...');
 
     // Get existing categories and locations
@@ -13,15 +14,17 @@ async function seedDummyAssets() {
     const locations = await Location.findAll();
 
     if (categories.length === 0 || locations.length === 0) {
+      // eslint-disable-next-line no-console
       console.error('❌ No categories or locations found. Please create some first.');
       process.exit(1);
     }
 
+    // eslint-disable-next-line no-console
     console.log(`Found ${categories.length} categories and ${locations.length} locations`);
 
     // Helper function to get random category
     const getRandomCategory = () => categories[Math.floor(Math.random() * categories.length)];
-    
+
     // Helper function to get random location
     const getRandomLocation = () => locations[Math.floor(Math.random() * locations.length)];
 
@@ -166,6 +169,7 @@ async function seedDummyAssets() {
       // Check if asset already exists
       const existingAsset = await Asset.findOne({ where: { kode: assetData.kode } });
       if (existingAsset) {
+        // eslint-disable-next-line no-console
         console.log(`⚠️  Asset ${assetData.kode} already exists, skipping...`);
         continue;
       }
@@ -177,19 +181,21 @@ async function seedDummyAssets() {
         lokasi_id: getRandomLocation().id,
       });
       createdSingleAssets.push(asset);
+      // eslint-disable-next-line no-console
       console.log(`📦 Created single asset: ${asset.nama} (${asset.kode})`);
     }
 
     // Bulk Assets Set 1: Office Phones (3 units)
     const bulkId1 = uuidv4();
     const phoneAssets = [];
-    
+
     for (let i = 1; i <= 3; i++) {
       const phoneCode = `PHONE${String(i).padStart(3, '0')}`;
-      
+
       // Check if asset already exists
       const existingAsset = await Asset.findOne({ where: { kode: phoneCode } });
       if (existingAsset) {
+        // eslint-disable-next-line no-console
         console.log(`⚠️  Asset ${phoneCode} already exists, skipping...`);
         continue;
       }
@@ -219,20 +225,28 @@ async function seedDummyAssets() {
         bulk_total_count: 3,
       });
       phoneAssets.push(phoneAsset);
+      // eslint-disable-next-line no-console
       console.log(`📞 Created bulk phone asset: ${phoneAsset.nama} (${phoneAsset.kode})`);
     }
 
     const totalAssets = createdSingleAssets.length + phoneAssets.length;
 
-    console.log(`\n✅ Dummy assets seeding completed successfully!`);
+    // eslint-disable-next-line no-console
+    console.log('\n✅ Dummy assets seeding completed successfully!');
+    // eslint-disable-next-line no-console
     console.log(`📊 Created ${totalAssets} total assets:`);
+    // eslint-disable-next-line no-console
     console.log(`   - ${createdSingleAssets.length} individual assets`);
+    // eslint-disable-next-line no-console
     console.log(`   - ${phoneAssets.length} bulk assets (1 set)`);
-    console.log(`\n🔍 You can now view these assets in the frontend application.`);
-    
+    // eslint-disable-next-line no-console
+    console.log('\n🔍 You can now view these assets in the frontend application.');
+
     process.exit(0);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('❌ Dummy assets seeding failed:', error);
+    // eslint-disable-next-line no-console
     console.error(error.stack);
     process.exit(1);
   }

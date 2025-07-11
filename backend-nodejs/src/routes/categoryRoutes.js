@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+  },
 });
 
 const upload = multer({
@@ -41,46 +41,46 @@ const upload = multer({
 router.post(
   '/',
   validate(createAssetCategorySchema),
-  categoryController.createCategory.bind(categoryController)
+  categoryController.createCategory.bind(categoryController),
 );
 
 // Update category
 router.put(
   '/:id',
   validate(updateAssetCategorySchema),
-  categoryController.updateCategory.bind(categoryController)
+  categoryController.updateCategory.bind(categoryController),
 );
 
 // Delete category
 router.delete(
   '/:id',
-  categoryController.deleteCategory.bind(categoryController)
+  categoryController.deleteCategory.bind(categoryController),
 );
 
 // Get category by ID
 router.get(
   '/:id',
-  categoryController.getCategory.bind(categoryController)
+  categoryController.getCategory.bind(categoryController),
 );
 
 // Get category by code
 router.get(
   '/code/:code',
-  categoryController.getCategoryByCode.bind(categoryController)
+  categoryController.getCategoryByCode.bind(categoryController),
 );
 
 // List categories (with optional pagination)
 router.get(
   '/',
   validate(paginationSchema, 'query'),
-  categoryController.listCategories.bind(categoryController)
+  categoryController.listCategories.bind(categoryController),
 );
 
 // Import categories from CSV
 router.post(
   '/import',
   upload.single('file'),
-  categoryController.importCategories.bind(categoryController)
+  categoryController.importCategories.bind(categoryController),
 );
 
 module.exports = router;

@@ -16,7 +16,7 @@ class AuditLogRepository {
   async list(filter = {}) {
     try {
       const whereClause = this.buildWhereClause(filter);
-      
+
       const auditLogs = await AuditLog.findAll({
         where: whereClause,
         order: [['created_at', 'DESC']],

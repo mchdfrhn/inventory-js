@@ -26,10 +26,10 @@ async function startServer() {
     // Graceful shutdown
     const gracefulShutdown = async (signal) => {
       logger.info(`${signal} received, starting graceful shutdown...`);
-      
+
       server.close(async () => {
         logger.info('HTTP server closed');
-        
+
         try {
           await sequelize.close();
           logger.info('Database connection closed');
@@ -74,4 +74,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
- 
+

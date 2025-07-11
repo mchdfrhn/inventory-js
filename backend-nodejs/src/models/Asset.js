@@ -153,22 +153,22 @@ const Asset = sequelize.define('Asset', {
   indexes: [
     {
       unique: true,
-      fields: ['kode']
+      fields: ['kode'],
     },
     {
-      fields: ['category_id']
+      fields: ['category_id'],
     },
     {
-      fields: ['lokasi_id']
+      fields: ['lokasi_id'],
     },
     {
-      fields: ['bulk_id']
+      fields: ['bulk_id'],
     },
     {
-      fields: ['status']
+      fields: ['status'],
     },
     {
-      fields: ['tanggal_perolehan']
+      fields: ['tanggal_perolehan'],
     },
   ],
 });

@@ -20,7 +20,7 @@ async function seedDummyAssets() {
 
     // Helper function to get random category
     const getRandomCategory = () => categories[Math.floor(Math.random() * categories.length)];
-    
+
     // Helper function to get random location
     const getRandomLocation = () => locations[Math.floor(Math.random() * locations.length)];
 
@@ -212,14 +212,15 @@ async function seedDummyAssets() {
 
     const totalAssets = createdSingleAssets.length + phoneAssets.length + 1; // +1 for UPS
 
-    logger.info(`✅ Dummy assets seeding completed successfully!`);
+    logger.info('✅ Dummy assets seeding completed successfully!');
     logger.info(`📊 Created ${totalAssets} total assets:`);
     logger.info(`   - ${createdSingleAssets.length + 1} individual assets`);
     logger.info(`   - ${phoneAssets.length} bulk assets (1 set)`);
-    
+
     process.exit(0);
   } catch (error) {
     logger.error('❌ Dummy assets seeding failed:', error);
+    // eslint-disable-next-line no-console
     console.error(error);
     process.exit(1);
   }

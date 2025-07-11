@@ -84,19 +84,19 @@ const AuditLog = sequelize.define('AuditLog', {
   updatedAt: false, // Only track creation time
   indexes: [
     {
-      fields: ['entity_type']
+      fields: ['entity_type'],
     },
     {
-      fields: ['entity_id']
+      fields: ['entity_id'],
     },
     {
-      fields: ['action']
+      fields: ['action'],
     },
     {
-      fields: ['created_at']
+      fields: ['created_at'],
     },
     {
-      fields: ['entity_type', 'entity_id']
+      fields: ['entity_type', 'entity_id'],
     },
   ],
 });

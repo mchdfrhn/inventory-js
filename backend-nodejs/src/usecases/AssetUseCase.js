@@ -162,13 +162,13 @@ class AssetUseCase {
 
       // Generate bulk ID
       const bulkId = uuidv4();
-      
+
       // Get next available sequence range like Go implementation
       const startSequence = await this.getNextAvailableSequenceRange(quantity);
 
       // Prepare bulk assets
       const assetsToCreate = [];
-      
+
       for (let i = 0; i < quantity; i++) {
         const sequence = startSequence + i;
         const assetKode = await this.generateAssetCodeWithSequence(assetData.category_id, assetData, sequence);
@@ -207,7 +207,6 @@ class AssetUseCase {
       throw error;
     }
   }
-
 
 
   async getNextAvailableSequenceRange(count) {
@@ -544,7 +543,7 @@ class AssetUseCase {
     }
     assetData.nama = assetData.nama.trim();
     assetData.satuan = assetData.satuan.trim();
-    
+
     if (assetData.spesifikasi) {
       assetData.spesifikasi = assetData.spesifikasi.trim();
     }
@@ -602,16 +601,16 @@ class AssetUseCase {
       // Map procurement source to code
       const procurementMap = {
         'pembelian': '1',
-        'bantuan': '2', 
+        'bantuan': '2',
         'hibah': '3',
         'sumbangan': '4',
-        'produksi_sendiri': '5'
+        'produksi_sendiri': '5',
       };
       const procurementCode = procurementMap[assetData.asal_pengadaan] || '1';
 
       // Get year from tanggal_perolehan
-      const year = assetData.tanggal_perolehan 
-        ? new Date(assetData.tanggal_perolehan).getFullYear() 
+      const year = assetData.tanggal_perolehan
+        ? new Date(assetData.tanggal_perolehan).getFullYear()
         : new Date().getFullYear();
       const yearCode = String(year).slice(-2).padStart(2, '0');
 
@@ -621,7 +620,7 @@ class AssetUseCase {
 
       // Generate the new code with format: 001.10.1.24.001
       const newCode = `${locationCode}.${categoryCode}.${procurementCode}.${yearCode}.${sequenceCode}`;
-      
+
       return newCode;
     } catch (error) {
       logger.error('Error generating asset code:', error);
@@ -653,16 +652,16 @@ class AssetUseCase {
       // Map procurement source to code
       const procurementMap = {
         'pembelian': '1',
-        'bantuan': '2', 
+        'bantuan': '2',
         'hibah': '3',
         'sumbangan': '4',
-        'produksi_sendiri': '5'
+        'produksi_sendiri': '5',
       };
       const procurementCode = procurementMap[assetData.asal_pengadaan] || '1';
 
       // Get year from tanggal_perolehan
-      const year = assetData.tanggal_perolehan 
-        ? new Date(assetData.tanggal_perolehan).getFullYear() 
+      const year = assetData.tanggal_perolehan
+        ? new Date(assetData.tanggal_perolehan).getFullYear()
         : new Date().getFullYear();
       const yearCode = String(year).slice(-2).padStart(2, '0');
 
@@ -671,7 +670,7 @@ class AssetUseCase {
 
       // Generate the new code with format: 001.10.1.24.001
       const newCode = `${locationCode}.${categoryCode}.${procurementCode}.${yearCode}.${sequenceCode}`;
-      
+
       return newCode;
     } catch (error) {
       logger.error('Error generating asset code with sequence:', error);
@@ -685,35 +684,35 @@ class AssetUseCase {
       // Convert economic life from years to months
       const umurEkonomisTahun = assetData.umur_ekonomis_tahun || 0;
       const umurEkonomisBulan = umurEkonomisTahun * 12;
-      
+
       // Calculate months in use
       const now = new Date();
       const tanggalPerolehan = new Date(assetData.tanggal_perolehan);
-      
+
       const yearsDiff = now.getFullYear() - tanggalPerolehan.getFullYear();
       const monthsDiff = now.getMonth() - tanggalPerolehan.getMonth();
       let totalBulanPemakaian = yearsDiff * 12 + monthsDiff;
-      
+
       // Ensure non-negative value
       if (totalBulanPemakaian < 0) {
         totalBulanPemakaian = 0;
       }
-      
+
       // Cap depreciation at asset's economic life
       if (totalBulanPemakaian > umurEkonomisBulan) {
         totalBulanPemakaian = umurEkonomisBulan;
       }
-      
+
       // Calculate depreciation and remaining value
       let akumulasiPenyusutan = 0;
       let nilaiSisa = assetData.harga_perolehan;
-      
+
       if (umurEkonomisBulan > 0) {
         const penyusutanPerBulan = assetData.harga_perolehan / umurEkonomisBulan;
         akumulasiPenyusutan = penyusutanPerBulan * totalBulanPemakaian;
         // Round to 2 decimal places
         akumulasiPenyusutan = Math.round(akumulasiPenyusutan * 100) / 100;
-        
+
         nilaiSisa = assetData.harga_perolehan - akumulasiPenyusutan;
         if (nilaiSisa < 0) {
           nilaiSisa = 0;
@@ -721,7 +720,7 @@ class AssetUseCase {
         // Round to 2 decimal places
         nilaiSisa = Math.round(nilaiSisa * 100) / 100;
       }
-      
+
       return {
         ...assetData,
         umur_ekonomis_bulan: umurEkonomisBulan,
@@ -737,7 +736,7 @@ class AssetUseCase {
   async getNextAvailableSequence() {
     try {
       const allAssets = await this.assetRepository.list({});
-      
+
       const existingSequences = new Set();
       for (const asset of allAssets) {
         const code = asset.kode;

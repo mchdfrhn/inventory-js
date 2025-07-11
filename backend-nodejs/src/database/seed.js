@@ -171,15 +171,15 @@ async function seedDatabase() {
         is_bulk_parent: i === 1,
         bulk_total_count: 3,
       });
-      
+
       bulkAssets.push(bulkAsset);
       logger.info(`💻 Created bulk asset: ${bulkAsset.nama} (${bulkAsset.kode})`);
     }
 
-    logger.info(`✅ Database seeding completed successfully!`);
+    logger.info('✅ Database seeding completed successfully!');
     logger.info(`📊 Created ${createdAssets.length} individual assets`);
     logger.info(`📦 Created ${bulkAssets.length} bulk assets`);
-    
+
     process.exit(0);
   } catch (error) {
     logger.error('❌ Database seeding failed:', error);

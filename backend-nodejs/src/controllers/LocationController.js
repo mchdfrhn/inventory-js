@@ -184,11 +184,12 @@ class LocationController {
       const errors = [];
       let processedCount = 0;
 
+      // eslint-disable-next-line no-console
       console.log('Starting enhanced CSV parsing for locations...');
 
       // Read and clean file content
       let content = fs.readFileSync(filePath, 'utf8');
-      
+
       // Remove BOM if present
       if (content.charCodeAt(0) === 0xFEFF) {
         content = content.slice(1);
@@ -199,7 +200,7 @@ class LocationController {
       const firstLine = content.split('\n')[0];
       let detectedDelimiter = ',';
       let maxDelimiterCount = 0;
-      
+
       delimiters.forEach(delimiter => {
         const count = (firstLine.match(new RegExp('\\' + delimiter, 'g')) || []).length;
         if (count > maxDelimiterCount) {
@@ -208,18 +209,19 @@ class LocationController {
         }
       });
 
+      // eslint-disable-next-line no-console
       console.log(`Detected delimiter: "${detectedDelimiter}"`);
 
       // Create temporary file with cleaned content
       const path = require('path');
       const tempFile = path.join(__dirname, '../temp/locations_import.csv');
-      
+
       // Ensure temp directory exists
       const tempDir = path.dirname(tempFile);
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true });
       }
-      
+
       fs.writeFileSync(tempFile, content);
 
       // Enhanced field mapping function
@@ -233,19 +235,20 @@ class LocationController {
       };
 
       // Parse CSV file
-      const stream = fs.createReadStream(tempFile, { encoding: 'utf8' })
+      fs.createReadStream(tempFile, { encoding: 'utf8' })
         .pipe(csv({
           separator: detectedDelimiter,
           skipEmptyLines: true,
           skipLinesWithError: false,
           strip_bom: true,
-          trim: true
+          trim: true,
         }))
         .on('data', (row) => {
           try {
             processedCount++;
+            // eslint-disable-next-line no-console
             console.log(`Processing row ${processedCount}:`, row);
-            
+
             // Enhanced field mapping - support multiple column name variations
             const locationData = {
               code: getFieldValue(row, ['code', 'kode', 'Kode', 'Kode*', 'CODE', 'Code']),
@@ -256,6 +259,7 @@ class LocationController {
               room: getFieldValue(row, ['room', 'ruangan', 'Ruangan', 'ROOM', 'Room', 'ruang']) || '',
             };
 
+            // eslint-disable-next-line no-console
             console.log('Mapped location data:', locationData);
 
             // Enhanced validation
@@ -284,29 +288,32 @@ class LocationController {
             }
 
             // Check for duplicates within the CSV
-            const isDuplicate = locations.some(loc => 
-              loc.code.toLowerCase() === locationData.code.toLowerCase() || 
-              loc.name.toLowerCase() === locationData.name.toLowerCase()
+            const isDuplicate = locations.some(loc =>
+              loc.code.toLowerCase() === locationData.code.toLowerCase() ||
+              loc.name.toLowerCase() === locationData.name.toLowerCase(),
             );
-            
+
             if (isDuplicate) {
               throw new Error('Duplicate code or name found in CSV');
             }
 
             locations.push(locationData);
           } catch (error) {
+            // eslint-disable-next-line no-console
             console.error(`Error processing row ${processedCount}:`, error.message);
             errors.push(`Row ${processedCount}: ${error.message}`);
           }
         })
         .on('error', (error) => {
+          // eslint-disable-next-line no-console
           console.error('CSV parsing error:', error);
           errors.push(`CSV parsing error: ${error.message}`);
         })
         .on('end', async () => {
           try {
+            // eslint-disable-next-line no-console
             console.log(`Parsed ${locations.length} locations with ${errors.length} errors`);
-            
+
             // Clean up files
             fs.unlinkSync(filePath);
             if (fs.existsSync(tempFile)) {
@@ -314,13 +321,14 @@ class LocationController {
             }
 
             if (errors.length > 0) {
+              // eslint-disable-next-line no-console
               console.log('Errors found:', errors);
               return res.status(400).json({
                 success: false,
                 message: 'CSV parsing errors',
                 errors,
                 processed_rows: processedCount,
-                valid_rows: locations.length
+                valid_rows: locations.length,
               });
             }
 
@@ -355,8 +363,8 @@ class LocationController {
                   total_processed: processedCount,
                   valid_data: locations.length,
                   successfully_imported: importedLocations.length,
-                  failed_imports: importErrors.length
-                }
+                  failed_imports: importErrors.length,
+                },
               },
             });
           } catch (error) {

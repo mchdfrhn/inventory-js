@@ -22,7 +22,7 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+  },
 });
 
 const upload = multer({
@@ -43,79 +43,79 @@ const upload = multer({
 router.post(
   '/',
   validate(createAssetSchema),
-  assetController.createAsset.bind(assetController)
+  assetController.createAsset.bind(assetController),
 );
 
 // Create bulk assets
 router.post(
   '/bulk',
   validate(createBulkAssetSchema),
-  assetController.createBulkAsset.bind(assetController)
+  assetController.createBulkAsset.bind(assetController),
 );
 
 // Update single asset
 router.put(
   '/:id',
   validate(updateAssetSchema),
-  assetController.updateAsset.bind(assetController)
+  assetController.updateAsset.bind(assetController),
 );
 
 // Update bulk assets
 router.put(
   '/bulk/:bulk_id',
   validate(bulkUpdateAssetSchema),
-  assetController.updateBulkAssets.bind(assetController)
+  assetController.updateBulkAssets.bind(assetController),
 );
 
 // Delete single asset
 router.delete(
   '/:id',
-  assetController.deleteAsset.bind(assetController)
+  assetController.deleteAsset.bind(assetController),
 );
 
 // Delete bulk assets
 router.delete(
   '/bulk/:bulk_id',
-  assetController.deleteBulkAssets.bind(assetController)
+  assetController.deleteBulkAssets.bind(assetController),
 );
 
 // List assets with bulk view
 router.get(
   '/with-bulk',
   validate(assetFilterSchema, 'query'),
-  assetController.listAssetsWithBulk.bind(assetController)
+  assetController.listAssetsWithBulk.bind(assetController),
 );
 
 // Get single asset
 router.get(
   '/:id',
-  assetController.getAsset.bind(assetController)
+  assetController.getAsset.bind(assetController),
 );
 
 // Get bulk assets
 router.get(
   '/bulk/:bulk_id',
-  assetController.getBulkAssets.bind(assetController)
+  assetController.getBulkAssets.bind(assetController),
 );
 
 // Import assets from CSV
 router.post(
   '/import',
   upload.single('file'),
-  assetController.importAssets.bind(assetController)
+  assetController.importAssets.bind(assetController),
 );
 
 // Export assets to CSV
 router.get(
   '/export',
-  assetController.exportAssets.bind(assetController)
+  assetController.exportAssets.bind(assetController),
 );
 
 // List assets (with filtering and pagination)
 router.get(
   '/',
   validate(assetFilterSchema, 'query'),
-  assetController.listAssets.bind(assetController)
+  assetController.listAssets.bind(assetController),
 );
 
 module.exports = router;

@@ -12,7 +12,7 @@ const dbConfig = {
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'inventaris',
   user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '123'
+  password: process.env.DB_PASSWORD || '123',
 };
 
 async function insertDummyAssets() {
@@ -57,7 +57,7 @@ async function insertDummyAssets() {
         keterangan: 'Proyektor untuk presentasi ruang rapat',
         lokasi: 'Ruang Rapat',
         asal_pengadaan: 'Tender',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'SCAN001',
@@ -74,7 +74,7 @@ async function insertDummyAssets() {
         keterangan: 'Scanner untuk digitalisasi dokumen',
         lokasi: 'Ruang Administrasi',
         asal_pengadaan: 'Pembelian',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'SAFE001',
@@ -91,7 +91,7 @@ async function insertDummyAssets() {
         keterangan: 'Brankas untuk menyimpan dokumen penting',
         lokasi: 'Ruang Direktur',
         asal_pengadaan: 'Pembelian',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'WIFI001',
@@ -108,7 +108,7 @@ async function insertDummyAssets() {
         keterangan: 'Access point untuk koneksi wireless',
         lokasi: 'Ruang IT',
         asal_pengadaan: 'Tender',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'DISP001',
@@ -125,7 +125,7 @@ async function insertDummyAssets() {
         keterangan: 'Dispenser untuk ruang tamu',
         lokasi: 'Ruang Tamu',
         asal_pengadaan: 'Pembelian',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'WHIT001',
@@ -142,7 +142,7 @@ async function insertDummyAssets() {
         keterangan: 'Whiteboard untuk ruang rapat',
         lokasi: 'Ruang Rapat',
         asal_pengadaan: 'Pembelian',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'UPS001',
@@ -159,7 +159,7 @@ async function insertDummyAssets() {
         keterangan: 'UPS untuk backup power server',
         lokasi: 'Ruang Server',
         asal_pengadaan: 'Tender',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'PRINTER001',
@@ -176,7 +176,7 @@ async function insertDummyAssets() {
         keterangan: 'Printer multifungsi untuk kantor',
         lokasi: 'Ruang Administrasi',
         asal_pengadaan: 'Pembelian',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'AC001',
@@ -193,7 +193,7 @@ async function insertDummyAssets() {
         keterangan: 'AC untuk ruang direktur',
         lokasi: 'Ruang Direktur',
         asal_pengadaan: 'Tender',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'CCTV001',
@@ -210,7 +210,7 @@ async function insertDummyAssets() {
         keterangan: 'Kamera CCTV untuk keamanan pintu masuk',
         lokasi: 'Pintu Masuk',
         asal_pengadaan: 'Pembelian',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'DESK001',
@@ -227,7 +227,7 @@ async function insertDummyAssets() {
         keterangan: 'Meja kerja untuk ruang direktur',
         lokasi: 'Ruang Direktur',
         asal_pengadaan: 'Pembelian',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'CHAIR001',
@@ -244,7 +244,7 @@ async function insertDummyAssets() {
         keterangan: 'Kursi executive untuk direktur',
         lokasi: 'Ruang Direktur',
         asal_pengadaan: 'Pembelian',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'SERVER001',
@@ -261,7 +261,7 @@ async function insertDummyAssets() {
         keterangan: 'Server utama untuk aplikasi inventory',
         lokasi: 'Ruang Server',
         asal_pengadaan: 'Tender',
-        status: 'baik'
+        status: 'baik',
       },
       {
         kode: 'SWITCH001',
@@ -278,8 +278,8 @@ async function insertDummyAssets() {
         keterangan: 'Switch jaringan untuk konektifitas kantor',
         lokasi: 'Ruang IT',
         asal_pengadaan: 'Tender',
-        status: 'baik'
-      }
+        status: 'baik',
+      },
     ];
 
     // Insert single assets
@@ -324,7 +324,7 @@ async function insertDummyAssets() {
           randomLocation.id,
           asset.status,
           new Date(),
-          new Date()
+          new Date(),
         ];
 
         await client.query(insertQuery, values);
@@ -340,7 +340,7 @@ async function insertDummyAssets() {
     const phoneAssets = [
       { kode: 'PHONE001', lokasi: 'Ruang Direktur', status: 'baik', sequence: 1, isParent: true },
       { kode: 'PHONE002', lokasi: 'Ruang Administrasi', status: 'baik', sequence: 2, isParent: false },
-      { kode: 'PHONE003', lokasi: 'Ruang IT', status: 'rusak', sequence: 3, isParent: false }
+      { kode: 'PHONE003', lokasi: 'Ruang IT', status: 'rusak', sequence: 3, isParent: false },
     ];
 
     for (const phone of phoneAssets) {
@@ -388,7 +388,7 @@ async function insertDummyAssets() {
           phone.isParent,
           3,
           new Date(),
-          new Date()
+          new Date(),
         ];
 
         await client.query(insertQuery, values);
@@ -406,7 +406,7 @@ async function insertDummyAssets() {
       { kode: 'MONITOR002', lokasi: 'Ruang Administrasi', status: 'baik', sequence: 2, isParent: false },
       { kode: 'MONITOR003', lokasi: 'Ruang IT', status: 'baik', sequence: 3, isParent: false },
       { kode: 'MONITOR004', lokasi: 'Ruang IT', status: 'baik', sequence: 4, isParent: false },
-      { kode: 'MONITOR005', lokasi: 'Ruang Direktur', status: 'tidak_memadai', sequence: 5, isParent: false }
+      { kode: 'MONITOR005', lokasi: 'Ruang Direktur', status: 'tidak_memadai', sequence: 5, isParent: false },
     ];
 
     for (const monitor of monitorAssets) {
@@ -454,7 +454,7 @@ async function insertDummyAssets() {
           monitor.isParent,
           5,
           new Date(),
-          new Date()
+          new Date(),
         ];
 
         await client.query(insertQuery, values);
@@ -475,7 +475,7 @@ async function insertDummyAssets() {
       { kode: 'CHAIR006', lokasi: 'Ruang IT', status: 'baik', sequence: 5, isParent: false },
       { kode: 'CHAIR007', lokasi: 'Ruang IT', status: 'baik', sequence: 6, isParent: false },
       { kode: 'CHAIR008', lokasi: 'Ruang Rapat', status: 'baik', sequence: 7, isParent: false },
-      { kode: 'CHAIR009', lokasi: 'Ruang Rapat', status: 'baik', sequence: 8, isParent: false }
+      { kode: 'CHAIR009', lokasi: 'Ruang Rapat', status: 'baik', sequence: 8, isParent: false },
     ];
 
     for (const chair of chairAssets) {
@@ -523,7 +523,7 @@ async function insertDummyAssets() {
           chair.isParent,
           8,
           new Date(),
-          new Date()
+          new Date(),
         ];
 
         await client.query(insertQuery, values);
@@ -562,7 +562,7 @@ async function insertDummyAssets() {
     `;
 
     const result = await client.query(verifyQuery);
-    
+
     console.log('\n📊 Inserted Assets:');
     console.table(result.rows);
 
@@ -571,17 +571,17 @@ async function insertDummyAssets() {
     const singleAssets = result.rows.filter(row => row.asset_type === 'Single Asset').length;
     const bulkParents = result.rows.filter(row => row.asset_type === 'Bulk Parent').length;
     const bulkChildren = result.rows.filter(row => row.asset_type === 'Bulk Child').length;
-    
+
     console.log('\n📈 Summary:');
     console.log(`Total Assets Inserted: ${result.rows.length}`);
     console.log(`- Single Assets: ${singleAssets}`);
     console.log(`- Bulk Asset Sets: ${bulkParents} (${bulkChildren + bulkParents} total units)`);
     console.log(`Total Value: Rp ${totalValue.toLocaleString('id-ID')}`);
-    console.log(`\n✅ All assets inserted successfully!`);
+    console.log('\n✅ All assets inserted successfully!');
 
   } catch (error) {
     console.error('❌ Error inserting dummy assets:', error);
-    
+
     if (error.code === '28P01') {
       console.log('\n💡 Authentication failed. Please check your database password in the .env file.');
       console.log('   Current password setting: DB_PASSWORD=123');

@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+  },
 });
 
 const upload = multer({
@@ -41,53 +41,53 @@ const upload = multer({
 router.post(
   '/',
   validate(createLocationSchema),
-  locationController.createLocation.bind(locationController)
+  locationController.createLocation.bind(locationController),
 );
 
 // Update location
 router.put(
   '/:id',
   validate(updateLocationSchema),
-  locationController.updateLocation.bind(locationController)
+  locationController.updateLocation.bind(locationController),
 );
 
 // Delete location
 router.delete(
   '/:id',
-  locationController.deleteLocation.bind(locationController)
+  locationController.deleteLocation.bind(locationController),
 );
 
 // Get location by ID
 router.get(
   '/:id',
-  locationController.getLocation.bind(locationController)
+  locationController.getLocation.bind(locationController),
 );
 
 // Get location by code
 router.get(
   '/code/:code',
-  locationController.getLocationByCode.bind(locationController)
+  locationController.getLocationByCode.bind(locationController),
 );
 
 // Search locations
 router.get(
   '/search',
   validate(paginationSchema, 'query'),
-  locationController.searchLocations.bind(locationController)
+  locationController.searchLocations.bind(locationController),
 );
 
 // List locations (with pagination)
 router.get(
   '/',
   validate(paginationSchema, 'query'),
-  locationController.listLocations.bind(locationController)
+  locationController.listLocations.bind(locationController),
 );
 
 // Import locations from CSV
 router.post(
   '/import',
   upload.single('file'),
-  locationController.importLocations.bind(locationController)
+  locationController.importLocations.bind(locationController),
 );
 
 module.exports = router;

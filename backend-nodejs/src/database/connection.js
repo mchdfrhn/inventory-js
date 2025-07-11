@@ -20,25 +20,25 @@ if (config.database.driver !== 'sqlite') {
 
 // Driver-specific configurations
 switch (config.database.driver) {
-  case 'postgres':
-    dbConfig.dialectOptions = {
-      ssl: config.database.ssl ? {
-        require: true,
-        rejectUnauthorized: false
-      } : false,
-    };
-    break;
-  case 'mysql':
-    dbConfig.dialectOptions = {
-      charset: config.database.charset,
-    };
-    if (config.database.timezone) {
-      dbConfig.dialectOptions.timezone = config.database.timezone;
-    }
-    break;
-  case 'sqlite':
-    dbConfig.storage = config.database.database;
-    break;
+case 'postgres':
+  dbConfig.dialectOptions = {
+    ssl: config.database.ssl ? {
+      require: true,
+      rejectUnauthorized: false,
+    } : false,
+  };
+  break;
+case 'mysql':
+  dbConfig.dialectOptions = {
+    charset: config.database.charset,
+  };
+  if (config.database.timezone) {
+    dbConfig.dialectOptions.timezone = config.database.timezone;
+  }
+  break;
+case 'sqlite':
+  dbConfig.storage = config.database.database;
+  break;
 }
 
 // Create Sequelize instance
@@ -49,7 +49,7 @@ if (config.database.driver === 'sqlite') {
     config.database.database,
     config.database.username,
     config.database.password,
-    dbConfig
+    dbConfig,
   );
 }
 

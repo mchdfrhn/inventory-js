@@ -367,7 +367,7 @@ console.log(`- Single Assets: ${dummyAssets.length}`);
 console.log(`- Bulk Asset Sets: ${bulkAssets.length} (containing ${bulkAssets.reduce((acc, asset) => acc + asset.quantity, 0)} individual units)`);
 console.log(`Total Individual Units: ${dummyAssets.length + bulkAssets.reduce((acc, asset) => acc + asset.quantity, 0)}`);
 
-const totalValue = dummyAssets.reduce((sum, asset) => sum + asset.harga_perolehan, 0) + 
+const totalValue = dummyAssets.reduce((sum, asset) => sum + asset.harga_perolehan, 0) +
                   bulkAssets.reduce((sum, asset) => sum + (asset.harga_perolehan * asset.quantity), 0);
 console.log(`Total Value: Rp ${totalValue.toLocaleString('id-ID')}`);
 

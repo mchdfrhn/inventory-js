@@ -95,7 +95,7 @@ class LocationRepository {
   async list(page = 1, pageSize = 10) {
     try {
       const offset = (page - 1) * pageSize;
-      
+
       const { count, rows } = await Location.findAndCountAll({
         order: [['code', 'ASC']],
         limit: pageSize,

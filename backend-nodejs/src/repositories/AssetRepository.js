@@ -1,6 +1,5 @@
 const { Asset, AssetCategory, Location } = require('../models');
 const { Op, fn, col } = require('sequelize');
-const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
 
 // Updated asset repository with proper location fields
@@ -164,7 +163,7 @@ class AssetRepository {
   async list(filter = {}) {
     try {
       const whereClause = this.buildWhereClause(filter);
-      
+
       const assets = await Asset.findAll({
         where: whereClause,
         order: [['created_at', 'DESC']],
@@ -295,7 +294,7 @@ class AssetRepository {
       // Get all assets and parse their codes for sequences
       const allAssets = await Asset.findAll({
         attributes: ['kode'],
-        order: [['created_at', 'ASC']]
+        order: [['created_at', 'ASC']],
       });
 
       const existingSequences = new Set();
@@ -331,7 +330,7 @@ class AssetRepository {
       // Get all assets and parse their codes for sequences
       const allAssets = await Asset.findAll({
         attributes: ['kode'],
-        order: [['created_at', 'ASC']]
+        order: [['created_at', 'ASC']],
       });
 
       const existingSequences = new Set();
@@ -351,7 +350,9 @@ class AssetRepository {
 
       // Find the first available range starting from 1
       let start = 1;
-      while (true) {
+      const maxIterations = 1000000; // Reasonable limit
+      let iterations = 0;
+      while (iterations < maxIterations) {
         let canAllocate = true;
         for (let i = 0; i < count; i++) {
           if (existingSequences.has(start + i)) {
@@ -366,7 +367,11 @@ class AssetRepository {
           };
         }
         start++;
+        iterations++;
       }
+
+      // If we've exhausted reasonable range, throw error
+      throw new Error('Unable to find available sequence range');
     } catch (error) {
       logger.error('Error getting next available sequence range:', error);
       throw error;
@@ -460,11 +465,11 @@ class AssetRepository {
       const asset = await Asset.findOne({
         where: {
           kode: {
-            [Op.like]: `${prefix}%`
-          }
+            [Op.like]: `${prefix}%`,
+          },
         },
         order: [['kode', 'DESC']],
-        attributes: ['id', 'kode']
+        attributes: ['id', 'kode'],
       });
 
       return asset;

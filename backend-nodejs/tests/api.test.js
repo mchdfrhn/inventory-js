@@ -48,7 +48,7 @@ describe('Asset Categories API', () => {
     const categoryData = {
       code: 'TEST001',
       name: 'Test Category',
-      description: 'This is a test category'
+      description: 'This is a test category',
     };
 
     const response = await request(app)
@@ -68,7 +68,7 @@ describe('Asset Categories API', () => {
     const categoryData = {
       code: 'TEST002',
       name: 'Test Category 2',
-      description: 'This is another test category'
+      description: 'This is another test category',
     };
 
     await request(app)

@@ -38,11 +38,11 @@ const AssetCategory = sequelize.define('AssetCategory', {
   indexes: [
     {
       unique: true,
-      fields: ['code']
+      fields: ['code'],
     },
     {
       unique: true,
-      fields: ['name']
+      fields: ['name'],
     },
   ],
 });

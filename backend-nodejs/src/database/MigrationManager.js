@@ -25,7 +25,7 @@ class MigrationManager {
 
   async createTables() {
     const transaction = await this.sequelize.transaction();
-    
+
     try {
       // Create asset_categories table
       await this.sequelize.query(`
@@ -121,18 +121,18 @@ class MigrationManager {
         'CREATE INDEX IF NOT EXISTS idx_assets_tanggal_perolehan ON assets(tanggal_perolehan);',
         'CREATE INDEX IF NOT EXISTS idx_assets_nama ON assets USING gin(nama gin_trgm_ops);',
         'CREATE INDEX IF NOT EXISTS idx_assets_kode ON assets USING gin(kode gin_trgm_ops);',
-        
+
         // Audit log indexes
         'CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type ON audit_logs(entity_type);',
         'CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_id ON audit_logs(entity_id);',
         'CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);',
         'CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);',
         'CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type_entity_id ON audit_logs(entity_type, entity_id);',
-        
+
         // Location indexes
         'CREATE INDEX IF NOT EXISTS idx_locations_name ON locations USING gin(name gin_trgm_ops);',
         'CREATE INDEX IF NOT EXISTS idx_locations_code ON locations USING gin(code gin_trgm_ops);',
-        
+
         // Category indexes
         'CREATE INDEX IF NOT EXISTS idx_categories_name ON asset_categories USING gin(name gin_trgm_ops);',
         'CREATE INDEX IF NOT EXISTS idx_categories_code ON asset_categories USING gin(code gin_trgm_ops);',
@@ -156,7 +156,7 @@ class MigrationManager {
 
   async insertDefaultData() {
     const transaction = await this.sequelize.transaction();
-    
+
     try {
       // Insert default categories
       await this.sequelize.query(`

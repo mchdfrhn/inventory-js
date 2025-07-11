@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 
 const logger = require('./utils/logger');
@@ -75,10 +74,10 @@ app.get('/health', (req, res) => {
 app.get('/health/detailed', async (req, res) => {
   try {
     const { sequelize } = require('./database/connection');
-    
+
     // Test database connection
     await sequelize.authenticate();
-    
+
     res.status(200).json({
       status: 'OK',
       timestamp: new Date().toISOString(),
