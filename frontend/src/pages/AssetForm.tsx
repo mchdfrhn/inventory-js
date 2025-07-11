@@ -35,6 +35,38 @@ type AssetFormData = {
   status: 'baik' | 'rusak' | 'tidak_memadai';
 };
 
+// Interface for asset data from API
+interface AssetData {
+  kode: string;
+  nama: string;
+  spesifikasi: string;
+  quantity: number;
+  satuan: string;
+  tanggal_perolehan: string;
+  harga_perolehan: number;
+  umur_ekonomis_tahun: number;
+  keterangan: string;
+  lokasi_id: number;
+  asal_pengadaan: string;
+  category_id: string;
+  status: string;
+  is_bulk_parent?: boolean;
+  bulk_total_count?: number;
+}
+
+// Interface for category and location data
+interface CategoryData {
+  id: string;
+  code: string;
+  name: string;
+}
+
+interface LocationData {
+  id: number;
+  code: string;
+  name: string;
+}
+
 export default function AssetForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -140,11 +172,26 @@ export default function AssetForm() {
       );
       navigate('/assets');
     },
-    onError: (err: Error) => {
-      const errorMessage = `Gagal membuat bulk aset: ${err.message}`;
+    onError: (err: Error & { response?: { data?: { errors?: Array<{ field: string; message: string }>; message?: string } } }) => {
+      let errorMessage = 'Gagal membuat bulk aset';
+      
+      // Handle different types of errors
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        // Handle validation errors with detailed field information
+        const validationErrors = err.response.data.errors;
+        const errorDetails = validationErrors.map((error) => `${error.field}: ${error.message}`).join(', ');
+        errorMessage = `Gagal membuat bulk aset: ${errorDetails}`;
+      } else if (err.response?.data?.message) {
+        // Handle API error messages
+        errorMessage = `Gagal membuat bulk aset: ${err.response.data.message}`;
+      } else if (err.message) {
+        // Handle general error messages
+        errorMessage = `Gagal membuat bulk aset: ${err.message}`;
+      }
+      
       setError(errorMessage);
       addNotification('error', errorMessage);
-      console.error(err);
+      console.error('Bulk asset create error:', err);
       setIsSubmitting(false);
     },
   });
@@ -159,11 +206,26 @@ export default function AssetForm() {
       addNotification('success', 'Aset baru berhasil ditambahkan!');
       navigate('/assets');
     },
-    onError: (err: Error) => {
-      const errorMessage = `Gagal menyimpan aset: ${err.message}`;
+    onError: (err: Error & { response?: { data?: { errors?: Array<{ field: string; message: string }>; message?: string } } }) => {
+      let errorMessage = 'Gagal menyimpan aset';
+      
+      // Handle different types of errors
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        // Handle validation errors with detailed field information
+        const validationErrors = err.response.data.errors;
+        const errorDetails = validationErrors.map((error) => `${error.field}: ${error.message}`).join(', ');
+        errorMessage = `Gagal menyimpan aset: ${errorDetails}`;
+      } else if (err.response?.data?.message) {
+        // Handle API error messages
+        errorMessage = `Gagal menyimpan aset: ${err.response.data.message}`;
+      } else if (err.message) {
+        // Handle general error messages
+        errorMessage = `Gagal menyimpan aset: ${err.message}`;
+      }
+      
       setError(errorMessage);
       addNotification('error', errorMessage);
-      console.error(err);
+      console.error('Asset create error:', err);
       setIsSubmitting(false);
     },
   });
@@ -184,12 +246,28 @@ export default function AssetForm() {
       addNotification('success', message);
       navigate('/assets');
     },
-    onError: (err: Error) => {
-      const errorMessage = `Gagal menyimpan aset: ${err.message}`;
+    onError: (err: Error & { response?: { data?: { errors?: Array<{ field: string; message: string }>; message?: string } } }) => {
+      let errorMessage = 'Gagal memperbarui aset';
+      
+      // Handle different types of errors
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        // Handle validation errors with detailed field information
+        const validationErrors = err.response.data.errors;
+        const errorDetails = validationErrors.map((error) => `${error.field}: ${error.message}`).join(', ');
+        errorMessage = `Gagal memperbarui aset: ${errorDetails}`;
+      } else if (err.response?.data?.message) {
+        // Handle API error messages
+        errorMessage = `Gagal memperbarui aset: ${err.response.data.message}`;
+      } else if (err.message) {
+        // Handle general error messages
+        errorMessage = `Gagal memperbarui aset: ${err.message}`;
+      }
+      
       setError(errorMessage);
       addNotification('error', errorMessage);
-      console.error(err);
-      setIsSubmitting(false);    },
+      console.error('Asset update error:', err);
+      setIsSubmitting(false);
+    },
   });
 
   // Create category and location mutations are currently disabled
@@ -211,7 +289,7 @@ export default function AssetForm() {
         asal_pengadaan,
         category_id, 
         status
-      } = assetData.data as any;
+      } = assetData.data as AssetData;
       
       // Use the status directly - we only accept baik, rusak, or tidak_memadai now
       let mappedStatus: 'baik' | 'rusak' | 'tidak_memadai' = 'baik';
@@ -228,7 +306,7 @@ export default function AssetForm() {
       }
       
       // Ensure lokasi_id is a number or undefined, not a string
-      let parsedLokasiId = lokasi_id;
+      let parsedLokasiId: number | undefined = lokasi_id;
       if (lokasi_id !== null && lokasi_id !== undefined) {
         parsedLokasiId = Number(lokasi_id);
         if (isNaN(parsedLokasiId)) {
@@ -364,19 +442,25 @@ export default function AssetForm() {
     } else {
       dataToSubmit.umur_ekonomis_tahun = umurNum;
     }
-      // Convert lokasi_id to number or null
-    const lokasiIdNum = dataToSubmit.lokasi_id ? Number(dataToSubmit.lokasi_id) : null;
-    if (lokasiIdNum && !isNaN(lokasiIdNum)) {
-      dataToSubmit.lokasi_id = lokasiIdNum;
+      // Convert lokasi_id to number, only include if it's valid
+    if (dataToSubmit.lokasi_id) {
+      const lokasiIdNum = Number(dataToSubmit.lokasi_id);
+      if (!isNaN(lokasiIdNum) && lokasiIdNum > 0) {
+        dataToSubmit.lokasi_id = lokasiIdNum;
+      } else {
+        // For invalid lokasi_id, don't send the field (this should be caught by frontend validation)
+        delete dataToSubmit.lokasi_id;
+      }
     } else {
-      // If no valid lokasi_id, this should be caught by validation
+      // If lokasi_id is empty, don't send the field
       delete dataToSubmit.lokasi_id;
     }
 
     // Prepare final data to submit
-    let finalDataToSubmit: any;
+    let finalDataToSubmit: AssetFormData | Omit<AssetFormData, 'kode'>;
     if (!isEditMode) {
       // Remove kode field for create mode (akan di-generate di backend)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { kode, ...dataWithoutKode } = dataToSubmit;
       finalDataToSubmit = dataWithoutKode;
     } else {
@@ -384,16 +468,16 @@ export default function AssetForm() {
     }
 
     if (isEditMode) {
-      updateMutation.mutate({ id: id as string, asset: finalDataToSubmit });
+      updateMutation.mutate({ id: id as string, asset: finalDataToSubmit as AssetFormData });
     } else {
       // Only create bulk for eligible units
       const bulkEligibleUnits = ['unit', 'pcs', 'set', 'buah'];
-      const shouldCreateBulk = quantity > 1 && bulkEligibleUnits.includes(finalDataToSubmit.satuan);
+      const shouldCreateBulk = quantity > 1 && bulkEligibleUnits.includes((finalDataToSubmit as AssetFormData).satuan || '');
       
       if (shouldCreateBulk) {
-        createBulkMutation.mutate({ asset: finalDataToSubmit, quantity });
+        createBulkMutation.mutate({ asset: finalDataToSubmit as AssetFormData, quantity });
       } else {
-        createMutation.mutate(finalDataToSubmit);
+        createMutation.mutate(finalDataToSubmit as AssetFormData);
       }
     }
   };
@@ -426,7 +510,7 @@ export default function AssetForm() {
       }
     }
       // Update form data
-    setFormData(prev => ({ ...prev, [name]: newValue as any }));
+    setFormData(prev => ({ ...prev, [name]: newValue as string | number | undefined }));
     
     // Validate the field
     const errorMessage = validateField(name, newValue);
@@ -465,10 +549,10 @@ export default function AssetForm() {
   };
 
   // Validate a single field
-  const validateField = (name: string, value: any): string => {
+  const validateField = (name: string, value: string | number | undefined): string => {
     switch (name) {
       case 'nama':
-        return (value && value.trim()) ? '' : 'Nama aset wajib diisi';
+        return (value && typeof value === 'string' && value.trim()) ? '' : 'Nama aset wajib diisi';
       case 'category_id':
         return value ? '' : 'Kategori wajib dipilih';
       case 'lokasi_id':
@@ -476,11 +560,11 @@ export default function AssetForm() {
       case 'asal_pengadaan':
         return value ? '' : 'Asal pengadaan wajib dipilih';
       case 'quantity':
-        return value > 0 ? '' : 'Jumlah wajib lebih dari 0';
+        return (value !== undefined && Number(value) > 0) ? '' : 'Jumlah wajib lebih dari 0';
       case 'harga_perolehan':
-        return value > 0 ? '' : 'Harga perolehan wajib lebih dari 0';      
+        return (value !== undefined && Number(value) > 0) ? '' : 'Harga perolehan wajib lebih dari 0';      
       case 'umur_ekonomis_tahun':
-        return value >= 1 ? '' : 'Umur ekonomis wajib minimal 1 tahun';
+        return (value !== undefined && Number(value) >= 1) ? '' : 'Umur ekonomis wajib minimal 1 tahun';
       default:
         return '';    }
   };
@@ -645,8 +729,8 @@ export default function AssetForm() {
                   onBlur={() => setTouched(prev => ({ ...prev, category_id: true }))}
                 >                  <option value="">Pilih Kategori</option>
                   {categoriesData?.data
-                    .sort((a: any, b: any) => (a.code || '').localeCompare(b.code || ''))
-                    .map((category: any) => (
+                    .sort((a: CategoryData, b: CategoryData) => (a.code || '').localeCompare(b.code || ''))
+                    .map((category: CategoryData) => (
                     <option key={category.id} value={category.id}>
                       {category.code} - {category.name}
                     </option>
@@ -673,8 +757,8 @@ export default function AssetForm() {
                   onBlur={() => setTouched(prev => ({ ...prev, lokasi_id: true }))}
                 >                  <option value="">Pilih Lokasi</option>
                   {locationsData?.data
-                    .sort((a: any, b: any) => (a.code || '').localeCompare(b.code || ''))
-                    .map((location: any) => (
+                    .sort((a: LocationData, b: LocationData) => (a.code || '').localeCompare(b.code || ''))
+                    .map((location: LocationData) => (
                     <option key={location.id} value={location.id}>
                       {location.code} - {location.name}
                     </option>

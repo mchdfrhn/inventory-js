@@ -81,11 +81,44 @@ const createAssetSchema = Joi.object({
   status: Joi.string().valid('baik', 'rusak', 'tidak_memadai').default('baik'),
 });
 
-const updateAssetSchema = createAssetSchema.keys({
-  id: Joi.string().uuid().required().messages({
-    'string.guid': 'Asset ID must be a valid UUID',
-    'any.required': 'Asset ID is required',
+const updateAssetSchema = Joi.object({
+  // All fields are optional for update, except for basic validation rules
+  kode: Joi.string().trim().min(1).max(50).optional().messages({
+    'string.empty': 'Asset code cannot be empty',
+    'string.max': 'Asset code must be 50 characters or less',
   }),
+  nama: Joi.string().trim().min(1).max(255).optional().messages({
+    'string.empty': 'Asset name cannot be empty',
+    'string.max': 'Asset name must be 255 characters or less',
+  }),
+  spesifikasi: Joi.string().trim().allow('').optional(),
+  quantity: Joi.number().integer().min(0).optional(),
+  satuan: Joi.string().trim().min(1).max(50).optional().messages({
+    'string.empty': 'Unit cannot be empty',
+    'string.max': 'Unit must be 50 characters or less',
+  }),
+  tanggal_perolehan: Joi.date().optional().messages({
+    'date.base': 'Acquisition date must be a valid date',
+  }),
+  harga_perolehan: Joi.number().min(0).optional().messages({
+    'number.min': 'Acquisition price must be greater than or equal to 0',
+  }),
+  umur_ekonomis_tahun: Joi.number().integer().min(0).optional(),
+  umur_ekonomis_bulan: Joi.number().integer().min(0).max(11).optional(),
+  akumulasi_penyusutan: Joi.number().min(0).optional(),
+  nilai_sisa: Joi.number().min(0).optional(),
+  keterangan: Joi.string().trim().allow('').optional(),
+  lokasi: Joi.string().trim().max(255).allow('').optional(),
+  lokasi_id: Joi.number().integer().positive().optional().messages({
+    'number.positive': 'Location ID must be a positive number',
+  }),
+  asal_pengadaan: Joi.string().trim().max(255).optional().messages({
+    'string.empty': 'Asal pengadaan cannot be empty',
+  }),
+  category_id: Joi.string().uuid().optional().messages({
+    'string.guid': 'Category ID must be a valid UUID',
+  }),
+  status: Joi.string().valid('baik', 'rusak', 'tidak_memadai').optional(),
 });
 
 const createBulkAssetSchema = createAssetSchema.keys({
