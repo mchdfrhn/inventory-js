@@ -226,10 +226,28 @@ class AssetRepository {
     }
   }
 
+  /**
+   * List assets with bulk support - only shows bulk parents and single assets
+   * This prevents showing individual bulk children as separate assets to avoid duplication
+   *
+   * @param {Object} filter - Filter criteria
+   * @param {number} page - Page number
+   * @param {number} pageSize - Page size
+   * @returns {Promise<Object>} Paginated asset list with only bulk parents and single assets
+   */
   async listPaginatedWithBulk(filter = {}, page = 1, pageSize = 10) {
     try {
       const offset = (page - 1) * pageSize;
       const whereClause = this.buildWhereClause(filter);
+
+      // Only show assets that are either:
+      // 1. Not part of any bulk (bulk_id is null)
+      // 2. Bulk parent assets (is_bulk_parent is true)
+      // This prevents showing individual bulk children as separate assets
+      whereClause[Op.or] = [
+        { bulk_id: null }, // Single assets (not part of any bulk)
+        { is_bulk_parent: true }, // Bulk parent assets
+      ];
 
       // Group by bulk_id for bulk assets, show individual assets normally
       const assets = await Asset.findAll({
@@ -360,7 +378,7 @@ class AssetRepository {
       // Find the highest sequence and start from there + 1
       const maxSequence = Math.max(...existingSequences);
       const nextStart = maxSequence + 1;
-      
+
       return {
         start: nextStart,
         end: nextStart + count - 1,
