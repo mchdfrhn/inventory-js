@@ -192,19 +192,22 @@ export default function AuditLogPage() {
         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
           <h4 className="text-[11px] font-medium text-gray-900 mb-2">Perubahan:</h4>
           <div className="space-y-2">
-            {Object.entries(changes).map(([field, change]: [string, { from: unknown; to: unknown }]) => (
-              <div key={field} className="text-[10px]">
-                <span className="font-medium text-gray-700">{field}:</span>
-                <div className="ml-2 text-gray-600">
-                  {change.from !== null && (
-                    <div>Dari: <span className="text-red-600">{JSON.stringify(change.from)}</span></div>
-                  )}
-                  {change.to !== null && (
-                    <div>Ke: <span className="text-green-600">{JSON.stringify(change.to)}</span></div>
-                  )}
+            {Object.entries(changes).map(([field, change]) => {
+              const changeObj = change as { from: unknown; to: unknown };
+              return (
+                <div key={field} className="text-[10px]">
+                  <span className="font-medium text-gray-700">{field}:</span>
+                  <div className="ml-2 text-gray-600">
+                    {changeObj.from !== null && (
+                      <div>Dari: <span className="text-red-600">{JSON.stringify(changeObj.from)}</span></div>
+                    )}
+                    {changeObj.to !== null && (
+                      <div>Ke: <span className="text-green-600">{JSON.stringify(changeObj.to)}</span></div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       );

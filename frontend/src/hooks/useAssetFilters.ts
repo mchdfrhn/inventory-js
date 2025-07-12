@@ -59,6 +59,19 @@ interface Asset {
   tanggal_perolehan?: string;
   asal_pengadaan?: string;
   umur_ekonomis_tahun?: number;
+  // Additional fields for reporting
+  quantity?: number;
+  satuan?: string;
+  keterangan?: string;
+  category_id?: string;
+  lokasi_id?: number;
+  created_at?: string;
+  updated_at?: string;
+  umur_ekonomis_bulan?: number;
+  bulk_id?: string;
+  bulk_sequence?: number;
+  is_bulk_parent?: boolean;
+  bulk_total_count?: number;
 }
 
 const initialFilters: FilterOptions = {

@@ -119,43 +119,46 @@ const ReportsPage = () => {
       console.log(`[ReportsPage] 📊 Total data dimuat: ${allAssets.length} aset`);
       
       // Transform API data to match our Asset interface
-      const transformedAssets: Asset[] = allAssets.map((asset: unknown) => ({
-        id: asset.id,
-        kode: asset.kode,
-        nama: asset.nama,
-        spesifikasi: asset.spesifikasi || '',
-        category: { 
-          name: asset.category?.name || 'Tidak Berkategori' 
-        },
-        lokasi: asset.location_info?.name || asset.lokasi || 'Tidak Diketahui',
-        location_info: {
-          name: asset.location_info?.name || asset.lokasi || '',
-          building: asset.location_info?.building || '',
-          floor: asset.location_info?.floor || '',
-          room: asset.location_info?.room || ''
-        },
-        status: asset.status || 'baik',
-        harga_perolehan: Number(asset.harga_perolehan || 0),
-        nilai_sisa: Number(asset.nilai_sisa || 0),
-        akumulasi_penyusutan: Number(asset.akumulasi_penyusutan || 0),
-        tanggal_perolehan: asset.tanggal_perolehan || '',
-        asal_pengadaan: asset.asal_pengadaan || 'Tidak Diketahui',
-        umur_ekonomis_tahun: Number(asset.umur_ekonomis_tahun || 0),
-        
-        // Additional fields from API
-        quantity: asset.quantity || 1,
-        satuan: asset.satuan || 'unit',
-        keterangan: asset.keterangan || '',
-        category_id: asset.category_id || '',
-        lokasi_id: asset.lokasi_id,
-        created_at: asset.created_at || '',
-        updated_at: asset.updated_at || '',
-        umur_ekonomis_bulan: asset.umur_ekonomis_bulan || 0,
-        bulk_id: asset.bulk_id,
-        bulk_sequence: asset.bulk_sequence,
-        is_bulk_parent: asset.is_bulk_parent,
-        bulk_total_count: asset.bulk_total_count
-      }));
+      const transformedAssets: Asset[] = allAssets.map((asset: unknown) => {
+        const a = asset as any; // Type assertion for API data
+        return {
+          id: a.id,
+          kode: a.kode,
+          nama: a.nama,
+          spesifikasi: a.spesifikasi || '',
+          category: { 
+            name: a.category?.name || 'Tidak Berkategori' 
+          },
+          lokasi: a.location_info?.name || a.lokasi || 'Tidak Diketahui',
+          location_info: {
+            name: a.location_info?.name || a.lokasi || '',
+            building: a.location_info?.building || '',
+            floor: a.location_info?.floor || '',
+            room: a.location_info?.room || ''
+          },
+          status: a.status || 'baik',
+          harga_perolehan: Number(a.harga_perolehan || 0),
+          nilai_sisa: Number(a.nilai_sisa || 0),
+          akumulasi_penyusutan: Number(a.akumulasi_penyusutan || 0),
+          tanggal_perolehan: a.tanggal_perolehan || '',
+          asal_pengadaan: a.asal_pengadaan || 'Tidak Diketahui',
+          umur_ekonomis_tahun: Number(a.umur_ekonomis_tahun || 0),
+          
+          // Additional fields from API
+          quantity: a.quantity || 1,
+          satuan: a.satuan || 'unit',
+          keterangan: a.keterangan || '',
+          category_id: a.category_id || '',
+          lokasi_id: a.lokasi_id,
+          created_at: a.created_at || '',
+          updated_at: a.updated_at || '',
+          umur_ekonomis_bulan: a.umur_ekonomis_bulan || 0,
+          bulk_id: a.bulk_id,
+          bulk_sequence: a.bulk_sequence,
+          is_bulk_parent: a.is_bulk_parent,
+          bulk_total_count: a.bulk_total_count
+        };
+      });
       
       console.log(`[ReportsPage] 🔄 Data setelah transform (${transformedAssets.length} aset):`, transformedAssets.slice(0, 2));
       
@@ -231,7 +234,7 @@ const ReportsPage = () => {
       sum + (asset.akumulasi_penyusutan || 0), 0
     );
 
-    const statusCounts = assetsData.reduce((counts: any, asset: Asset) => {
+    const statusCounts = assetsData.reduce((counts: Record<string, number>, asset: Asset) => {
       const status = asset.status || 'baik';
       counts[status] = (counts[status] || 0) + 1;
       return counts;
@@ -345,7 +348,7 @@ const ReportsPage = () => {
     }
   };
 
-  const generateReportHTML = (template: ReportTemplate, assets: any[], stats: any) => {
+  const generateReportHTML = (template: ReportTemplate, assets: Asset[], stats: { totalValue: number; currentValue: number; totalDepreciation: number; statusCounts: Record<string, number> }) => {
     const now = new Date();
     const formatDate = (date: Date) => {
       return date.toLocaleDateString('id-ID', {

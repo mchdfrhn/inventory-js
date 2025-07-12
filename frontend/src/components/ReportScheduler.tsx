@@ -4,7 +4,11 @@ import { ClockIcon, CalendarIcon, BellIcon } from '@heroicons/react/24/outline';
 interface ScheduledReport {
   id: string;
   name: string;
-  template: any;
+  template: {
+    id: string;
+    name: string;
+    type: string;
+  };
   frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly';
   time: string;
   dayOfWeek?: number; // 0-6, for weekly reports
@@ -23,9 +27,16 @@ interface ScheduleData {
   [key: string]: unknown;
 }
 
+interface Template {
+  id: string;
+  name: string;
+  type: string;
+}
+
 interface ReportSchedulerProps {
   schedule: ScheduleData;
   onScheduleChange: (schedule: ScheduleData) => void;
+  availableTemplates: Template[];
 }
 
 const STORAGE_KEY = 'sttpu_scheduled_reports';
@@ -387,7 +398,7 @@ export default function ReportScheduler({ availableTemplates }: ReportSchedulerP
                     value={newReport.frequency}
                     onChange={(e) => setNewReport(prev => ({ 
                       ...prev, 
-                      frequency: e.target.value as any 
+                      frequency: e.target.value as 'daily' | 'weekly' | 'monthly' | 'quarterly'
                     }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
