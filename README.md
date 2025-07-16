@@ -61,7 +61,6 @@ Sistem manajemen inventaris aset untuk STTPU (Sekolah Tinggi Teknologi Pembangun
 - **State Management**: Context API + React Query
 
 ### Infrastructure
-- **Containerization**: Docker
 - **Database**: PostgreSQL with optimized indexes
 - **API**: RESTful API with comprehensive endpoints
 - **Authentication**: JWT Token based
@@ -129,19 +128,21 @@ Sistem manajemen inventaris aset untuk STTPU (Sekolah Tinggi Teknologi Pembangun
 git clone <repository-url>
 cd inventory-js
 
-# 2. Setup backend
+# 2. Setup database (make sure PostgreSQL is installed)
+createdb inventaris
+
+# 3. Setup backend
 cd backend-nodejs
 cp .env.example .env
 npm install
-docker-compose up -d postgres
 npm run migrate
 
-# 3. Setup frontend
+# 4. Setup frontend
 cd ../frontend
 cp .env.example .env
 npm install
 
-# 4. Run development
+# 5. Run development
 # Terminal 1: Backend
 cd backend-nodejs && npm run dev
 
@@ -236,18 +237,22 @@ JWT_EXPIRES_IN=24h
 VITE_API_BASE_URL=http://localhost:8080
 ```
 
-## 🐳 Docker Support
+## 🐳 Manual Setup
 
-### Backend + Database
+### Install PostgreSQL
 ```bash
-cd backend-nodejs
-docker-compose up -d
+# Ubuntu/Debian
+sudo apt-get install postgresql postgresql-contrib
+
+# macOS (dengan Homebrew)
+brew install postgresql
+
+# Windows - Download dari official website
 ```
 
-### Full Stack (Optional)
+### Create Database
 ```bash
-# Build and run all services
-docker-compose -f docker-compose.full.yml up -d --build
+createdb inventaris
 ```
 
 ## 🧪 Testing

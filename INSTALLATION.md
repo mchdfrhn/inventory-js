@@ -41,10 +41,11 @@ UPLOAD_PATH=./uploads
 MAX_FILE_SIZE=5242880
 ```
 
-### 4. Run Backend
+### 4. Install Dependencies & Start Backend
 ```bash
 cd backend-nodejs
 npm install
+npm run migrate
 npm run dev
 ```
 
@@ -169,17 +170,6 @@ curl http://localhost:8080/api
 
 ### 3. Test Frontend Access
 Open browser: http://localhost:5173 (Vite dev server)
-
-## 🐳 Docker Alternative
-
-Jika Anda menggunakan Docker:
-
-```bash
-cd backend-nodejs
-docker-compose up -d
-```
-
-Ini akan menjalankan PostgreSQL dan backend service.
 
 ## 🔍 Troubleshooting
 

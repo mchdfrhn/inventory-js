@@ -4,10 +4,9 @@ Panduan deployment untuk STTPU Inventory Management System dengan Node.js backen
 
 ## 📋 Prerequisites
 
-- Docker & Docker Compose
 - Node.js 18+ 
 - npm 8+
-- PostgreSQL 12+ (jika tidak menggunakan Docker)
+- PostgreSQL 12+
 
 ## 🚀 Quick Start
 
@@ -42,12 +41,6 @@ npm run dev
 cd frontend
 npm install
 npm run dev
-```
-
-#### For Docker
-```bash
-cd backend-nodejs
-docker-compose up -d
 ```
 
 ## 📁 Configuration Files
@@ -119,24 +112,33 @@ npm run build
 npm run preview
 ```
 
-## 🐳 Docker Deployment
+## 🐳 Manual Database Setup
 
-### Backend with PostgreSQL
+### Install PostgreSQL
 ```bash
-cd backend-nodejs
-docker-compose up -d
+# Ubuntu/Debian
+sudo apt-get install postgresql postgresql-contrib
+
+# CentOS/RHEL
+sudo yum install postgresql postgresql-server
+
+# macOS (dengan Homebrew)
+brew install postgresql
+
+# Windows - Download dari https://www.postgresql.org/download/windows/
 ```
 
-This will start:
-- PostgreSQL database
-- Node.js backend API server
-- Automatic database migration
-
-### Frontend Docker Build
+### Create Database
 ```bash
-cd frontend
-docker build -t inventory-frontend .
-docker run -p 5173:5173 inventory-frontend
+# Start PostgreSQL service
+sudo systemctl start postgresql  # Linux
+brew services start postgresql   # macOS
+
+# Create database
+createdb inventaris
+
+# Or using SQL
+psql -U postgres -c "CREATE DATABASE inventaris;"
 ```
 
 ## 🗄️ Database Setup
@@ -166,7 +168,7 @@ The system automatically creates:
 ### Development Environment
 - Debug mode enabled
 - CORS allows localhost origins
-- Database on localhost/Docker
+- Database on localhost
 - Hot reload for frontend
 - Detailed logging
 - Auto-migration enabled
@@ -204,11 +206,12 @@ curl http://localhost:8080/api
 
 ### Database Health
 ```bash
-# If using Docker
-docker-compose exec postgres pg_isready -U postgres
-
 # Manual check
 psql -U postgres -d inventaris -c "SELECT version();"
+
+# Check if service is running
+sudo systemctl status postgresql  # Linux
+brew services list | grep postgres  # macOS
 ```
 
 ## 🔒 Security Considerations
@@ -242,7 +245,7 @@ DB_SSL=true
 #### Database Connection Failed
 ```bash
 # Check if PostgreSQL is running
-systemctl status postgresql  # Linux
+sudo systemctl status postgresql  # Linux
 brew services list | grep postgres  # macOS
 
 # Check database exists
@@ -250,6 +253,10 @@ psql -U postgres -l | grep inventaris
 
 # Test connection
 psql -U postgres -d inventaris -c "SELECT 1;"
+
+# Start PostgreSQL service if not running
+sudo systemctl start postgresql  # Linux
+brew services start postgresql   # macOS
 ```
 
 #### Backend Migration Warnings

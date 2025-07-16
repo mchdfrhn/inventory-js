@@ -2,7 +2,14 @@
 
 # STTPU Inventory System Deployment Script
 # Usage: ./deploy.sh [environment]
-# Environment: development, production, docker
+# Environment: dev    "docker")
+        echo "🐳 Manual database setup required..."
+        echo "❌ Docker support not available in this project"
+        echo ""
+        echo "Please use 'development' or 'production' environment"
+        echo "Make sure PostgreSQL is installed and running manually"
+        exit 1
+        ;;, docker
 
 set -e
 
@@ -28,17 +35,25 @@ case $ENVIRONMENT in
             echo "✅ Created frontend/.env from example"
         fi
         
-        # Start database
-        echo "🐘 Starting PostgreSQL database..."
-        cd backend-nodejs
-        docker-compose up -d postgres
+        # Check if PostgreSQL is running
+        echo "🐘 Checking PostgreSQL database..."
+        if ! command -v psql &> /dev/null; then
+            echo "❌ PostgreSQL not found! Please install PostgreSQL first"
+            exit 1
+        fi
         
-        # Wait for database to be ready
-        echo "⏳ Waiting for database to be ready..."
-        sleep 10
+        # Check if database exists
+        if ! psql -U postgres -lqt | cut -d \| -f 1 | grep -qw inventaris; then
+            echo "📊 Creating database..."
+            createdb inventaris
+            echo "✅ Database 'inventaris' created"
+        else
+            echo "✅ Database 'inventaris' already exists"
+        fi
         
         # Install backend dependencies
         echo "📦 Installing backend dependencies..."
+        cd backend-nodejs
         npm install
         
         # Run migrations
@@ -122,7 +137,7 @@ case $ENVIRONMENT in
         
     *)
         echo "❌ Unknown environment: $ENVIRONMENT"
-        echo "Available environments: development, production, docker"
+        echo "Available environments: development, production"
         exit 1
         ;;
 esac
@@ -130,6 +145,6 @@ esac
 echo ""
 echo "🎉 Deployment completed successfully!"
 echo "📋 Next steps:"
-echo "1. Check application logs: docker-compose logs -f (for docker)"
+echo "1. Start the backend and frontend services"
 echo "2. Access the application at the URLs shown above"
 echo "3. Monitor system resources and performance"
