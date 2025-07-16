@@ -173,3 +173,7 @@ coverage/
 # Local development files
 .local/
 local/
+
+# SSH Key
+PopKey
+PopKey.pub

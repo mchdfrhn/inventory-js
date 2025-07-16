@@ -18,28 +18,32 @@ case $ENVIRONMENT in
         echo "🔧 Setting up development environment..."
         
         # Copy environment files
-        if [ ! -f "backend/.env" ]; then
-            cp backend/.env.example backend/.env || cp .env.example backend/.env
-            echo "✅ Created backend/.env from example"
+        if [ ! -f "backend-nodejs/.env" ]; then
+            cp backend-nodejs/.env.example backend-nodejs/.env
+            echo "✅ Created backend-nodejs/.env from example"
         fi
         
         if [ ! -f "frontend/.env" ]; then
-            cp frontend/.env.example frontend/.env || cp .env.example frontend/.env
+            cp frontend/.env.example frontend/.env
             echo "✅ Created frontend/.env from example"
         fi
         
         # Start database
         echo "🐘 Starting PostgreSQL database..."
-        cd backend
+        cd backend-nodejs
         docker-compose up -d postgres
         
         # Wait for database to be ready
         echo "⏳ Waiting for database to be ready..."
         sleep 10
         
+        # Install backend dependencies
+        echo "📦 Installing backend dependencies..."
+        npm install
+        
         # Run migrations
         echo "🗄️ Running database migrations..."
-        go run cmd/migrate/main.go
+        npm run migrate
         
         # Install frontend dependencies
         echo "📦 Installing frontend dependencies..."
@@ -51,7 +55,7 @@ case $ENVIRONMENT in
         echo "🔗 Frontend: http://localhost:5173"
         echo ""
         echo "To start the services:"
-        echo "Backend: cd backend && go run cmd/main.go"
+        echo "Backend: cd backend-nodejs && npm run dev"
         echo "Frontend: cd frontend && npm run dev"
         ;;
         
@@ -59,9 +63,9 @@ case $ENVIRONMENT in
         echo "🏭 Setting up production environment..."
         
         # Check if production env files exist
-        if [ ! -f "backend/.env.production" ]; then
-            echo "❌ backend/.env.production not found!"
-            echo "Please create backend/.env.production file first"
+        if [ ! -f "backend-nodejs/.env.production" ]; then
+            echo "❌ backend-nodejs/.env.production not found!"
+            echo "Please create backend-nodejs/.env.production file first"
             exit 1
         fi
         
@@ -72,15 +76,27 @@ case $ENVIRONMENT in
         fi
         
         # Copy production env files
-        cp backend/.env.production backend/.env
+        cp backend-nodejs/.env.production backend-nodejs/.env
         cp frontend/.env.production frontend/.env
         
-        # Build and deploy with docker
-        echo "🐳 Building and deploying with Docker..."
-        docker-compose -f docker-compose.full.yml --env-file .env.docker up -d --build
+        # Install and build backend
+        echo "� Installing backend dependencies..."
+        cd backend-nodejs
+        npm install --production
         
-        echo "✅ Production deployment complete!"
-        echo "🔗 Application: http://localhost:3000"
+        # Run migrations
+        echo "🗄️ Running database migrations..."
+        npm run migrate
+        
+        # Install and build frontend
+        echo "📦 Building frontend..."
+        cd ../frontend
+        npm install
+        npm run build
+        
+        echo "✅ Production build complete!"
+        echo "🔗 To start backend: cd backend-nodejs && npm start"
+        echo "🔗 To serve frontend: cd frontend && npm run preview"
         ;;
         
     "docker")
@@ -88,17 +104,20 @@ case $ENVIRONMENT in
         
         # Use docker environment file
         if [ ! -f ".env.docker" ]; then
-            echo "❌ .env.docker not found!"
-            exit 1
+            echo "❌ .env.docker not found! Creating from example..."
+            cp backend-nodejs/.env.example .env.docker
         fi
         
         # Deploy with docker compose
-        docker-compose -f docker-compose.full.yml --env-file .env.docker up -d --build
+        cd backend-nodejs
+        docker-compose up -d --build
         
         echo "✅ Docker deployment complete!"
-        echo "🔗 Application: http://localhost:3000"
-        echo "🔗 API: http://localhost:8080"
-        echo "🐘 Database: localhost:5432"
+        echo "🔗 Backend API: http://localhost:8080"
+        echo "� Database: localhost:5432"
+        echo ""
+        echo "To deploy frontend separately:"
+        echo "cd frontend && docker build -t inventory-frontend . && docker run -p 5173:5173 inventory-frontend"
         ;;
         
     *)
@@ -111,6 +130,6 @@ esac
 echo ""
 echo "🎉 Deployment completed successfully!"
 echo "📋 Next steps:"
-echo "1. Check application logs: docker-compose logs -f"
+echo "1. Check application logs: docker-compose logs -f (for docker)"
 echo "2. Access the application at the URLs shown above"
 echo "3. Monitor system resources and performance"

@@ -4,8 +4,8 @@
 
 ### 1. Prerequisites
 - PostgreSQL 12+ 
-- Go 1.21+
 - Node.js 18+
+- npm 8+ atau yarn
 
 ### 2. Database Setup
 ```bash
@@ -17,30 +17,38 @@ psql -U postgres -c "CREATE DATABASE inventaris;"
 ```
 
 ### 3. Configure Database Connection
-Edit `backend/config.yaml`:
-```yaml
-server:
-  port: "8080"
-  mode: "debug"
+Edit `backend-nodejs/.env`:
+```env
+# Server Configuration
+PORT=8080
+NODE_ENV=development
+HOST=localhost
 
-database:
-  driver: "postgres"
-  host: "localhost"
-  port: "5432"
-  user: "postgres"
-  password: "123"  # Change this to your password
-  dbname: "inventaris"
-  sslmode: "disable"
+# Database Configuration
+DB_DIALECT=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=123
+DB_NAME=inventaris
+
+# JWT Configuration
+JWT_SECRET=your-secret-key-here
+JWT_EXPIRES_IN=24h
+
+# File Upload
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=5242880
 ```
 
 ### 4. Run Backend
 ```bash
-cd backend
-go mod tidy
-go run cmd/main.go
+cd backend-nodejs
+npm install
+npm run dev
 ```
 
-The backend will automatically handle database migrations and create all necessary tables.
+Backend akan otomatis menjalankan migrasi database dan membuat tabel yang diperlukan.
 
 ### 5. Run Frontend
 ```bash
@@ -50,6 +58,12 @@ npm run dev
 ```
 
 ## 📊 System Architecture
+
+### Technology Stack:
+- **Backend**: Node.js + Express.js
+- **Database**: PostgreSQL dengan Sequelize ORM
+- **Frontend**: React 19 + TypeScript + Vite
+- **Styling**: TailwindCSS
 
 ### Tables Created Automatically:
 1. **asset_categories** - Categories with code and name
@@ -61,7 +75,7 @@ npm run dev
 
 **Health & Info:**
 - `GET /health` - Server health check
-- `GET /version` - Server version info
+- `GET /api` - API documentation
 
 **Assets API:**
 - `POST /api/v1/assets` - Create asset
@@ -88,31 +102,41 @@ npm run dev
 - `GET /api/v1/audit-logs/entity/:entity_type/:entity_id` - Get entity history
 
 ### Key Features:
-- ✅ Automatic database migration
-- ✅ PostgreSQL optimized indexes
+- ✅ Automatic database migration with Sequelize
+- ✅ PostgreSQL optimized with indexes
 - ✅ Foreign key constraints
 - ✅ Automatic timestamps
 - ✅ Soft delete support
 - ✅ Bulk asset management
 - ✅ Complete audit trail
 - ✅ CORS enabled for frontend integration
+- ✅ File upload support
+- ✅ CSV import/export functionality
 
 ## 🔧 Configuration Options
 
-### Backend Configuration (`backend/config.yaml`)
-```yaml
-server:
-  port: "8080"        # Server port
-  mode: "debug"       # debug or release
+### Backend Configuration (`backend-nodejs/.env`)
+```env
+# Server Configuration
+PORT=8080
+NODE_ENV=development
+HOST=localhost
 
-database:
-  driver: "postgres"  # Only PostgreSQL supported
-  host: "localhost"   # Database host
-  port: "5432"       # Database port
-  user: "postgres"   # Database user
-  password: "123"    # Database password
-  dbname: "inventaris" # Database name
-  sslmode: "disable" # SSL mode
+# Database Configuration  
+DB_DIALECT=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=inventaris
+
+# JWT Configuration
+JWT_SECRET=your-secret-key-here
+JWT_EXPIRES_IN=24h
+
+# File Upload Configuration
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=5242880
 ```
 
 ### Frontend Configuration (`frontend/.env`)
@@ -131,64 +155,103 @@ Expected response:
 ```json
 {
   "status": "ok",
-  "time": "2025-07-08T...",
-  "service": "STTPU Inventory Management System",
-  "version": "v1.0.0",
-  "developer": "Mochammad Farhan Ali"
+  "timestamp": "2025-07-16T...",
+  "uptime": "...",
+  "database": "connected",
+  "version": "1.0.0"
 }
 ```
 
-### 2. Test API Version
+### 2. Test API Documentation
 ```bash
-curl http://localhost:8080/version
+curl http://localhost:8080/api
 ```
 
 ### 3. Test Frontend Access
-Open browser: http://localhost:3000
+Open browser: http://localhost:5173 (Vite dev server)
 
 ## 🐳 Docker Alternative
 
-If you prefer using Docker:
+Jika Anda menggunakan Docker:
 
 ```bash
-cd backend
+cd backend-nodejs
 docker-compose up -d
 ```
 
-This will start PostgreSQL and the backend service.
+Ini akan menjalankan PostgreSQL dan backend service.
 
 ## 🔍 Troubleshooting
 
 ### Database Connection Issues
-1. Ensure PostgreSQL is running
-2. Check database credentials in `config.yaml`
-3. Verify database `inventaris` exists
-4. Check firewall/network connectivity
+1. Pastikan PostgreSQL sedang berjalan
+2. Periksa kredensial database di `.env`
+3. Verifikasi database `inventaris` sudah dibuat
+4. Periksa koneksi firewall/network
 
-### Migration Warnings
-The system may show warnings about existing indexes or columns. This is normal and doesn't affect functionality.
+### Node.js Version Issues
+Pastikan menggunakan Node.js versi 18 atau lebih tinggi:
+```bash
+node --version
+npm --version
+```
 
 ### Port Conflicts
 - Backend default: 8080
-- Frontend default: 3000
+- Frontend default: 5173 (Vite)
 - Database default: 5432
 
-Change ports in configuration files if needed.
+Ubah port di file konfigurasi jika diperlukan.
+
+### Migration Issues
+Jika migrasi gagal, jalankan manual:
+```bash
+cd backend-nodejs
+npm run migrate
+```
+
+### Environment Variables
+Pastikan file `.env` sudah dibuat dan dikonfigurasi dengan benar:
+```bash
+# Check backend env
+cat backend-nodejs/.env
+
+# Check frontend env
+cat frontend/.env
+```
+
+### Dependencies Issues
+Jika ada masalah dengan dependencies:
+```bash
+# Clear npm cache
+npm cache clean --force
+
+# Remove node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
 
 ## 📝 Development Notes
 
 ### Project Structure
 ```
-inventory/
-├── backend/           # Go backend service
-│   ├── cmd/          # Main application
-│   ├── internal/     # Business logic
-│   ├── migrations/   # Database migrations
-│   └── config.yaml   # Configuration
-├── frontend/         # React frontend
-│   ├── src/         # Source code
-│   └── public/      # Static assets
-└── docs/            # Documentation
+inventory-js/
+├── backend-nodejs/       # Node.js backend service
+│   ├── src/             # Source code
+│   │   ├── controllers/ # Route controllers
+│   │   ├── models/      # Database models
+│   │   ├── routes/      # API routes
+│   │   ├── database/    # Database config & migrations
+│   │   └── utils/       # Utilities
+│   ├── tests/           # Test files
+│   └── package.json     # Dependencies
+├── frontend/            # React frontend
+│   ├── src/            # Source code
+│   │   ├── components/ # React components
+│   │   ├── pages/      # Application pages
+│   │   └── services/   # API services
+│   └── package.json    # Dependencies
+└── docs/               # Documentation
 ```
 
 ### Developer Credits

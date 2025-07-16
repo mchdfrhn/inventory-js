@@ -1,12 +1,12 @@
 # STTPU Inventory Management System - Deployment Guide
 
-Panduan deployment untuk STTPU Inventory Management System dengan PostgreSQL.
+Panduan deployment untuk STTPU Inventory Management System dengan Node.js backend dan PostgreSQL.
 
 ## 📋 Prerequisites
 
 - Docker & Docker Compose
-- Node.js 18+ (untuk development)
-- Go 1.21+ (untuk development)
+- Node.js 18+ 
+- npm 8+
 - PostgreSQL 12+ (jika tidak menggunakan Docker)
 
 ## 🚀 Quick Start
@@ -14,14 +14,18 @@ Panduan deployment untuk STTPU Inventory Management System dengan PostgreSQL.
 ### 1. Clone Repository
 ```bash
 git clone <repository-url>
-cd inventory
+cd inventory-js
 ```
 
 ### 2. Setup Environment
 ```bash
-# Backend configuration already set in config.yaml
+# Backend configuration
+cd backend-nodejs
+cp .env.example .env
+# Edit .env dengan konfigurasi database Anda
+
 # Frontend environment (optional)
-cd frontend
+cd ../frontend
 cp .env.example .env
 ```
 
@@ -30,8 +34,9 @@ cp .env.example .env
 #### For Development (Recommended)
 ```bash
 # Start backend
-cd backend
-go run cmd/main.go
+cd backend-nodejs
+npm install
+npm run dev
 
 # Start frontend (in new terminal)
 cd frontend
@@ -41,26 +46,37 @@ npm run dev
 
 #### For Docker
 ```bash
-cd backend
+cd backend-nodejs
 docker-compose up -d
 ```
 
 ## 📁 Configuration Files
 
-### Backend Configuration (`backend/config.yaml`)
-```yaml
-server:
-  port: "8080"
-  mode: "debug"
+### Backend Configuration (`backend-nodejs/.env`)
+```env
+# Server Configuration
+PORT=8080
+NODE_ENV=development
+HOST=localhost
 
-database:
-  driver: "postgres"  # Only PostgreSQL supported
-  host: "localhost"
-  port: "5432"
-  user: "postgres"
-  password: "123"     # Change for production
-  dbname: "inventaris"
-  sslmode: "disable"
+# Database Configuration
+DB_DIALECT=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=inventaris
+
+# JWT Configuration
+JWT_SECRET=your-secret-key-here
+JWT_EXPIRES_IN=24h
+
+# File Upload Configuration
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=5242880
+
+# Logging
+LOG_LEVEL=info
 ```
 
 ### Frontend Environment Variables (`frontend/.env`)
@@ -73,13 +89,19 @@ database:
 
 ### Backend Only
 ```bash
-cd backend
+cd backend-nodejs
 
 # Ensure PostgreSQL is running and database exists
 createdb inventaris
 
-# Start backend (auto-migration enabled)
-go run cmd/main.go
+# Install dependencies
+npm install
+
+# Run migrations
+npm run migrate
+
+# Start backend
+npm start
 ```
 
 ### Frontend Only
@@ -101,20 +123,20 @@ npm run preview
 
 ### Backend with PostgreSQL
 ```bash
-cd backend
+cd backend-nodejs
 docker-compose up -d
 ```
 
 This will start:
 - PostgreSQL database
-- Backend API server
+- Node.js backend API server
 - Automatic database migration
 
 ### Frontend Docker Build
 ```bash
 cd frontend
 docker build -t inventory-frontend .
-docker run -p 3000:3000 inventory-frontend
+docker run -p 5173:5173 inventory-frontend
 ```
 
 ## 🗄️ Database Setup
@@ -143,15 +165,15 @@ The system automatically creates:
 
 ### Development Environment
 - Debug mode enabled
-- CORS allows all origins
-- Database on localhost
+- CORS allows localhost origins
+- Database on localhost/Docker
 - Hot reload for frontend
 - Detailed logging
 - Auto-migration enabled
 
 ### Production Environment
-- Release mode recommended
-- Restricted CORS origins
+- Production mode
+- CORS restricted to production domains
 - SSL enabled for database
 - Optimized builds
 - Error logging only
@@ -168,16 +190,16 @@ Expected response:
 ```json
 {
   "status": "ok",
-  "time": "2025-07-08T...",
-  "service": "STTPU Inventory Management System",
-  "version": "v1.0.0",
-  "developer": "Mochammad Farhan Ali"
+  "timestamp": "2025-07-16T...",
+  "uptime": "...",
+  "database": "connected",
+  "version": "1.0.0"
 }
 ```
 
-### Version Information
+### API Documentation
 ```bash
-curl http://localhost:8080/version
+curl http://localhost:8080/api
 ```
 
 ### Database Health
@@ -202,16 +224,15 @@ psql -U postgres -d inventaris -c "SELECT version();"
 - [ ] Regular security updates
 
 ### Database Security
-```yaml
+```env
 # Production database config
-database:
-  driver: "postgres"
-  host: "your-db-host"
-  port: "5432"
-  user: "inventory_user"
-  password: "${DB_PASSWORD}"  # From environment
-  dbname: "inventaris"
-  sslmode: "require"
+DB_DIALECT=postgres
+DB_HOST=your-db-host
+DB_PORT=5432
+DB_USER=inventory_user
+DB_PASSWORD=${DB_PASSWORD}  # From environment
+DB_NAME=inventaris
+DB_SSL=true
 ```
 
 ## 🔧 Troubleshooting
@@ -515,14 +536,46 @@ npm install
 cat frontend/.env
 ```
 
-#### Backend Compilation Error
+#### Backend Migration/Startup Errors
 ```bash
-# Clean module cache
-go clean -modcache
-go mod download
+# Check if PostgreSQL is running
+systemctl status postgresql  # Linux
+brew services list | grep postgres  # macOS
 
-# Rebuild
-go build ./cmd/main.go
+# Check database exists
+psql -U postgres -l | grep inventaris
+
+# Test connection
+psql -U postgres -d inventaris -c "SELECT 1;"
+
+# Run migrations manually
+cd backend-nodejs
+npm run migrate
+```
+
+#### Frontend Build Failed
+```bash
+# Clear cache and reinstall
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+
+# Check environment variables
+cat .env
+```
+
+#### Backend Startup Errors
+```bash
+# Check Node.js version
+node --version
+
+# Clear npm cache
+npm cache clean --force
+
+# Reinstall dependencies
+cd backend-nodejs
+rm -rf node_modules package-lock.json
+npm install
 ```
 
 ### Performance Optimization
@@ -545,18 +598,43 @@ go build ./cmd/main.go
 - Use CDN for static assets
 - Implement lazy loading
 
+#### Backend
+- Set `NODE_ENV=production`
+- Configure proper timeouts
+- Use caching where appropriate
+- Monitor memory usage
+- Use PM2 for process management
+
 ## 📞 Support
 
 Untuk bantuan deployment atau konfigurasi:
-1. Check dokumentasi API
+1. Check dokumentasi API di http://localhost:8080/api
 2. Review application logs
 3. Check environment variables
 4. Verify network connectivity
 5. Contact development team
 
+### System Information
+- **Developer**: Mochammad Farhan Ali
+- **Organization**: STTPU
+- **Version**: v1.0.0
+- **Database**: PostgreSQL only
+- **Architecture**: Node.js backend + React frontend
+
 ## 📝 Notes
 
-- Port defaults: Backend (8080), Frontend (3000), Database (5432)
-- All timestamps use Asia/Jakarta timezone
+- Port defaults: Backend (8080), Frontend (5173), Database (5432)
+- All timestamps use system timezone
 - File uploads stored in `./uploads` directory
-- Session tokens expire after 24 hours
+- JWT tokens expire after 24 hours (configurable)
+- Database migrations run automatically on startup
+- CORS configuration in environment variables
+
+### Production Tips
+- Use process manager like PM2 for backend
+- Setup reverse proxy with nginx
+- Enable SSL certificates
+- Configure database backup
+- Monitor system resources
+- Setup logging aggregation
+- Configure environment-specific variables

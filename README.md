@@ -1,6 +1,6 @@
 # STTPU Inventory Management System
 
-Sistem manajemen inventaris aset untuk STTPU (Sekolah Tinggi Teknologi Pembangunan Utama) yang dibangun dengan Go backend dan React frontend.
+Sistem manajemen inventaris aset untuk STTPU (Sekolah Tinggi Teknologi Pembangunan Utama) yang dibangun dengan Node.js backend dan React frontend.
 
 ## 🏢 Tentang Sistem
 
@@ -47,29 +47,30 @@ Sistem manajemen inventaris aset untuk STTPU (Sekolah Tinggi Teknologi Pembangun
 ## 🛠️ Teknologi
 
 ### Backend
-- **Language**: Go 1.21+
-- **Framework**: Gin Web Framework
+- **Language**: Node.js 18+
+- **Framework**: Express.js
 - **Database**: PostgreSQL 12+
-- **ORM**: GORM
-- **Architecture**: Clean Architecture
+- **ORM**: Sequelize
+- **Architecture**: RESTful API
 
 ### Frontend
-- **Framework**: React 18+
+- **Framework**: React 19+
 - **Language**: TypeScript
 - **Styling**: TailwindCSS
 - **Build Tool**: Vite
-- **State Management**: Context API
+- **State Management**: Context API + React Query
 
 ### Infrastructure
 - **Containerization**: Docker
 - **Database**: PostgreSQL with optimized indexes
 - **API**: RESTful API with comprehensive endpoints
+- **Authentication**: JWT Token based
 
 ## 🚀 Quick Start
 
 ### Minimum Requirements
-- Go 1.21+
 - Node.js 18+
+- npm 8+
 - PostgreSQL 12+
 
 ### Installation Steps
@@ -77,7 +78,7 @@ Sistem manajemen inventaris aset untuk STTPU (Sekolah Tinggi Teknologi Pembangun
 1. **Clone Repository**
    ```bash
    git clone <repository-url>
-   cd inventory
+   cd inventory-js
    ```
 
 2. **Setup Database**
@@ -87,40 +88,88 @@ Sistem manajemen inventaris aset untuk STTPU (Sekolah Tinggi Teknologi Pembangun
 
 3. **Configure Backend**
    ```bash
-   cd backend
-   # Edit config.yaml with your database credentials
+   cd backend-nodejs
+   cp .env.example .env
+   # Edit .env dengan konfigurasi database Anda
    ```
 
-4. **Start Backend**
+4. **Install Dependencies & Start Backend**
    ```bash
-   go mod tidy
-   go run cmd/main.go
+   npm install
+   npm run dev
    ```
 
 5. **Start Frontend**
    ```bash
-   cd frontend
+   cd ../frontend
    npm install
    npm run dev
    ```
 
 6. **Access Application**
-   - Frontend: http://localhost:3000
+   - Frontend: http://localhost:5173
    - Backend API: http://localhost:8080
-   - API Documentation: http://localhost:8080/version
+   - API Documentation: http://localhost:8080/api
 
 ## 📚 Dokumentasi
 
 - [📋 Installation Guide](./INSTALLATION.md) - Panduan instalasi lengkap
 - [🚀 Deployment Guide](./DEPLOYMENT.md) - Panduan deployment untuk berbagai environment
 
+## 📋 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 12+
+- npm 8+
+
+### Installation
+```bash
+# 1. Clone repository
+git clone <repository-url>
+cd inventory-js
+
+# 2. Setup backend
+cd backend-nodejs
+cp .env.example .env
+npm install
+docker-compose up -d postgres
+npm run migrate
+
+# 3. Setup frontend
+cd ../frontend
+cp .env.example .env
+npm install
+
+# 4. Run development
+# Terminal 1: Backend
+cd backend-nodejs && npm run dev
+
+# Terminal 2: Frontend
+cd frontend && npm run dev
+```
+
+### Automated Deployment
+```bash
+# Linux/Mac
+./deploy.sh development
+
+# Windows
+deploy.bat development
+```
+
+### Access Application
+- 🌐 Frontend: http://localhost:5173
+- 🔌 Backend API: http://localhost:8080
+- 📖 API Docs: http://localhost:8080/api
+
 ## 🏗️ Arsitektur Sistem
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Frontend      │    │    Backend      │    │   Database      │
-│   (React)       │◄──►│   (Go/Gin)      │◄──►│  (PostgreSQL)   │
-│   Port: 3000    │    │   Port: 8080    │    │   Port: 5432    │
+│ (React + Vite)  │◄──►│ (Node.js/Express│◄──►│  (PostgreSQL)   │
+│   Port: 5173    │    │   Port: 8080    │    │   Port: 5432    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -134,7 +183,7 @@ Sistem manajemen inventaris aset untuk STTPU (Sekolah Tinggi Teknologi Pembangun
 
 ### Health & System
 - `GET /health` - Status kesehatan sistem
-- `GET /version` - Informasi versi dan developer
+- `GET /api` - Dokumentasi API
 
 ### Assets Management
 - `POST /api/v1/assets` - Buat aset baru
@@ -162,20 +211,24 @@ Sistem manajemen inventaris aset untuk STTPU (Sekolah Tinggi Teknologi Pembangun
 
 ## 🔧 Konfigurasi
 
-### Backend Configuration (`backend/config.yaml`)
-```yaml
-server:
-  port: "8080"
-  mode: "debug"  # debug | release
+### Backend Configuration (`backend-nodejs/.env`)
+```env
+# Server Configuration
+PORT=8080
+NODE_ENV=development
+HOST=localhost
 
-database:
-  driver: "postgres"
-  host: "localhost"
-  port: "5432"
-  user: "postgres"
-  password: "your_password"
-  dbname: "inventaris"
-  sslmode: "disable"
+# Database Configuration
+DB_DIALECT=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=inventaris
+
+# JWT Configuration
+JWT_SECRET=your-secret-key-here
+JWT_EXPIRES_IN=24h
 ```
 
 ### Frontend Configuration (`frontend/.env`)
@@ -187,7 +240,7 @@ VITE_API_BASE_URL=http://localhost:8080
 
 ### Backend + Database
 ```bash
-cd backend
+cd backend-nodejs
 docker-compose up -d
 ```
 
@@ -206,8 +259,8 @@ curl http://localhost:8080/health
 
 ### API Testing
 ```bash
-# Get version info
-curl http://localhost:8080/version
+# Get API documentation
+curl http://localhost:8080/api
 
 # List assets (empty initially)
 curl http://localhost:8080/api/v1/assets
