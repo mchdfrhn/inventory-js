@@ -496,8 +496,8 @@ class AssetUseCase {
       throw new Error('Economic life (years) must be greater than or equal to 0');
     }
 
-    if (assetData.umur_ekonomis_bulan !== undefined && (assetData.umur_ekonomis_bulan < 0 || assetData.umur_ekonomis_bulan > 11)) {
-      throw new Error('Economic life (months) must be between 0 and 11');
+    if (assetData.umur_ekonomis_bulan !== undefined && (assetData.umur_ekonomis_bulan < 0 || assetData.umur_ekonomis_bulan > 600)) {
+      throw new Error('Economic life (months) must be between 0 and 600 (50 years)');
     }
 
     if (assetData.akumulasi_penyusutan !== undefined && assetData.akumulasi_penyusutan < 0) {
@@ -621,8 +621,8 @@ class AssetUseCase {
       throw new Error('Economic life (years) must be greater than or equal to 0');
     }
 
-    if (assetData.umur_ekonomis_bulan !== undefined && (assetData.umur_ekonomis_bulan < 0 || assetData.umur_ekonomis_bulan > 11)) {
-      throw new Error('Economic life (months) must be between 0 and 11');
+    if (assetData.umur_ekonomis_bulan !== undefined && (assetData.umur_ekonomis_bulan < 0 || assetData.umur_ekonomis_bulan > 600)) {
+      throw new Error('Economic life (months) must be between 0 and 600 (50 years)');
     }
 
     if (assetData.akumulasi_penyusutan !== undefined && assetData.akumulasi_penyusutan < 0) {

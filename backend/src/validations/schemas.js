@@ -84,7 +84,7 @@ const createAssetSchema = Joi.object({
     'any.required': 'Acquisition price is required',
   }),
   umur_ekonomis_tahun: Joi.number().integer().min(0).default(0),
-  umur_ekonomis_bulan: Joi.number().integer().min(0).max(11).default(0),
+  umur_ekonomis_bulan: Joi.number().integer().min(0).max(600).default(0), // Allow total months (0-600 = 0-50 years)
   akumulasi_penyusutan: Joi.number().min(0).default(0),
   nilai_sisa: Joi.number().min(0).default(0),
   keterangan: Joi.string().trim().allow('').optional(),
@@ -127,7 +127,7 @@ const updateAssetSchema = Joi.object({
     'number.min': 'Acquisition price must be greater than or equal to 0',
   }),
   umur_ekonomis_tahun: Joi.number().integer().min(0).optional(),
-  umur_ekonomis_bulan: Joi.number().integer().min(0).max(11).optional(),
+  umur_ekonomis_bulan: Joi.number().integer().min(0).max(600).optional(), // Allow total months
   akumulasi_penyusutan: Joi.number().min(0).optional(),
   nilai_sisa: Joi.number().min(0).optional(),
   keterangan: Joi.string().trim().allow('').optional(),
@@ -159,7 +159,7 @@ const bulkUpdateAssetSchema = Joi.object({
   tanggal_perolehan: Joi.date().max('now').optional(),
   harga_perolehan: Joi.number().min(0).optional(),
   umur_ekonomis_tahun: Joi.number().integer().min(0).optional(),
-  umur_ekonomis_bulan: Joi.number().integer().min(0).max(11).optional(),
+  umur_ekonomis_bulan: Joi.number().integer().min(0).max(600).optional(), // Allow total months
   akumulasi_penyusutan: Joi.number().min(0).optional(),
   nilai_sisa: Joi.number().min(0).optional(),
   keterangan: Joi.string().trim().allow('').optional(),

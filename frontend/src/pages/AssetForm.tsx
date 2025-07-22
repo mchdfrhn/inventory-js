@@ -28,6 +28,7 @@ type AssetFormData = {
   tanggal_perolehan: string;
   harga_perolehan: number | string; // Allow string for empty state
   umur_ekonomis_tahun: number | string; // Allow string for empty state
+  umur_ekonomis_bulan?: number | string; // Optional - calculated automatically from years
   keterangan: string;
   lokasi_id: number | string | undefined; // Can be string for empty value or form handling
   asal_pengadaan: string; 
@@ -45,6 +46,7 @@ interface AssetData {
   tanggal_perolehan: string;
   harga_perolehan: number;
   umur_ekonomis_tahun: number;
+  umur_ekonomis_bulan: number;
   keterangan: string;
   lokasi_id: number;
   asal_pengadaan: string;
@@ -315,7 +317,8 @@ export default function AssetForm() {
         quantity,        satuan, 
         tanggal_perolehan, 
         harga_perolehan,
-        umur_ekonomis_tahun, 
+        umur_ekonomis_tahun,
+        umur_ekonomis_bulan, 
         keterangan, 
         lokasi_id,
         asal_pengadaan,
@@ -351,7 +354,7 @@ export default function AssetForm() {
       }
         
       // Set form data with values from API
-      const updatedFormData = {
+      const updatedFormData: AssetFormData = {
         kode: kode || '',
         nama: nama || '',
         spesifikasi: spesifikasi || '',        quantity: quantity || 1,
@@ -359,6 +362,7 @@ export default function AssetForm() {
         tanggal_perolehan: tanggal_perolehan ? new Date(tanggal_perolehan).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         harga_perolehan: harga_perolehan || 0,
         umur_ekonomis_tahun: umur_ekonomis_tahun || 5, // Default to 5 years if not set
+        umur_ekonomis_bulan: umur_ekonomis_bulan || (umur_ekonomis_tahun || 5) * 12, // Calculate from existing data or default
         keterangan: keterangan || '',
         lokasi_id: parsedLokasiId,
         asal_pengadaan: asal_pengadaan || '',
@@ -475,8 +479,10 @@ export default function AssetForm() {
     const umurNum = typeof dataToSubmit.umur_ekonomis_tahun === 'string' ? Number(dataToSubmit.umur_ekonomis_tahun) : dataToSubmit.umur_ekonomis_tahun;
     if (isNaN(umurNum) || umurNum < 1) {
       dataToSubmit.umur_ekonomis_tahun = 1;
+      dataToSubmit.umur_ekonomis_bulan = 12; // 1 year = 12 months
     } else {
       dataToSubmit.umur_ekonomis_tahun = umurNum;
+      dataToSubmit.umur_ekonomis_bulan = umurNum * 12; // Auto-calculate months from years
     }
       // Convert lokasi_id to number, only include if it's valid
     if (dataToSubmit.lokasi_id) {
@@ -537,7 +543,7 @@ export default function AssetForm() {
     
     // Update form data
     let newValue: string | number | undefined = value;
-      // Convert numeric values - only convert to number if value is not empty
+    // Convert numeric values - only convert to number if value is not empty
     // Skip harga_perolehan as it has its own handler
     if (['quantity', 'umur_ekonomis_tahun'].includes(name)) {
       if (value === '') {
@@ -611,6 +617,8 @@ export default function AssetForm() {
         return (value !== undefined && Number(value) > 0) ? '' : 'Harga perolehan wajib lebih dari 0';      
       case 'umur_ekonomis_tahun':
         return (value !== undefined && Number(value) >= 1) ? '' : 'Umur ekonomis wajib minimal 1 tahun';
+      case 'umur_ekonomis_bulan':
+        return (value !== undefined && Number(value) >= 0 && Number(value) <= 600) ? '' : 'Umur ekonomis bulan harus antara 0-600 bulan';
       default:
         return '';    }
   };
@@ -1001,6 +1009,9 @@ export default function AssetForm() {
                   onChange={handleChange}
                   placeholder="5"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Umur ekonomis aset dalam tahun (1-50 tahun)
+                </p>
               </div>
             </div>
           </div>

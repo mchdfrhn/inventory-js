@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS assets (
   tanggal_perolehan DATE NOT NULL,
   harga_perolehan DECIMAL(15,2) NOT NULL CHECK (harga_perolehan >= 0),
   umur_ekonomis_tahun INTEGER NOT NULL DEFAULT 0 CHECK (umur_ekonomis_tahun >= 0),
-  umur_ekonomis_bulan INTEGER NOT NULL DEFAULT 0 CHECK (umur_ekonomis_bulan >= 0 AND umur_ekonomis_bulan <= 11),
+  umur_ekonomis_bulan INTEGER NOT NULL DEFAULT 0 CHECK (umur_ekonomis_bulan >= 0 AND umur_ekonomis_bulan <= 600),
   akumulasi_penyusutan DECIMAL(15,2) NOT NULL DEFAULT 0 CHECK (akumulasi_penyusutan >= 0),
   nilai_sisa DECIMAL(15,2) NOT NULL DEFAULT 0 CHECK (nilai_sisa >= 0),
   keterangan TEXT,
