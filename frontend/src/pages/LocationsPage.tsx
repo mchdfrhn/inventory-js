@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { locationApi } from '../services/api';
@@ -87,11 +87,11 @@ export default function LocationsPage() {
     setDeleteError(null);
   };
   // Handle delete confirmation
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     if (locationToDelete) {
       deleteMutation.mutate(locationToDelete.id);
     }
-  };
+  }, [locationToDelete, deleteMutation]);
 
   // Handle Enter key press for delete confirmation
   useEffect(() => {
@@ -103,7 +103,7 @@ export default function LocationsPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [deleteModalOpen, deleteMutation.isPending]);
+  }, [deleteModalOpen, deleteMutation.isPending, confirmDelete]);
 
   // Handle file selection for import
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -271,7 +271,7 @@ export default function LocationsPage() {
 
   // Sorting functionality for locations
   const filteredAndSortedLocations = filteredLocations?.sort((a: Location, b: Location) => {
-    let aValue: any, bValue: any;
+    let aValue: string | number, bValue: string | number;
     
     switch (sortField) {
       case 'code':
@@ -467,13 +467,19 @@ export default function LocationsPage() {
                         {location.description || ''}
                       </td>
                       <td className="px-2 py-2.5 text-xs w-24">
-                        <Link
-                          to={`/assets?location=${location.id}`}
-                          className="inline-flex items-center rounded-full bg-gradient-to-r from-green-50 to-green-100 px-2 py-0.5 text-xs font-medium text-green-800 border border-green-200 shadow-sm transition-all duration-300 hover:scale-105 hover:from-green-100 hover:to-green-200 hover:border-green-300 cursor-pointer truncate"
-                          title={`Lihat ${location.asset_count || 0} aset dalam lokasi ${location.name}`}
-                        >
-                          {location.asset_count || 0} aset
-                        </Link>
+                        {location.asset_count && location.asset_count > 0 ? (
+                          <Link
+                            to={`/assets?location=${location.id}`}
+                            className="inline-flex items-center rounded-full bg-gradient-to-r from-green-50 to-green-100 px-2 py-0.5 text-xs font-medium text-green-800 border border-green-200 shadow-sm transition-all duration-300 hover:scale-105 hover:from-green-100 hover:to-green-200 hover:border-green-300 cursor-pointer truncate"
+                            title={`Lihat ${location.asset_count} aset dalam lokasi ${location.name}`}
+                          >
+                            {location.asset_count} aset
+                          </Link>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-gradient-to-r from-gray-50 to-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 border border-gray-200 truncate">
+                            0 aset
+                          </span>
+                        )}
                       </td>
                       <td className="py-2.5 pl-2 pr-4 text-right text-xs font-medium w-24 sticky-action-col">
                         <div className="flex justify-end space-x-1.5">

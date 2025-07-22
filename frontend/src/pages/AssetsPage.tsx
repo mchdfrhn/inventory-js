@@ -229,13 +229,11 @@ export default function AssetsPage() {
       try {
         // Try listWithBulk first, fallback to regular list if it fails
         const result = await assetApi.listWithBulk(page, pageSize);
-        console.log('Assets data fetched:', result);
         return result;
       } catch (error) {
         console.error('Error with listWithBulk, trying regular list:', error);
         // Fallback to regular list
         const result = await assetApi.list(page, pageSize);
-        console.log('Assets data fetched (fallback):', result);
         return result;
       }
     },
@@ -248,7 +246,6 @@ export default function AssetsPage() {
     queryFn: async () => {
       try {
         const result = await categoryApi.list(1, 100);
-        console.log('Categories data fetched:', result);
         return result;
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -264,7 +261,6 @@ export default function AssetsPage() {
     queryFn: async () => {
       try {
         const result = await locationApi.list(1, 100);
-        console.log('Locations data fetched:', result);
         return result;
       } catch (error) {
         console.error('Error fetching locations:', error);
@@ -499,7 +495,8 @@ export default function AssetsPage() {
     // Category filter
     let matchesCategoryFilter = true;
     if (categoryFilter) {
-      matchesCategoryFilter = asset.category_id === categoryFilter;
+      // Pastikan perbandingan yang konsisten dengan mengkonversi ke string
+      matchesCategoryFilter = String(asset.category_id) === String(categoryFilter);
     }
     
     // Location filter
@@ -901,6 +898,65 @@ export default function AssetsPage() {
             </button>
           </div>
         </div>
+
+        {/* Active Filters Display */}
+        {(categoryFilter || locationFilter) && (
+          <div className="px-4 py-2 border-b border-gray-200/50 bg-gradient-to-r from-blue-50/30 to-indigo-50/30">
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-xs font-medium text-gray-600">Filter aktif:</span>
+              
+              {categoryFilter && categoriesData?.data && (
+                <div className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                  <TagIcon className="h-3 w-3 mr-1" />
+                  <span>Kategori: </span>
+                  <span className="ml-1 font-semibold">
+                    {(categoriesData.data.find((c: Category) => c.id === categoryFilter)?.name) || 'Dipilih'}
+                  </span>
+                  <button
+                    type="button"
+                    className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-green-600 hover:bg-green-200 hover:text-green-800 focus:outline-none"
+                    onClick={() => {
+                      setCategoryFilter(null);
+                      setTempCategoryFilter(null);
+                      // Update URL to remove category parameter
+                      const newSearchParams = new URLSearchParams(searchParams);
+                      newSearchParams.delete('category');
+                      setSearchParams(newSearchParams);
+                    }}
+                  >
+                    <span className="sr-only">Hapus filter kategori</span>
+                    <XMarkIcon className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              
+              {locationFilter && locationsData?.data && (
+                <div className="inline-flex items-center rounded-full bg-pink-50 border border-pink-200 px-2.5 py-0.5 text-xs font-medium text-pink-800">
+                  <MapPinIcon className="h-3 w-3 mr-1" />
+                  <span>Lokasi: </span>
+                  <span className="ml-1 font-semibold">
+                    {(locationsData.data.find((l: Location) => l.id.toString() === locationFilter)?.name) || 'Dipilih'}
+                  </span>
+                  <button
+                    type="button"
+                    className="ml-1 inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full text-pink-600 hover:bg-pink-200 hover:text-pink-800 focus:outline-none"
+                    onClick={() => {
+                      setLocationFilter(null);
+                      setTempLocationFilter(null);
+                      // Update URL to remove location parameter
+                      const newSearchParams = new URLSearchParams(searchParams);
+                      newSearchParams.delete('location');
+                      setSearchParams(newSearchParams);
+                    }}
+                  >
+                    <span className="sr-only">Hapus filter lokasi</span>
+                    <XMarkIcon className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
           {/* Filter Side Panel */}
         <Transition.Root show={filterPanelOpen} as={Fragment}>
           <Dialog as="div" className="fixed inset-y-0 right-0 z-50 overflow-y-auto" onClose={setFilterPanelOpen}>

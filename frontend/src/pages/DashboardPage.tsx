@@ -224,19 +224,19 @@ function StatusChart({ statusCounts }: { statusCounts: Record<string, number> })
   
   return (
     <div className="h-full flex items-center">
-      <div className="flex items-center gap-3 w-full">
+      <div className="flex items-center gap-4 w-full">
         {/* Chart container */}
         <div className="relative flex-shrink-0">
           <svg 
             viewBox="0 0 120 120" 
-            width="140" 
-            height="140" 
+            width="160" 
+            height="160" 
             className="transform -rotate-90"
             style={{ filter: 'drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.1))' }}
           >
             {segments.map((segment, i) => {
               // Calculate stroke-dasharray and stroke-dashoffset for each segment
-              const radius = 40; // Slightly smaller than viewBox to fit
+              const radius = 42; // Slightly larger radius for better proportion
               const circumference = 2 * Math.PI * radius;
               const dash = (segment.percentage / 100) * circumference;
               
@@ -255,7 +255,7 @@ function StatusChart({ statusCounts }: { statusCounts: Record<string, number> })
                   r={radius}
                   fill="transparent"
                   stroke={`url(#${segment.status}Gradient)`}
-                  strokeWidth="10" 
+                  strokeWidth="12" 
                   strokeDasharray={circumference}
                   strokeDashoffset={circumference - dash}
                   strokeLinecap="round"
@@ -270,7 +270,7 @@ function StatusChart({ statusCounts }: { statusCounts: Record<string, number> })
             })}
             
             {/* Center */}
-            <circle cx="60" cy="60" r="32" fill="white" />
+            <circle cx="60" cy="60" r="30" fill="white" />
             {/* Gradient definitions */}
             <defs>
               <linearGradient id="baikGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -294,20 +294,20 @@ function StatusChart({ statusCounts }: { statusCounts: Record<string, number> })
           
           {/* Center text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-sm text-gray-500 font-medium">Total</span>
-            <span className="text-lg font-bold text-gray-800">{totalCount}</span>
+            <span className="text-xs text-gray-500 font-medium">Total</span>
+            <span className="text-xl font-bold text-gray-800">{totalCount}</span>
           </div>
         </div>
         
         {/* Legend - Compact vertical list */}
         <div className="flex-1 min-w-0">
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {segments.map((segment, idx) => {
               const statusKey = segment.status as keyof typeof statusLabels;
               return (
                 <div 
                   key={segment.status} 
-                  className="flex items-center justify-between py-0.5 px-1 rounded hover:bg-gray-50/50 transition-colors" 
+                  className="flex items-center justify-between py-1 px-2 rounded hover:bg-gray-50/50 transition-colors" 
                   style={{
                     animation: 'fadeIn 0.5s ease-out forwards',
                     animationDelay: `${idx * 0.15 + 0.5}s`,
@@ -316,20 +316,20 @@ function StatusChart({ statusCounts }: { statusCounts: Record<string, number> })
                 >
                   <div className="flex items-center min-w-0 flex-1">
                     <div 
-                      className="h-1.5 w-1.5 rounded-full mr-1.5 flex-shrink-0"
+                      className="h-2 w-2 rounded-full mr-2 flex-shrink-0"
                       style={{
                         background: statusKey === 'baik' ? '#10b981' : 
                                    statusKey === 'rusak' ? '#ef4444' : 
                                    statusKey === 'tidak_memadai' ? '#d97706' : '#3b82f6'
                       }}
                     ></div>
-                    <span className="text-[11px] font-medium text-gray-700 truncate">
+                    <span className="text-xs font-medium text-gray-700 truncate">
                       {statusLabels[statusKey] || segment.status.replace('_', ' ')}
                     </span>
                   </div>
                   <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
-                    <span className="font-semibold text-[11px] text-gray-800">{segment.count}</span>
-                    <span className="text-[9px] text-gray-500">({segment.percentage}%)</span>
+                    <span className="font-semibold text-xs text-gray-800">{segment.count}</span>
+                    <span className="text-xs text-gray-500">({segment.percentage}%)</span>
                   </div>
                 </div>
               );
@@ -590,15 +590,15 @@ export default function DashboardPage() {
         </div>
       </GlassCard>
           {/* Status Chart Card */}
-          <GlassCard hover={true} className="p-3 flex flex-col">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-sm font-semibold text-gray-900">
+          <GlassCard hover={true} className="p-4 flex flex-col">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-base font-semibold text-gray-900">
                 Status Aset
               </h2>
               <div className="text-xs text-gray-500">Distribusi saat ini</div>
             </div>
             
-            <div className="flex-1 flex items-center">
+            <div className="flex-1 flex items-center min-h-[180px]">
               <StatusChart statusCounts={stats?.statusCounts || { baik: 0, rusak: 0, tidak_memadai: 0 }} />
             </div>
           </GlassCard>

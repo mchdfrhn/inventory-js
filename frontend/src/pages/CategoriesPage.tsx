@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { categoryApi } from '../services/api';
@@ -124,7 +124,7 @@ export default function CategoriesPage() {
 
   // Sorting functionality for categories
   const filteredAndSortedCategories = filteredCategories?.sort((a: Category, b: Category) => {
-    let aValue: any, bValue: any;
+    let aValue: string | number, bValue: string | number;
     
     switch (sortField) {
       case 'code':
@@ -169,11 +169,11 @@ export default function CategoriesPage() {
   };
 
   // Handle delete confirmation
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     if (categoryToDelete) {
       deleteMutation.mutate(categoryToDelete.id);
     }
-  };
+  }, [categoryToDelete, deleteMutation]);
 
   // Handle Enter key press for delete confirmation
   useEffect(() => {
@@ -185,7 +185,7 @@ export default function CategoriesPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [deleteModalOpen, deleteMutation.isPending]);
+  }, [deleteModalOpen, deleteMutation.isPending, confirmDelete]);
 
   // Handle file selection for import
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -422,14 +422,21 @@ export default function CategoriesPage() {
                         <div className="line-clamp-2 break-words">{category.description || '-'}</div>
                       </td>
                       <td className="w-24 whitespace-nowrap px-2 py-3 text-xs">
-                        <Link
-                          to={`/assets?category=${category.id}`}
-                          className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 border border-blue-200 shadow-sm transition-all duration-300 hover:scale-105 hover:from-blue-100 hover:to-blue-200 hover:border-blue-300 cursor-pointer"
-                          title={`Lihat ${category.asset_count || 0} aset dalam kategori ${category.name}`}
-                        >
-                          <span className="mobile-hide-text">{category.asset_count || 0} aset</span>
-                          <span className="md:hidden">{category.asset_count || 0}</span>
-                        </Link>
+                        {category.asset_count && category.asset_count > 0 ? (
+                          <Link
+                            to={`/assets?category=${category.id}`}
+                            className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 border border-blue-200 shadow-sm transition-all duration-300 hover:scale-105 hover:from-blue-100 hover:to-blue-200 hover:border-blue-300 cursor-pointer"
+                            title={`Lihat ${category.asset_count} aset dalam kategori ${category.name}`}
+                          >
+                            <span className="mobile-hide-text">{category.asset_count} aset</span>
+                            <span className="md:hidden">{category.asset_count}</span>
+                          </Link>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-gradient-to-r from-gray-50 to-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 border border-gray-200">
+                            <span className="mobile-hide-text">0 aset</span>
+                            <span className="md:hidden">0</span>
+                          </span>
+                        )}
                       </td>
                       <td className="sticky-action-col w-28 whitespace-nowrap py-3 pl-2 pr-4 text-right text-xs font-medium bg-white/80 backdrop-blur-sm">
                         <div className="flex justify-end space-x-2">

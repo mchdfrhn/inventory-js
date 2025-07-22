@@ -260,6 +260,7 @@ class AssetRepository {
           'satuan',
           'tanggal_perolehan',
           'harga_perolehan',
+          'category_id', // Add missing category_id field
           'status',
           'bulk_id',
           'is_bulk_parent',
