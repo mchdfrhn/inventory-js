@@ -230,6 +230,27 @@ class AssetUseCase {
       // Validate asset data
       await this.validateAssetDataForUpdate(assetData);
 
+      // Check if category or location has changed and regenerate kode if needed
+      const categoryChanged = assetData.category_id && assetData.category_id !== existingAsset.category_id;
+      const locationChanged = assetData.lokasi_id && assetData.lokasi_id !== existingAsset.lokasi_id;
+      const procurementChanged = assetData.asal_pengadaan && assetData.asal_pengadaan !== existingAsset.asal_pengadaan;
+      const dateChanged = assetData.tanggal_perolehan &&
+        new Date(assetData.tanggal_perolehan).getFullYear() !== new Date(existingAsset.tanggal_perolehan).getFullYear();
+
+      if (categoryChanged || locationChanged || procurementChanged || dateChanged) {
+        // Regenerate asset code while preserving the sequence (last 3 digits)
+        const newKode = await this.regenerateAssetCodePreservingSequence(
+          existingAsset,
+          {
+            category_id: assetData.category_id || existingAsset.category_id,
+            lokasi_id: assetData.lokasi_id || existingAsset.lokasi_id,
+            asal_pengadaan: assetData.asal_pengadaan || existingAsset.asal_pengadaan,
+            tanggal_perolehan: assetData.tanggal_perolehan || existingAsset.tanggal_perolehan,
+          },
+        );
+        assetData.kode = newKode;
+      }
+
       // Check if kode already exists (excluding current asset) - only if kode is being updated
       if (assetData.kode !== undefined && assetData.kode !== existingAsset.kode) {
         const kodeExists = await this.assetRepository.checkKodeExists(assetData.kode, assetData.id);
@@ -267,11 +288,55 @@ class AssetUseCase {
       delete dataToValidate.kode; // Don't validate kode for bulk update
       await this.validateAssetDataForUpdate(dataToValidate, true);
 
-      // Calculate depreciation values
-      const calculatedAssetData = await this.calculateDepreciationValues(assetData);
+      // Check if category or location has changed for bulk assets
+      const firstAsset = existingAssets[0];
+      const categoryChanged = assetData.category_id && assetData.category_id !== firstAsset.category_id;
+      const locationChanged = assetData.lokasi_id && assetData.lokasi_id !== firstAsset.lokasi_id;
+      const procurementChanged = assetData.asal_pengadaan && assetData.asal_pengadaan !== firstAsset.asal_pengadaan;
+      const dateChanged = assetData.tanggal_perolehan &&
+        new Date(assetData.tanggal_perolehan).getFullYear() !== new Date(firstAsset.tanggal_perolehan).getFullYear();
 
-      // Update bulk assets
-      const updatedAssets = await this.assetRepository.updateBulkAssets(bulkId, calculatedAssetData);
+      let updatedAssets;
+
+      if (categoryChanged || locationChanged || procurementChanged || dateChanged) {
+        // Regenerate kode for each bulk asset while preserving their sequences
+        const regeneratedAssets = [];
+        for (const asset of existingAssets) {
+          const newKode = await this.regenerateAssetCodePreservingSequence(
+            asset,
+            {
+              category_id: assetData.category_id || asset.category_id,
+              lokasi_id: assetData.lokasi_id || asset.lokasi_id,
+              asal_pengadaan: assetData.asal_pengadaan || asset.asal_pengadaan,
+              tanggal_perolehan: assetData.tanggal_perolehan || asset.tanggal_perolehan,
+            },
+          );
+
+          // Update each asset individually with new kode
+          const updatedAssetData = {
+            ...assetData,
+            kode: newKode,
+          };
+          
+          // Calculate depreciation values for this asset
+          const calculatedAssetData = await this.calculateDepreciationValues(updatedAssetData);
+          
+          const updatedAsset = await this.assetRepository.update({
+            ...calculatedAssetData,
+            id: asset.id,
+          });
+          
+          regeneratedAssets.push(updatedAsset);
+        }
+        updatedAssets = regeneratedAssets;
+      } else {
+        // No kode regeneration needed, proceed with normal bulk update
+        // Calculate depreciation values
+        const calculatedAssetData = await this.calculateDepreciationValues(assetData);
+
+        // Update bulk assets
+        updatedAssets = await this.assetRepository.updateBulkAssets(bulkId, calculatedAssetData);
+      }
 
       // Log audit
       await this.auditLogUseCase.logBulkAssetUpdated(bulkId, existingAssets, updatedAssets, metadata);
@@ -776,6 +841,35 @@ class AssetUseCase {
       logger.error('Error generating asset code with sequence:', error);
       // Fallback to UUID-based code if generation fails
       return `AST-${uuidv4().substring(0, 8).toUpperCase()}`;
+    }
+  }
+
+  async regenerateAssetCodePreservingSequence(existingAsset, newData) {
+    try {
+      // Extract sequence from existing asset code (last 3 digits)
+      let sequence = 1;
+      if (existingAsset.kode && existingAsset.kode.includes('.')) {
+        const parts = existingAsset.kode.split('.');
+        if (parts.length === 5) {
+          const lastPart = parts[4];
+          const parsedSequence = parseInt(lastPart);
+          if (!isNaN(parsedSequence)) {
+            sequence = parsedSequence;
+          }
+        }
+      }
+
+      // Generate new asset code with preserved sequence
+      const newCode = await this.generateAssetCodeWithSequence(
+        newData.category_id,
+        newData,
+        sequence,
+      );
+
+      return newCode;
+    } catch (error) {
+      logger.error('Error regenerating asset code:', error);
+      throw error;
     }
   }
 

@@ -88,6 +88,8 @@ export default function AssetForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [kodeWillChange, setKodeWillChange] = useState(false);
+  const [originalFormData, setOriginalFormData] = useState<AssetFormData | null>(null);
     // Form state with correct typing
   const [formData, setFormData] = useState<AssetFormData>({
     kode: '',
@@ -370,9 +372,28 @@ export default function AssetForm() {
         status: mappedStatus,
       };        
       setFormData(updatedFormData);
+      setOriginalFormData(updatedFormData); // Store original data for comparison
       setDisplayHarga(formatCurrency(harga_perolehan || 0));
     }
   }, [assetData]);
+
+  // Check if kode will change when category, location, procurement, or date changes
+  useEffect(() => {
+    if (isEditMode && originalFormData) {
+      const categoryChanged = formData.category_id !== originalFormData.category_id;
+      const locationChanged = formData.lokasi_id !== originalFormData.lokasi_id;
+      const procurementChanged = formData.asal_pengadaan !== originalFormData.asal_pengadaan;
+      
+      // Check if year changed
+      const originalYear = originalFormData.tanggal_perolehan ? 
+        new Date(originalFormData.tanggal_perolehan).getFullYear() : new Date().getFullYear();
+      const currentYear = formData.tanggal_perolehan ? 
+        new Date(formData.tanggal_perolehan).getFullYear() : new Date().getFullYear();
+      const dateChanged = originalYear !== currentYear;
+
+      setKodeWillChange(categoryChanged || locationChanged || procurementChanged || dateChanged);
+    }
+  }, [formData.category_id, formData.lokasi_id, formData.asal_pengadaan, formData.tanggal_perolehan, originalFormData, isEditMode]);
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -681,6 +702,19 @@ export default function AssetForm() {
                 <span className="text-sm font-medium">📦 Bulk Asset: Perubahan akan diterapkan ke semua {assetData.data.bulk_total_count || 1} unit dalam bulk ini</span>
                 <p className="text-xs text-amber-700 mt-1">
                   Saat Anda menyimpan perubahan, semua asset dalam grup bulk ini akan diperbarui dengan data yang sama.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Info untuk kode akan berubah */}
+          {isEditMode && kodeWillChange && (
+            <div className="bg-orange-50 border border-orange-200 text-orange-800 rounded-md p-3 flex items-center">
+              <InformationCircleIcon className="h-4 w-4 mr-2 text-orange-500 flex-shrink-0" />
+              <div>
+                <span className="text-sm font-medium">🔄 Kode Asset akan berubah otomatis</span>
+                <p className="text-xs text-orange-700 mt-1">
+                  Karena Anda mengubah kategori, lokasi, asal pengadaan, atau tahun perolehan, kode asset akan diperbarui secara otomatis. Nomor urut (3 digit terakhir) akan tetap sama.
                 </p>
               </div>
             </div>
