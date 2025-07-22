@@ -164,7 +164,7 @@ export const assetApi = {
     return response.data;
   },
 
-  update: async (id: string, asset: Omit<Asset, 'id' | 'created_at' | 'updated_at'>) => {
+  update: async (id: string, asset: Partial<Omit<Asset, 'id' | 'created_at' | 'updated_at'>>) => {
     const response = await api.put<SingleResourceResponse<Asset>>(`/assets/${id}`, asset);
     return response.data;
   },

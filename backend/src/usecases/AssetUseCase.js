@@ -317,15 +317,15 @@ class AssetUseCase {
             ...assetData,
             kode: newKode,
           };
-          
+
           // Calculate depreciation values for this asset
           const calculatedAssetData = await this.calculateDepreciationValues(updatedAssetData);
-          
+
           const updatedAsset = await this.assetRepository.update({
             ...calculatedAssetData,
             id: asset.id,
           });
-          
+
           regeneratedAssets.push(updatedAsset);
         }
         updatedAssets = regeneratedAssets;

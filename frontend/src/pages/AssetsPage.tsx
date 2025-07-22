@@ -1417,12 +1417,19 @@ export default function AssetsPage() {
                         getTotalHargaPerolehan={getTotalHargaPerolehan}
                         getTotalNilaiSisa={getTotalNilaiSisa}
                         getTotalAkumulasiPenyusutan={getTotalAkumulasiPenyusutan}
+                        onStatusUpdate={(message, type) => addNotification(type, message)}
                       />
                     ) : (
                       <tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">
                         <td className="py-3 pl-4 pr-2 w-20">
                           <div className="flex flex-col space-y-1">
-                            <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md truncate">{asset.kode}</span>
+                            <button
+                              onClick={() => openDetailPopup(asset)}
+                              className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md truncate hover:bg-blue-100 transition-colors cursor-pointer text-left"
+                              title="Klik untuk melihat detail asset"
+                            >
+                              {asset.kode}
+                            </button>
                           </div>
                         </td>
                         <td className="px-2 py-3 max-w-48">
