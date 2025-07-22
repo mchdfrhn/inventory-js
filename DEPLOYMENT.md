@@ -19,7 +19,7 @@ cd inventory-js
 ### 2. Setup Environment
 ```bash
 # Backend configuration
-cd backend-nodejs
+cd backend
 cp .env.example .env
 # Edit .env dengan konfigurasi database Anda
 
@@ -33,7 +33,7 @@ cp .env.example .env
 #### For Development (Recommended)
 ```bash
 # Start backend
-cd backend-nodejs
+cd backend
 npm install
 npm run dev
 
@@ -45,7 +45,7 @@ npm run dev
 
 ## 📁 Configuration Files
 
-### Backend Configuration (`backend-nodejs/.env`)
+### Backend Configuration (`backend/.env`)
 ```env
 # Server Configuration
 PORT=8080
@@ -82,7 +82,7 @@ LOG_LEVEL=info
 
 ### Backend Only
 ```bash
-cd backend-nodejs
+cd backend
 
 # Ensure PostgreSQL is running and database exists
 createdb inventaris
@@ -556,7 +556,7 @@ psql -U postgres -l | grep inventaris
 psql -U postgres -d inventaris -c "SELECT 1;"
 
 # Run migrations manually
-cd backend-nodejs
+cd backend
 npm run migrate
 ```
 
@@ -580,7 +580,7 @@ node --version
 npm cache clean --force
 
 # Reinstall dependencies
-cd backend-nodejs
+cd backend
 rm -rf node_modules package-lock.json
 npm install
 ```

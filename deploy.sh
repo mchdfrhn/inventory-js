@@ -25,9 +25,9 @@ case $ENVIRONMENT in
         echo "🔧 Setting up development environment..."
         
         # Copy environment files
-        if [ ! -f "backend-nodejs/.env" ]; then
-            cp backend-nodejs/.env.example backend-nodejs/.env
-            echo "✅ Created backend-nodejs/.env from example"
+        if [ ! -f "backend/.env" ]; then
+            cp backend/.env.example backend/.env
+            echo "✅ Created backend/.env from example"
         fi
         
         if [ ! -f "frontend/.env" ]; then
@@ -53,7 +53,7 @@ case $ENVIRONMENT in
         
         # Install backend dependencies
         echo "📦 Installing backend dependencies..."
-        cd backend-nodejs
+        cd backend
         npm install
         
         # Run migrations

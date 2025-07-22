@@ -17,7 +17,7 @@ psql -U postgres -c "CREATE DATABASE inventaris;"
 ```
 
 ### 3. Configure Database Connection
-Edit `backend-nodejs/.env`:
+Edit `backend/.env`:
 ```env
 # Server Configuration
 PORT=8080
@@ -43,7 +43,7 @@ MAX_FILE_SIZE=5242880
 
 ### 4. Install Dependencies & Start Backend
 ```bash
-cd backend-nodejs
+cd backend
 npm install
 npm run migrate
 npm run dev
@@ -116,7 +116,7 @@ npm run dev
 
 ## 🔧 Configuration Options
 
-### Backend Configuration (`backend-nodejs/.env`)
+### Backend Configuration (`backend/.env`)
 ```env
 # Server Configuration
 PORT=8080
@@ -196,7 +196,7 @@ Ubah port di file konfigurasi jika diperlukan.
 ### Migration Issues
 Jika migrasi gagal, jalankan manual:
 ```bash
-cd backend-nodejs
+cd backend
 npm run migrate
 ```
 
@@ -204,7 +204,7 @@ npm run migrate
 Pastikan file `.env` sudah dibuat dan dikonfigurasi dengan benar:
 ```bash
 # Check backend env
-cat backend-nodejs/.env
+cat backend/.env
 
 # Check frontend env
 cat frontend/.env
@@ -226,7 +226,7 @@ npm install
 ### Project Structure
 ```
 inventory-js/
-├── backend-nodejs/       # Node.js backend service
+├── backend/              # Node.js backend service
 │   ├── src/             # Source code
 │   │   ├── controllers/ # Route controllers
 │   │   ├── models/      # Database models
