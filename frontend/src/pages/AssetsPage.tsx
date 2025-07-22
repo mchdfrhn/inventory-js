@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { assetApi, categoryApi, locationApi } from '../services/api';
@@ -319,11 +319,11 @@ export default function AssetsPage() {
   };
   
   // Handle delete confirmation
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     if (assetToDelete) {
       deleteMutation.mutate(assetToDelete);
     }
-  };
+  }, [assetToDelete, deleteMutation]);
   // Handle import submission
   const handleImportSubmit = async () => {
     if (!importFile) {
@@ -516,91 +516,97 @@ export default function AssetsPage() {
            matchesLocationFilter;
   });
 
-  // Sorting functionality
-  const filteredAndSortedAssets = filteredAssets?.sort((a: Asset, b: Asset) => {
-    let aValue: any, bValue: any;
-      switch (sortField) {      case 'kode':
-        // Extract the 3-digit sequence number from the end of the code
-        // Format: "048.30.1.25.001" or bulk "048.30.1.25.001-002"
-        const extractSequenceNumber = (kode: string): number => {
-          // For bulk assets, remove the suffix (-XXX) first
-          let codeToProcess = kode;
-          if (kode.includes('-')) {
-            const parts = kode.split('-');
-            codeToProcess = parts[0]; // Get the parent code part
-          }
+  // Sorting functionality with useMemo to prevent dependency issues
+  const filteredAndSortedAssets = useMemo(() => {
+    return filteredAssets?.sort((a: Asset, b: Asset) => {
+      let aValue: string | number, bValue: string | number;
+      
+      switch (sortField) {
+        case 'kode':
+          // Extract the 3-digit sequence number from the end of the code
+          // Format: "048.30.1.25.001" or bulk "048.30.1.25.001-002"
+          const extractSequenceNumber = (kode: string): number => {
+            // For bulk assets, remove the suffix (-XXX) first
+            let codeToProcess = kode;
+            if (kode.includes('-')) {
+              const parts = kode.split('-');
+              codeToProcess = parts[0]; // Get the parent code part
+            }
+            
+            // Extract the last 3 digits after the last dot
+            const match = codeToProcess.match(/\.(\d{3})$/);
+            return match ? parseInt(match[1], 10) : 0;
+          };
           
-          // Extract the last 3 digits after the last dot
-          const match = codeToProcess.match(/\.(\d{3})$/);
-          return match ? parseInt(match[1], 10) : 0;
-        };
-        
-        aValue = extractSequenceNumber(a.kode);
-        bValue = extractSequenceNumber(b.kode);
-        
-        // If both have no sequence numbers (both return 0), fallback to string comparison
-        if (aValue === 0 && bValue === 0) {
-          aValue = a.kode;
-          bValue = b.kode;
-        }
-        break;
-      case 'nama':
-        aValue = a.nama;
-        bValue = b.nama;
-        break;
-      case 'kategori':
-        aValue = a.category?.name || '';
-        bValue = b.category?.name || '';
-        break;
-      case 'quantity':
-        aValue = a.quantity;
-        bValue = b.quantity;
-        break;      case 'harga_perolehan':
-        aValue = getTotalHargaPerolehan(a);
-        bValue = getTotalHargaPerolehan(b);
-        break;      case 'nilai_sisa':
-        aValue = getTotalNilaiSisa(a);
-        bValue = getTotalNilaiSisa(b);
-        break;
-      case 'penyusutan':
-        const aTotalHarga = getTotalHargaPerolehan(a);
-        const bTotalHarga = getTotalHargaPerolehan(b);
-        const aTotalAkumulasi = getTotalAkumulasiPenyusutan(a);
-        const bTotalAkumulasi = getTotalAkumulasiPenyusutan(b);
-        
-        aValue = aTotalHarga > 0 ? (aTotalAkumulasi / aTotalHarga) * 100 : 0;
-        bValue = bTotalHarga > 0 ? (bTotalAkumulasi / bTotalHarga) * 100 : 0;
-        break;
-      case 'lokasi':
-        aValue = a.location_info?.name || '';
-        bValue = b.location_info?.name || '';
-        break;
-      case 'status':
-        aValue = formatStatus(a.status);
-        bValue = formatStatus(b.status);
-        break;
-      default:
-        aValue = a.nama;
-        bValue = b.nama;
-    }
-    
-    // Handle string comparison
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+          aValue = extractSequenceNumber(a.kode);
+          bValue = extractSequenceNumber(b.kode);
+          
+          // If both have no sequence numbers (both return 0), fallback to string comparison
+          if (aValue === 0 && bValue === 0) {
+            aValue = a.kode;
+            bValue = b.kode;
+          }
+          break;
+        case 'nama':
+          aValue = a.nama;
+          bValue = b.nama;
+          break;
+        case 'kategori':
+          aValue = a.category?.name || '';
+          bValue = b.category?.name || '';
+          break;
+        case 'quantity':
+          aValue = a.quantity;
+          bValue = b.quantity;
+          break;
+        case 'harga_perolehan':
+          aValue = getTotalHargaPerolehan(a);
+          bValue = getTotalHargaPerolehan(b);
+          break;
+        case 'nilai_sisa':
+          aValue = getTotalNilaiSisa(a);
+          bValue = getTotalNilaiSisa(b);
+          break;
+        case 'penyusutan':
+          const aTotalHarga = getTotalHargaPerolehan(a);
+          const bTotalHarga = getTotalHargaPerolehan(b);
+          const aTotalAkumulasi = getTotalAkumulasiPenyusutan(a);
+          const bTotalAkumulasi = getTotalAkumulasiPenyusutan(b);
+          
+          aValue = aTotalHarga > 0 ? (aTotalAkumulasi / aTotalHarga) * 100 : 0;
+          bValue = bTotalHarga > 0 ? (bTotalAkumulasi / bTotalHarga) * 100 : 0;
+          break;
+        case 'lokasi':
+          aValue = a.location_info?.name || '';
+          bValue = b.location_info?.name || '';
+          break;
+        case 'status':
+          aValue = formatStatus(a.status);
+          bValue = formatStatus(b.status);
+          break;
+        default:
+          aValue = a.nama;
+          bValue = b.nama;
+      }
+      
+      // Handle string comparison
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+        return sortDirection === 'asc' ? comparison : -comparison;
+      }
+      
+      // Handle numeric comparison
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      // Fallback to string comparison
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+      const comparison = aStr.localeCompare(bStr);
       return sortDirection === 'asc' ? comparison : -comparison;
-    }
-    
-    // Handle numeric comparison
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-    }
-    
-    // Fallback to string comparison
-    const aStr = String(aValue).toLowerCase();
-    const bStr = String(bValue).toLowerCase();
-    const comparison = aStr.localeCompare(bStr);
-    return sortDirection === 'asc' ? comparison : -comparison;
-  }) || [];
+    }) || [];
+  }, [filteredAssets, sortField, sortDirection]);
 
   // Debug logging for filtered data
   useEffect(() => {
@@ -650,7 +656,7 @@ export default function AssetsPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [deleteModalOpen, deleteMutation.isPending]);  
+  }, [deleteModalOpen, deleteMutation.isPending, confirmDelete]);  
   // Initialize temporary filter states with current filter values when panel opens
   useEffect(() => {
     if (filterPanelOpen) {
