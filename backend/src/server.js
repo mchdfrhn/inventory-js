@@ -1,77 +1,85 @@
 require('dotenv').config();
 
-const app = require('./app');
-const { sequelize } = require('./database/connection');
-const logger = require('./utils/logger');
-const config = require('./config');
+// Better error handling at startup
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
+});
 
-// Function to start the server
-async function startServer() {
-  try {
-    // Test database connection
-    await sequelize.authenticate();
-    logger.info(`Database connection established successfully (${sequelize.getDialect()})`);
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
 
-    // Skip database sync in development if tables already exist
-    // await sequelize.sync({ force: false });
-    // logger.info('Database models synchronized');
+console.log('🚀 Starting server...');
+console.log('Node version:', process.version);
+console.log('Working directory:', process.cwd());
+console.log('Environment:', process.env.NODE_ENV);
 
-    // Start the server
-    const server = app.listen(config.server.port, config.server.host, () => {
-      logger.info(`🚀 Server running on ${config.server.host}:${config.server.port} in ${config.env} mode`);
-      logger.info(`📱 API Documentation: http://${config.server.host}:${config.server.port}/api`);
-      logger.info(`🏥 Health Check: http://${config.server.host}:${config.server.port}/health`);
-    });
+try {
+  const app = require('./app');
+  const config = require('./config');
+  console.log('✅ App and config loaded');
+  console.log('Server config:', {
+    host: config.server.host,
+    port: config.server.port,
+  });
 
-    // Graceful shutdown
-    const gracefulShutdown = async (signal) => {
-      logger.info(`${signal} received, starting graceful shutdown...`);
+  // Create required directories
+  const fs = require('fs');
+  const path = require('path');
+  ['logs', 'uploads', 'temp'].forEach(dir => {
+    const dirPath = path.join(__dirname, '..', dir);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+      console.log(`✅ Created directory: ${dir}`);
+    }
+  });
 
-      server.close(async () => {
-        logger.info('HTTP server closed');
+  // Start server
+  const server = app.listen(config.server.port, config.server.host, () => {
+    console.log(`✅ Server running on ${config.server.host}:${config.server.port}`);
+    console.log(`🏥 Health check: http://${config.server.host}:${config.server.port}/health`);
+  });
 
-        try {
-          await sequelize.close();
-          logger.info('Database connection closed');
-          process.exit(0);
-        } catch (error) {
-          logger.error('Error during database shutdown:', error);
-          process.exit(1);
-        }
-      });
-
-      // Force close after 30 seconds
-      setTimeout(() => {
-        logger.error('Forcing shutdown after timeout');
-        process.exit(1);
-      }, 30000);
-    };
-
-    // Handle process signals
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-    // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
-      logger.error('Uncaught Exception:', error);
-      process.exit(1);
-    });
-
-    process.on('unhandledRejection', (reason, promise) => {
-      logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      process.exit(1);
-    });
-
-  } catch (error) {
-    logger.error('Failed to start server:', error);
+  server.on('error', (error) => {
+    console.error('❌ Server error:', error);
     process.exit(1);
-  }
-}
+  });
 
-// Start the server only if this file is run directly
-if (require.main === module) {
-  startServer();
-}
+  // Test database connection after server starts
+  setTimeout(async () => {
+    try {
+      console.log('🔍 Testing database connection...');
+      const { sequelize } = require('./database/connection');
+      await sequelize.authenticate();
+      console.log('✅ Database connected successfully');
+    } catch (error) {
+      console.error('⚠️ Database connection failed:', error.message);
+      console.log('📊 Database config:', {
+        host: process.env.PGHOST || 'not set',
+        port: process.env.PGPORT || 'not set',
+        database: process.env.PGDATABASE || 'not set',
+        user: process.env.PGUSER || 'not set',
+        hasPassword: !!process.env.PGPASSWORD,
+      });
+    }
+  }, 3000);
 
-module.exports = app;
+  // Graceful shutdown
+  const gracefulShutdown = (signal) => {
+    console.log(`${signal} received. Shutting down gracefully...`);
+    server.close(() => {
+      console.log('HTTP server closed');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
+
+} catch (error) {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
+}
 
