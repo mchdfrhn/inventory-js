@@ -35,7 +35,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const addNotification = useCallback((type: NotificationType, message: string, duration = 5000) => {
     const id = Date.now().toString();
     
-    setNotifications((prev) => [...prev, { id, type, message, duration }]);
+    // Add new notification to the beginning of the array so newest appears at top
+    setNotifications((prev) => [{ id, type, message, duration }, ...prev]);
     
     if (duration > 0) {
       setTimeout(() => {
