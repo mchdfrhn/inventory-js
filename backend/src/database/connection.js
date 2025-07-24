@@ -41,26 +41,37 @@ case 'sqlite':
   break;
 }
 
-// Create Sequelize instance
-if (config.database.driver === 'sqlite') {
-  sequelize = new Sequelize(dbConfig);
-} else {
-  sequelize = new Sequelize(
-    config.database.database,
-    config.database.username,
-    config.database.password,
-    dbConfig,
-  );
+// Create Sequelize instance with better error handling
+try {
+  if (config.database.driver === 'sqlite') {
+    sequelize = new Sequelize(dbConfig);
+  } else {
+    sequelize = new Sequelize(
+      config.database.database,
+      config.database.username,
+      config.database.password,
+      dbConfig,
+    );
+  }
+} catch (error) {
+  logger.error('Failed to create Sequelize instance:', error);
+  process.exit(1);
 }
 
-// Test database connection
+// Test database connection with timeout
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
     logger.info('🔗 Database connection established successfully');
   } catch (error) {
     logger.error('❌ Unable to connect to the database:', error);
-    process.exit(1);
+    logger.error('Database config:', {
+      host: config.database.host,
+      port: config.database.port,
+      database: config.database.database,
+      ssl: config.database.ssl,
+    });
+    throw error; // Don't exit immediately, let server handle
   }
 };
 

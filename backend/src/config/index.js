@@ -8,25 +8,23 @@ const config = {
   // Environment
   env: process.env.NODE_ENV || 'development',
 
-  // Server
+  // Server - Railway requires 0.0.0.0 host
   server: {
     port: parseInt(process.env.PORT, 10) || 8080,
-    host: process.env.HOST || 'localhost',
+    host: process.env.HOST || '0.0.0.0', // Changed from localhost
   },
 
-  // Database
+  // Database - Railway compatibility
   database: {
-    // Railway environment variables
     driver: process.env.DB_DIALECT || 'postgres',
-    host: process.env.PGHOST || process.env.DB_HOST,
+    host: process.env.PGHOST || process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.PGPORT || process.env.DB_PORT, 10) || 5432,
-    username: process.env.PGUSER || process.env.DB_USER,
-    password: process.env.PGPASSWORD || process.env.DB_PASSWORD,
-    database: process.env.PGDATABASE || process.env.DB_NAME,
-    ssl: process.env.NODE_ENV === 'production',
+    username: process.env.PGUSER || process.env.DB_USER || 'postgres',
+    password: process.env.PGPASSWORD || process.env.DB_PASSWORD || '',
+    database: process.env.PGDATABASE || process.env.DB_NAME || 'inventaris',
+    ssl: process.env.NODE_ENV === 'production' || process.env.DB_SSL === 'true',
     charset: process.env.DB_CHARSET || 'utf8mb4',
     timezone: process.env.DB_TIMEZONE || '+07:00',
-    // eslint-disable-next-line no-console
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     pool: {
       max: 20,
