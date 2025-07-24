@@ -17,14 +17,33 @@ class LocationController {
 
       res.status(201).json({
         success: true,
-        message: 'Location created successfully',
+        message: 'Lokasi berhasil dibuat',
         data: location,
       });
     } catch (error) {
       logger.error('Error in createLocation controller:', error);
-      res.status(400).json({
+
+      // Handle specific error cases
+      let statusCode = 400;
+      let errorMessage = error.message;
+
+      if (error.message.includes('already exists')) {
+        statusCode = 409; // Conflict
+        errorMessage = error.message;
+      } else if (error.message.includes('Validation error') || error.message.includes('required')) {
+        statusCode = 400; // Bad Request
+        errorMessage = `Data tidak valid: ${error.message}`;
+      } else if (error.name === 'SequelizeValidationError') {
+        statusCode = 400;
+        errorMessage = `Validasi database gagal: ${error.errors?.map(e => e.message).join(', ') || error.message}`;
+      } else if (error.name === 'SequelizeUniqueConstraintError') {
+        statusCode = 409;
+        errorMessage = 'Kode atau nama lokasi sudah digunakan';
+      }
+
+      res.status(statusCode).json({
         success: false,
-        message: error.message,
+        message: errorMessage,
       });
     }
   }
@@ -39,15 +58,36 @@ class LocationController {
 
       res.status(200).json({
         success: true,
-        message: 'Location updated successfully',
+        message: 'Lokasi berhasil diperbarui',
         data: location,
       });
     } catch (error) {
       logger.error('Error in updateLocation controller:', error);
-      const status = error.message === 'Location not found' ? 404 : 400;
-      res.status(status).json({
+
+      // Handle specific error cases
+      let statusCode = 400;
+      let errorMessage = error.message;
+
+      if (error.message === 'Location not found') {
+        statusCode = 404;
+        errorMessage = 'Lokasi tidak ditemukan';
+      } else if (error.message.includes('already exists')) {
+        statusCode = 409;
+        errorMessage = error.message;
+      } else if (error.message.includes('Validation error') || error.message.includes('required')) {
+        statusCode = 400;
+        errorMessage = `Data tidak valid: ${error.message}`;
+      } else if (error.name === 'SequelizeValidationError') {
+        statusCode = 400;
+        errorMessage = `Validasi database gagal: ${error.errors?.map(e => e.message).join(', ') || error.message}`;
+      } else if (error.name === 'SequelizeUniqueConstraintError') {
+        statusCode = 409;
+        errorMessage = 'Kode atau nama lokasi sudah digunakan';
+      }
+
+      res.status(statusCode).json({
         success: false,
-        message: error.message,
+        message: errorMessage,
       });
     }
   }

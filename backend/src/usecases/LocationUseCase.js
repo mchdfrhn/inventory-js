@@ -16,13 +16,13 @@ class LocationUseCase {
       // Check if code already exists
       const codeExists = await this.locationRepository.checkCodeExists(locationData.code);
       if (codeExists) {
-        throw new Error(`Location with code '${locationData.code}' already exists`);
+        throw new Error(`Kode lokasi '${locationData.code}' sudah digunakan`);
       }
 
       // Check if name already exists
       const nameExists = await this.locationRepository.checkNameExists(locationData.name);
       if (nameExists) {
-        throw new Error(`Location with name '${locationData.name}' already exists`);
+        throw new Error(`Nama lokasi '${locationData.name}' sudah digunakan`);
       }
 
       // Create location
@@ -53,7 +53,7 @@ class LocationUseCase {
       if (locationData.code !== undefined && locationData.code !== existingLocation.code) {
         const codeExists = await this.locationRepository.checkCodeExists(locationData.code, id);
         if (codeExists) {
-          throw new Error(`Location with code '${locationData.code}' already exists`);
+          throw new Error(`Kode lokasi '${locationData.code}' sudah digunakan`);
         }
       }
 
@@ -61,7 +61,7 @@ class LocationUseCase {
       if (locationData.name !== undefined && locationData.name !== existingLocation.name) {
         const nameExists = await this.locationRepository.checkNameExists(locationData.name, id);
         if (nameExists) {
-          throw new Error(`Location with name '${locationData.name}' already exists`);
+          throw new Error(`Nama lokasi '${locationData.name}' sudah digunakan`);
         }
       }
 
@@ -152,31 +152,31 @@ class LocationUseCase {
 
   validateLocationData(locationData) {
     if (!locationData.code || !locationData.code.trim()) {
-      throw new Error('Location code is required');
+      throw new Error('Kode lokasi harus diisi');
     }
 
     if (!locationData.name || !locationData.name.trim()) {
-      throw new Error('Location name is required');
+      throw new Error('Nama lokasi harus diisi');
     }
 
     if (locationData.code.length > 50) {
-      throw new Error('Location code must be 50 characters or less');
+      throw new Error('Kode lokasi maksimal 50 karakter');
     }
 
     if (locationData.name.length > 255) {
-      throw new Error('Location name must be 255 characters or less');
+      throw new Error('Nama lokasi maksimal 255 karakter');
     }
 
     if (locationData.building && locationData.building.length > 255) {
-      throw new Error('Building must be 255 characters or less');
+      throw new Error('Nama gedung maksimal 255 karakter');
     }
 
     if (locationData.floor && locationData.floor.length > 50) {
-      throw new Error('Floor must be 50 characters or less');
+      throw new Error('Lantai maksimal 50 karakter');
     }
 
     if (locationData.room && locationData.room.length > 100) {
-      throw new Error('Room must be 100 characters or less');
+      throw new Error('Ruangan maksimal 100 karakter');
     }
 
     // Clean up data
@@ -200,41 +200,41 @@ class LocationUseCase {
     // For updates, only validate fields that are provided
     if (locationData.code !== undefined) {
       if (!locationData.code || !locationData.code.trim()) {
-        throw new Error('Location code cannot be empty');
+        throw new Error('Kode lokasi tidak boleh kosong');
       }
       if (locationData.code.length > 50) {
-        throw new Error('Location code must be 50 characters or less');
+        throw new Error('Kode lokasi maksimal 50 karakter');
       }
       locationData.code = locationData.code.trim();
     }
 
     if (locationData.name !== undefined) {
       if (!locationData.name || !locationData.name.trim()) {
-        throw new Error('Location name cannot be empty');
+        throw new Error('Nama lokasi tidak boleh kosong');
       }
       if (locationData.name.length > 255) {
-        throw new Error('Location name must be 255 characters or less');
+        throw new Error('Nama lokasi maksimal 255 karakter');
       }
       locationData.name = locationData.name.trim();
     }
 
     if (locationData.building !== undefined && locationData.building) {
       if (locationData.building.length > 255) {
-        throw new Error('Building must be 255 characters or less');
+        throw new Error('Nama gedung maksimal 255 karakter');
       }
       locationData.building = locationData.building.trim();
     }
 
     if (locationData.floor !== undefined && locationData.floor) {
       if (locationData.floor.length > 50) {
-        throw new Error('Floor must be 50 characters or less');
+        throw new Error('Lantai maksimal 50 karakter');
       }
       locationData.floor = locationData.floor.trim();
     }
 
     if (locationData.room !== undefined && locationData.room) {
       if (locationData.room.length > 100) {
-        throw new Error('Room must be 100 characters or less');
+        throw new Error('Ruangan maksimal 100 karakter');
       }
       locationData.room = locationData.room.trim();
     }
