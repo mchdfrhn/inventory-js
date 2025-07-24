@@ -93,28 +93,118 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
     }
   };
 
+  // Nama field yang mudah dipahami
+  const getFieldDisplayName = (field: string): string => {
+    const fieldNames: Record<string, string> = {
+      nama: 'Nama Asset',
+      kode: 'Kode Asset', 
+      spesifikasi: 'Spesifikasi',
+      status: 'Status',
+      tanggal_perolehan: 'Tanggal Perolehan',
+      harga_perolehan: 'Harga Perolehan',
+      umur_ekonomis_tahun: 'Umur Ekonomis (Tahun)',
+      umur_ekonomis_bulan: 'Umur Ekonomis (Bulan)',
+      akumulasi_penyusutan: 'Akumulasi Penyusutan',
+      nilai_sisa: 'Nilai Sisa',
+      keterangan: 'Keterangan',
+      category_code: 'Kode Kategori',
+      category_name: 'Nama Kategori',
+      lokasi_code: 'Kode Lokasi',
+      lokasi_name: 'Nama Lokasi',
+      quantity: 'Jumlah',
+      satuan: 'Satuan',
+      asal_pengadaan: 'Asal Pengadaan',
+    };
+    
+    return fieldNames[field] || field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  // Format nilai untuk tampilan
+  const formatDisplayValue = (value: unknown): string => {
+    // Handle null, undefined, empty
+    if (value === null || value === undefined || value === '') {
+      return '-';
+    }
+    
+    // Handle string
+    if (typeof value === 'string') {
+      // Jika terlalu panjang, potong
+      if (value.length > 30) {
+        return value.substring(0, 30) + '...';
+      }
+      return value;
+    }
+    
+    // Handle number
+    if (typeof value === 'number') {
+      return new Intl.NumberFormat('id-ID').format(value);
+    }
+    
+    // Handle boolean
+    if (typeof value === 'boolean') {
+      return value ? 'Ya' : 'Tidak';
+    }
+    
+    // Handle array
+    if (Array.isArray(value)) {
+      return `[${value.length} item${value.length > 1 ? 's' : ''}]`;
+    }
+    
+    // Handle object
+    if (typeof value === 'object') {
+      return '[Data Objek]';
+    }
+    
+    return String(value);
+  };
+
   const renderChanges = (log: AuditLog) => {
     if (!log.changes) return null;
 
     try {
       const changes = typeof log.changes === 'string' ? JSON.parse(log.changes) : log.changes;
       
+      // Debug: log untuk cek data mentah
+      console.log('Raw changes:', changes);
+      console.log('Changes entries:', Object.entries(changes));
+      
+      // Jika tidak ada perubahan yang relevan
+      if (!changes || Object.keys(changes).length === 0) {
+        return (
+          <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-500">
+            Tidak ada detail perubahan
+          </div>
+        );
+      }
+      
       return (
-        <div className="mt-1 p-1.5 bg-gray-50 rounded-lg">
-          <h4 className="text-xs font-medium text-gray-900 mb-0.5">Perubahan:</h4>
-          <div className="space-y-0.5">
+        <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <h4 className="text-sm font-semibold text-blue-900 mb-3">📝 Detail Perubahan</h4>
+          
+          <div className="space-y-3">
             {Object.entries(changes).map(([field, change]) => {
               const changeObj = change as { from: unknown; to: unknown };
+              
               return (
-                <div key={field} className="text-xs">
-                  <span className="font-medium text-gray-700">{field}:</span>
-                  <div className="ml-1 text-gray-600">
-                    {changeObj.from !== null && (
-                      <div>Dari: <span className="text-red-600">{JSON.stringify(changeObj.from)}</span></div>
-                    )}
-                    {changeObj.to !== null && (
-                      <div>Ke: <span className="text-green-600">{JSON.stringify(changeObj.to)}</span></div>
-                    )}
+                <div key={field} className="bg-white rounded-lg p-3 shadow-sm">
+                  <div className="font-medium text-gray-800 mb-2 text-sm">
+                    {getFieldDisplayName(field)}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-red-50 p-2 rounded border-l-4 border-red-400">
+                      <div className="text-red-600 font-medium text-xs mb-1">Sebelum</div>
+                      <div className="text-red-900">
+                        {formatDisplayValue(changeObj.from)}
+                      </div>
+                    </div>
+                    
+                    <div className="bg-green-50 p-2 rounded border-l-4 border-green-400">
+                      <div className="text-green-600 font-medium text-xs mb-1">Sesudah</div>
+                      <div className="text-green-900">
+                        {formatDisplayValue(changeObj.to)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -122,10 +212,10 @@ export default function AssetHistory({ assetId }: AssetHistoryProps) {
           </div>
         </div>
       );
-    } catch {
+    } catch (error) {
       return (
-        <div className="mt-1 p-1.5 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500">Data perubahan tidak dapat ditampilkan</p>
+        <div className="mt-2 p-2 bg-red-50 rounded text-xs text-red-600">
+          Error loading changes: {String(error)}
         </div>
       );
     }

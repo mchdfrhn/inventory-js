@@ -8,10 +8,14 @@ class AuditLogUseCase {
 
   async logActivity(entityType, entityId, action, oldValues = null, newValues = null, description = '', metadata = {}) {
     try {
+      // Clean dan extract data penting saja
+      const cleanOldValues = oldValues ? this.extractImportantData(oldValues) : null;
+      const cleanNewValues = newValues ? this.extractImportantData(newValues) : null;
+
       // Calculate changes
       let changes = null;
-      if (oldValues && newValues) {
-        changes = this.calculateChanges(oldValues, newValues);
+      if (cleanOldValues && cleanNewValues) {
+        changes = this.calculateChanges(cleanOldValues, cleanNewValues);
       }
 
       const auditData = {
@@ -19,8 +23,8 @@ class AuditLogUseCase {
         entity_id: entityId.toString(), // Convert to string
         action,
         changes,
-        old_values: oldValues,
-        new_values: newValues,
+        old_values: cleanOldValues,
+        new_values: cleanNewValues,
         user_id: metadata.user_id || null,
         ip_address: metadata.ip_address || null,
         user_agent: metadata.user_agent || null,
@@ -73,27 +77,142 @@ class AuditLogUseCase {
   calculateChanges(oldValues, newValues) {
     const changes = {};
 
-    // Compare all keys from both objects
-    const allKeys = new Set([...Object.keys(oldValues), ...Object.keys(newValues)]);
+    // Field yang penting untuk ditampilkan di audit log
+    const importantFields = [
+      'nama', 'kode', 'spesifikasi', 'status',
+      'harga_perolehan', 'tanggal_perolehan', 'quantity', 'satuan',
+      'umur_ekonomis_tahun', 'umur_ekonomis_bulan',
+      'akumulasi_penyusutan', 'nilai_sisa', 'keterangan',
+      'category_code', 'category_name', 'lokasi_code', 'lokasi_name', 'asal_pengadaan',
+    ];
 
-    for (const key of allKeys) {
+    // Hanya bandingkan field yang penting
+    for (const key of importantFields) {
       const oldValue = oldValues[key];
       const newValue = newValues[key];
 
-      // Skip timestamps and IDs that shouldn't be tracked
-      if (['created_at', 'updated_at', 'id'].includes(key)) {
+      // Skip jika tidak ada perubahan
+      if (oldValue === newValue) {
         continue;
       }
 
-      if (oldValue !== newValue) {
-        changes[key] = {
-          from: oldValue,
-          to: newValue,
-        };
+      // Skip jika kedua nilai null/undefined
+      if (!oldValue && !newValue) {
+        continue;
       }
+
+      changes[key] = {
+        from: this.formatValueForDisplay(oldValue, key),
+        to: this.formatValueForDisplay(newValue, key),
+      };
     }
 
     return Object.keys(changes).length > 0 ? changes : null;
+  }
+
+  // Extract data penting saja dari Sequelize object
+  extractImportantData(data) {
+    if (!data) {
+      return null;
+    }
+
+    // Jika data adalah Sequelize instance, ambil dataValues
+    let cleanData = {};
+
+    if (data.dataValues) {
+      // Sequelize instance
+      cleanData = { ...data.dataValues };
+    } else {
+      // Plain object
+      cleanData = { ...data };
+    }
+
+    // Hanya ambil field yang penting
+    const importantFields = [
+      'id', 'nama', 'kode', 'spesifikasi', 'status',
+      'harga_perolehan', 'tanggal_perolehan', 'quantity', 'satuan',
+      'umur_ekonomis_tahun', 'umur_ekonomis_bulan',
+      'akumulasi_penyusutan', 'nilai_sisa', 'keterangan',
+      'category_id', 'lokasi_id', 'asal_pengadaan',
+    ];
+
+    const result = {};
+    for (const field of importantFields) {
+      if (field in cleanData) {
+        result[field] = cleanData[field];
+      }
+    }
+
+    // Tambahkan kode dan nama kategori dan lokasi jika ada
+    if (data.category) {
+      if (data.category.code) {
+        result.category_code = data.category.code;
+      }
+      if (data.category.name) {
+        result.category_name = data.category.name;
+      }
+    }
+
+    if (data.location_info) {
+      if (data.location_info.code) {
+        result.lokasi_code = data.location_info.code;
+      }
+      if (data.location_info.name) {
+        result.lokasi_name = data.location_info.name;
+      }
+    }
+
+    return result;
+  }
+
+  // Format nilai agar mudah dibaca
+  formatValueForDisplay(value, fieldName = '') {
+    // Handle null/undefined
+    if (value === null || value === undefined || value === '') {
+      return '-';
+    }
+
+    // Handle tanggal
+    if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)) {
+      try {
+        const date = new Date(value);
+        return date.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        });
+      } catch {
+        return value;
+      }
+    }
+
+    // Handle harga/mata uang
+    if (typeof value === 'number' && ['harga_perolehan', 'akumulasi_penyusutan', 'nilai_sisa'].includes(fieldName)) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(value);
+    }
+
+    // Handle angka biasa
+    if (typeof value === 'number') {
+      return value.toString();
+    }
+
+    // Handle string panjang
+    if (typeof value === 'string' && value.length > 30) {
+      return value.substring(0, 30) + '...';
+    }
+
+    // Handle boolean
+    if (typeof value === 'boolean') {
+      return value ? 'Ya' : 'Tidak';
+    }
+
+    // Return string biasa
+    return String(value);
   }
 
   // Helper methods for common audit actions
