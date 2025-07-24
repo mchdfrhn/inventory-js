@@ -16,13 +16,14 @@ const config = {
 
   // Database
   database: {
-    driver: process.env.DB_DRIVER || 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT, 10) || 5432,
-    username: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
-    database: process.env.DB_NAME || 'inventaris',
-    ssl: process.env.DB_SSL === 'true',
+    // Railway environment variables
+    driver: process.env.DB_DIALECT || 'postgres',
+    host: process.env.PGHOST || process.env.DB_HOST,
+    port: parseInt(process.env.PGPORT || process.env.DB_PORT, 10) || 5432,
+    username: process.env.PGUSER || process.env.DB_USER,
+    password: process.env.PGPASSWORD || process.env.DB_PASSWORD,
+    database: process.env.PGDATABASE || process.env.DB_NAME,
+    ssl: process.env.NODE_ENV === 'production',
     charset: process.env.DB_CHARSET || 'utf8mb4',
     timezone: process.env.DB_TIMEZONE || '+07:00',
     // eslint-disable-next-line no-console

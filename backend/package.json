@@ -4,6 +4,7 @@
   "description": "STTPU Inventory Management System Backend - Node.js Express API",
   "main": "src/server.js",
   "scripts": {
+    "build": "npm install",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "jest --config jest.config.json",
@@ -65,5 +66,13 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
+  },
+  "build": {
+    "builder": "nixpacks"
+  },
+  "deploy": {
+    "startCommand": "cd backend && npm run migrate && npm start",
+    "restartPolicyType": "on_failure",
+    "restartPolicyMaxRetries": 10
   }
 }
