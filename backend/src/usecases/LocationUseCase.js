@@ -10,12 +10,17 @@ class LocationUseCase {
 
   async create(locationData, metadata = {}) {
     try {
+      // Validate required fields first (except code)
+      if (!locationData.name || !locationData.name.trim()) {
+        throw new Error('Nama lokasi harus diisi');
+      }
+
       // Generate automatic code if not provided
       if (!locationData.code) {
         locationData.code = await this.generateNextLocationCode();
       }
 
-      // Validate required fields
+      // Now validate all fields including generated code
       this.validateLocationData(locationData);
 
       // Check if code already exists
@@ -156,20 +161,23 @@ class LocationUseCase {
   }
 
   validateLocationData(locationData) {
-    if (!locationData.code || !locationData.code.trim()) {
-      throw new Error('Kode lokasi harus diisi');
-    }
-
+    // Validasi nama (selalu wajib)
     if (!locationData.name || !locationData.name.trim()) {
       throw new Error('Nama lokasi harus diisi');
     }
 
-    if (locationData.code.length > 50) {
-      throw new Error('Kode lokasi maksimal 50 karakter');
-    }
-
     if (locationData.name.length > 255) {
       throw new Error('Nama lokasi maksimal 255 karakter');
+    }
+
+    // Validasi kode hanya jika sudah ada (setelah generate atau user input)
+    if (locationData.code) {
+      if (!locationData.code.trim()) {
+        throw new Error('Kode lokasi tidak boleh kosong');
+      }
+      if (locationData.code.length > 50) {
+        throw new Error('Kode lokasi maksimal 50 karakter');
+      }
     }
 
     if (locationData.building && locationData.building.length > 255) {
@@ -185,8 +193,10 @@ class LocationUseCase {
     }
 
     // Clean up data
-    locationData.code = locationData.code.trim();
     locationData.name = locationData.name.trim();
+    if (locationData.code) {
+      locationData.code = locationData.code.trim();
+    }
     if (locationData.description) {
       locationData.description = locationData.description.trim();
     }

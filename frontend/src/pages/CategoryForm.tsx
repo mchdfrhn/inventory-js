@@ -28,60 +28,12 @@ export default function CategoryForm() {
   });
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Auto-generate code for new categories
-  useEffect(() => {
-    if (!isEditMode) {
-      categoryApi.list(1, 100)
-        .then(result => {
-          if (result.data && result.data.length > 0) {
-            const nextCode = generateNextCode(result.data);
-            setFormData(prev => ({
-              ...prev,
-              code: nextCode
-            }));
-          } else {
-            // No categories exist, use default "10"
-            setFormData(prev => ({
-              ...prev,
-              code: '10'
-            }));
-          }
-        })
-        .catch(err => {
-          console.error('Failed to fetch categories:', err);
-          // Fallback to default
-          setFormData(prev => ({
-            ...prev,
-            code: '10'
-          }));
-        });
-    }
-  }, [isEditMode]);
   // Fetch category data if in edit mode
   const { data: categoryData, isLoading } = useQuery({
     queryKey: ['category', id],
     queryFn: () => categoryApi.getById(id as string),
     enabled: isEditMode,
-  });
-  // Generate next category code with increments of 10
-  const generateNextCode = (existingCategories: Category[]): string => {
-    if (!existingCategories || existingCategories.length === 0) {
-      return '10';
-    }
-
-    // Extract numeric codes and find the highest
-    const numericCodes = existingCategories
-      .map(category => {
-        const match = category.code.match(/^(\d+)$/);
-        return match ? parseInt(match[1], 10) : 0;
-      })
-      .filter(code => !isNaN(code) && code > 0);
-
-    const maxCode = numericCodes.length > 0 ? Math.max(...numericCodes) : 0;
-    const nextCode = maxCode + 10;
-
-    return nextCode.toString();
-  };  // Update form data when category data is loaded (edit mode)
+  });  // Update form data when category data is loaded (edit mode)
   useEffect(() => {
     if (isEditMode && categoryData?.data) {
       const { code, name, description } = categoryData.data;
@@ -101,9 +53,10 @@ export default function CategoryForm() {
   const mutation = useMutation({
     mutationFn: (data: CategoryFormData) => {      // Transform data to match backend expected format (lowercase field names)
       const transformedData = {
-        code: data.code,
         name: data.name,
         description: data.description,
+        // Only include code if in edit mode, let backend generate for new categories
+        ...(isEditMode && { code: data.code })
       };
 
       if (isEditMode) {
@@ -132,28 +85,17 @@ export default function CategoryForm() {
     e.preventDefault();
     
     setIsSubmitting(true);
-    
-    // Manual validation for code field
-    if (!formData.code || formData.code.trim() === '') {
-      setError('Kode kategori wajib diisi');
-      setIsSubmitting(false);
-      return;
-    }
 
-    // Manual validation for name field
+    // Manual validation for name field only
     if (!formData.name || formData.name.trim() === '') {
       setError('Nama kategori wajib diisi');
       setIsSubmitting(false);
       return;
     }
     
-    // Let browser handle required field validation
-    // The form won't submit if required fields are empty
-    
     setError(null);
-    setIsSubmitting(true);
     
-    // Submit form - browser validation ensures required fields are filled
+    // Submit form
     mutation.mutate(formData);
   };
 
@@ -213,19 +155,18 @@ export default function CategoryForm() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-                  Kode Kategori <span className="text-red-500">*</span>
+                  Kode Kategori
                   <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
                 </label>
                 <input
                   type="text"
                   name="code"
                   id="code"
-                  required
-                  placeholder={!isEditMode ? "Auto-generating..." : "Kode tidak dapat diubah"}
+                  placeholder={!isEditMode ? "Akan dibuat otomatis" : "Kode tidak dapat diubah"}
                   readOnly={true}
                   disabled={true}
                   className="block w-full rounded-md shadow-sm sm:text-sm bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300"
-                  value={formData.code}
+                  value={isEditMode ? formData.code : ""}
                 />
                 {!isEditMode ? (
                   <p className="mt-1 text-xs text-gray-500">

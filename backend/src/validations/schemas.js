@@ -1,15 +1,14 @@
 const Joi = require('joi');
 
 const createAssetCategorySchema = Joi.object({
-  code: Joi.string().trim().min(1).max(50).required().messages({
-    'string.empty': 'Category code is required',
-    'string.max': 'Category code must be 50 characters or less',
-    'any.required': 'Category code is required',
+  code: Joi.string().trim().min(1).max(50).optional().messages({
+    'string.empty': 'Kode kategori tidak boleh kosong jika diisi',
+    'string.max': 'Kode kategori maksimal 50 karakter',
   }),
   name: Joi.string().trim().min(1).max(255).required().messages({
-    'string.empty': 'Category name is required',
-    'string.max': 'Category name must be 255 characters or less',
-    'any.required': 'Category name is required',
+    'string.empty': 'Nama kategori harus diisi',
+    'string.max': 'Nama kategori maksimal 255 karakter',
+    'any.required': 'Nama kategori harus diisi',
   }),
   description: Joi.string().trim().allow('').optional(),
 });
@@ -27,11 +26,10 @@ const updateAssetCategorySchema = Joi.object({
 });
 
 const createLocationSchema = Joi.object({
-  code: Joi.string().trim().min(1).max(50).required().messages({
-    'string.empty': 'Kode lokasi harus diisi',
+  code: Joi.string().trim().min(1).max(50).optional().messages({
+    'string.empty': 'Kode lokasi tidak boleh kosong jika diisi',
     'string.min': 'Kode lokasi minimal 1 karakter',
     'string.max': 'Kode lokasi maksimal 50 karakter',
-    'any.required': 'Kode lokasi harus diisi',
   }),
   name: Joi.string().trim().min(1).max(255).required().messages({
     'string.empty': 'Nama lokasi harus diisi',

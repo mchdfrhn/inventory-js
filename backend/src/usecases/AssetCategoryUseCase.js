@@ -12,13 +12,18 @@ class AssetCategoryUseCase {
     try {
       console.log('Creating category with data:', categoryData);
 
+      // Validate required fields first (except code)
+      if (!categoryData.name || !categoryData.name.trim()) {
+        throw new Error('Nama kategori harus diisi');
+      }
+
       // Generate automatic code if not provided
       if (!categoryData.code) {
         categoryData.code = await this.generateNextCategoryCode();
         console.log('Generated automatic code:', categoryData.code);
       }
 
-      // Validate required fields
+      // Now validate all fields including generated code
       this.validateCategoryData(categoryData);
 
       // Check if code already exists
@@ -159,25 +164,30 @@ class AssetCategoryUseCase {
   }
 
   validateCategoryData(categoryData) {
-    if (!categoryData.code || !categoryData.code.trim()) {
-      throw new Error('Kode kategori harus diisi');
-    }
-
+    // Validasi nama (selalu wajib)
     if (!categoryData.name || !categoryData.name.trim()) {
       throw new Error('Nama kategori harus diisi');
-    }
-
-    if (categoryData.code.length > 50) {
-      throw new Error('Kode kategori maksimal 50 karakter');
     }
 
     if (categoryData.name.length > 255) {
       throw new Error('Nama kategori maksimal 255 karakter');
     }
 
+    // Validasi kode hanya jika sudah ada (setelah generate atau user input)
+    if (categoryData.code) {
+      if (!categoryData.code.trim()) {
+        throw new Error('Kode kategori tidak boleh kosong');
+      }
+      if (categoryData.code.length > 50) {
+        throw new Error('Kode kategori maksimal 50 karakter');
+      }
+    }
+
     // Clean up data
-    categoryData.code = categoryData.code.trim();
     categoryData.name = categoryData.name.trim();
+    if (categoryData.code) {
+      categoryData.code = categoryData.code.trim();
+    }
     if (categoryData.description) {
       categoryData.description = categoryData.description.trim();
     }
