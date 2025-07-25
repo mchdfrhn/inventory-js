@@ -644,16 +644,8 @@ export default function AssetsPage() {
   };
 
   // Handle Enter key press for delete confirmation
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (deleteModalOpen && event.key === 'Enter' && !deleteMutation.isPending) {
-        confirmDelete();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [deleteModalOpen, deleteMutation.isPending, confirmDelete]);  
+  // Note: Enter key handling is now moved to DeleteConfirmationModal component
+  // to properly handle validation for bulk assets  
   // Initialize temporary filter states with current filter values when panel opens
   useEffect(() => {
     if (filterPanelOpen) {

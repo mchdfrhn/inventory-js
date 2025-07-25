@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { ExclamationTriangleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
@@ -48,14 +48,36 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
     }
   }, [confirmText, isBulkAsset, bulkCount]);
 
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     if (isValid) {
       onConfirm();
     }
-  };
+  }, [isValid, onConfirm]);
+
+  // Handle Enter key press globally within the modal
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && isValid && !isLoading && isOpen) {
+        // For bulk assets, only proceed if "yes" is typed
+        // For regular assets, always allow
+        e.preventDefault();
+        handleConfirm();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleGlobalKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [isValid, isLoading, isOpen, handleConfirm]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Only handle Enter key press when the input is focused and text is valid
     if (e.key === 'Enter' && isValid && !isLoading) {
+      e.preventDefault(); // Prevent any default behavior
       handleConfirm();
     }
   };
