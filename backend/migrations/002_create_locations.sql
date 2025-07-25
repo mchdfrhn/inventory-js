@@ -22,7 +22,11 @@ CREATE INDEX IF NOT EXISTS idx_locations_building ON locations(building);
 -- Create trigger for updated_at (only if it doesn't exist)
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_locations_updated_at') THEN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_locations_updated_at' 
+        AND tgrelid = 'locations'::regclass
+    ) THEN
         CREATE TRIGGER update_locations_updated_at 
             BEFORE UPDATE ON locations 
             FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

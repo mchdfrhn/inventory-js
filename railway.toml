@@ -1,0 +1,19 @@
+# Railway Configuration
+# Build settings
+[build]
+nixpacks = true
+
+# Deploy settings  
+[deploy]
+startCommand = "cd backend && npm run migrate && npm start"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+# Environment settings
+[environment]
+NODE_ENV = "production"
+PORT = "$PORT"
+
+# Service settings
+[service]
+name = "sttpu-inventory-backend"

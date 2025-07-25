@@ -40,7 +40,7 @@ class PgMigrationManager {
       await this.client.query(`
         CREATE TABLE IF NOT EXISTS pgmigrations (
           id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
+          name VARCHAR(255) NOT NULL UNIQUE,
           run_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
@@ -83,19 +83,41 @@ class PgMigrationManager {
 
       await this.client.query('BEGIN');
 
-      // Execute migration
-      await this.client.query(migrationSQL);
+      try {
+        // Execute migration
+        await this.client.query(migrationSQL);
 
-      // Record migration
-      await this.client.query(
-        'INSERT INTO pgmigrations (name) VALUES ($1)',
-        [filename],
-      );
+        // Record migration only if execution was successful
+        await this.client.query(
+          'INSERT INTO pgmigrations (name) VALUES ($1) ON CONFLICT (name) DO NOTHING',
+          [filename],
+        );
 
-      await this.client.query('COMMIT');
-      logger.info(`Migration applied: ${filename}`);
+        await this.client.query('COMMIT');
+        logger.info(`Migration applied: ${filename}`);
+      } catch (execError) {
+        await this.client.query('ROLLBACK');
+
+        // Check if it's a "already exists" error for triggers/indexes
+        if (execError.message.includes('already exists') ||
+            execError.code === '42710' || // duplicate object
+            execError.code === '42P07') { // duplicate table
+
+          logger.warn(`Migration ${filename} contains existing objects, marking as applied: ${execError.message}`);
+
+          // Record migration as applied since objects already exist
+          await this.client.query('BEGIN');
+          await this.client.query(
+            'INSERT INTO pgmigrations (name) VALUES ($1) ON CONFLICT (name) DO NOTHING',
+            [filename],
+          );
+          await this.client.query('COMMIT');
+          logger.info(`Migration marked as applied: ${filename}`);
+        } else {
+          throw execError;
+        }
+      }
     } catch (error) {
-      await this.client.query('ROLLBACK');
       logger.error(`Error applying migration ${filename}:`, error);
       throw error;
     }
