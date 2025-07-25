@@ -88,7 +88,7 @@ class LocationUseCase {
 
       // Check if location has associated assets
       if (existingLocation.assets && existingLocation.assets.length > 0) {
-        throw new Error(`Cannot delete location '${existingLocation.name}' because it has ${existingLocation.assets.length} associated assets`);
+        throw new Error(`Tidak dapat menghapus lokasi '${existingLocation.name}' karena masih terdapat ${existingLocation.assets.length} aset yang menggunakan lokasi ini. Silakan pindahkan atau hapus aset terlebih dahulu.`);
       }
 
       // Delete location

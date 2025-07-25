@@ -16,13 +16,13 @@ class AssetCategoryUseCase {
       // Check if code already exists
       const codeExists = await this.categoryRepository.checkCodeExists(categoryData.code);
       if (codeExists) {
-        throw new Error(`Category with code '${categoryData.code}' already exists`);
+        throw new Error(`Kode kategori '${categoryData.code}' sudah digunakan`);
       }
 
       // Check if name already exists
       const nameExists = await this.categoryRepository.checkNameExists(categoryData.name);
       if (nameExists) {
-        throw new Error(`Category with name '${categoryData.name}' already exists`);
+        throw new Error(`Nama kategori '${categoryData.name}' sudah digunakan`);
       }
 
       // Create category
@@ -43,7 +43,7 @@ class AssetCategoryUseCase {
       // Get existing category
       const existingCategory = await this.categoryRepository.getById(id);
       if (!existingCategory) {
-        throw new Error('Category not found');
+        throw new Error('Kategori tidak ditemukan');
       }
 
       // Validate required fields for update (only validate what is being changed)
@@ -53,7 +53,7 @@ class AssetCategoryUseCase {
       if (categoryData.code !== undefined && categoryData.code !== existingCategory.code) {
         const codeExists = await this.categoryRepository.checkCodeExists(categoryData.code, id);
         if (codeExists) {
-          throw new Error(`Category with code '${categoryData.code}' already exists`);
+          throw new Error(`Kode kategori '${categoryData.code}' sudah digunakan`);
         }
       }
 
@@ -61,7 +61,7 @@ class AssetCategoryUseCase {
       if (categoryData.name !== undefined && categoryData.name !== existingCategory.name) {
         const nameExists = await this.categoryRepository.checkNameExists(categoryData.name, id);
         if (nameExists) {
-          throw new Error(`Category with name '${categoryData.name}' already exists`);
+          throw new Error(`Nama kategori '${categoryData.name}' sudah digunakan`);
         }
       }
 
@@ -83,12 +83,12 @@ class AssetCategoryUseCase {
       // Get existing category
       const existingCategory = await this.categoryRepository.getById(id);
       if (!existingCategory) {
-        throw new Error('Category not found');
+        throw new Error('Kategori tidak ditemukan');
       }
 
       // Check if category has associated assets
       if (existingCategory.assets && existingCategory.assets.length > 0) {
-        throw new Error(`Cannot delete category '${existingCategory.name}' because it has ${existingCategory.assets.length} associated assets`);
+        throw new Error(`Tidak dapat menghapus kategori '${existingCategory.name}' karena masih terdapat ${existingCategory.assets.length} aset yang menggunakan kategori ini. Silakan pindahkan atau hapus aset terlebih dahulu.`);
       }
 
       // Delete category
@@ -108,7 +108,7 @@ class AssetCategoryUseCase {
     try {
       const category = await this.categoryRepository.getById(id);
       if (!category) {
-        throw new Error('Category not found');
+        throw new Error('Kategori tidak ditemukan');
       }
       return category;
     } catch (error) {
@@ -121,7 +121,7 @@ class AssetCategoryUseCase {
     try {
       const category = await this.categoryRepository.getByCode(code);
       if (!category) {
-        throw new Error('Category not found');
+        throw new Error('Kategori tidak ditemukan');
       }
       return category;
     } catch (error) {
@@ -152,19 +152,19 @@ class AssetCategoryUseCase {
 
   validateCategoryData(categoryData) {
     if (!categoryData.code || !categoryData.code.trim()) {
-      throw new Error('Category code is required');
+      throw new Error('Kode kategori harus diisi');
     }
 
     if (!categoryData.name || !categoryData.name.trim()) {
-      throw new Error('Category name is required');
+      throw new Error('Nama kategori harus diisi');
     }
 
     if (categoryData.code.length > 50) {
-      throw new Error('Category code must be 50 characters or less');
+      throw new Error('Kode kategori maksimal 50 karakter');
     }
 
     if (categoryData.name.length > 255) {
-      throw new Error('Category name must be 255 characters or less');
+      throw new Error('Nama kategori maksimal 255 karakter');
     }
 
     // Clean up data
@@ -179,20 +179,20 @@ class AssetCategoryUseCase {
     // For updates, only validate fields that are provided
     if (categoryData.code !== undefined) {
       if (!categoryData.code || !categoryData.code.trim()) {
-        throw new Error('Category code cannot be empty');
+        throw new Error('Kode kategori tidak boleh kosong');
       }
       if (categoryData.code.length > 50) {
-        throw new Error('Category code must be 50 characters or less');
+        throw new Error('Kode kategori maksimal 50 karakter');
       }
       categoryData.code = categoryData.code.trim();
     }
 
     if (categoryData.name !== undefined) {
       if (!categoryData.name || !categoryData.name.trim()) {
-        throw new Error('Category name cannot be empty');
+        throw new Error('Nama kategori tidak boleh kosong');
       }
       if (categoryData.name.length > 255) {
-        throw new Error('Category name must be 255 characters or less');
+        throw new Error('Nama kategori maksimal 255 karakter');
       }
       categoryData.name = categoryData.name.trim();
     }

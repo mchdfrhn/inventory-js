@@ -44,7 +44,7 @@ class AssetCategoryController {
       });
     } catch (error) {
       logger.error('Error in updateCategory controller:', error);
-      const status = error.message === 'Category not found' ? 404 : 400;
+      const status = error.message === 'Kategori tidak ditemukan' ? 404 : 400;
       res.status(status).json({
         success: false,
         message: error.message,
@@ -61,14 +61,25 @@ class AssetCategoryController {
 
       res.status(200).json({
         success: true,
-        message: 'Category deleted successfully',
+        message: 'Kategori berhasil dihapus',
       });
     } catch (error) {
       logger.error('Error in deleteCategory controller:', error);
-      const status = error.message === 'Category not found' ? 404 : 400;
+
+      let status = 400;
+      let errorMessage = error.message;
+
+      if (error.message === 'Kategori tidak ditemukan') {
+        status = 404;
+        errorMessage = 'Kategori tidak ditemukan';
+      } else if (error.message.includes('Tidak dapat menghapus kategori')) {
+        status = 409; // Conflict - cannot delete due to dependencies
+        errorMessage = error.message;
+      }
+
       res.status(status).json({
         success: false,
-        message: error.message,
+        message: errorMessage,
       });
     }
   }
@@ -85,7 +96,7 @@ class AssetCategoryController {
       });
     } catch (error) {
       logger.error('Error in getCategory controller:', error);
-      const status = error.message === 'Category not found' ? 404 : 400;
+      const status = error.message === 'Kategori tidak ditemukan' ? 404 : 400;
       res.status(status).json({
         success: false,
         message: error.message,
@@ -105,7 +116,7 @@ class AssetCategoryController {
       });
     } catch (error) {
       logger.error('Error in getCategoryByCode controller:', error);
-      const status = error.message === 'Category not found' ? 404 : 400;
+      const status = error.message === 'Kategori tidak ditemukan' ? 404 : 400;
       res.status(status).json({
         success: false,
         message: error.message,

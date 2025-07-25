@@ -73,9 +73,18 @@ export default function LocationsPage() {
       setLocationToDelete(null);
       addNotification('success', 'Lokasi berhasil dihapus');
     },
-    onError: (err) => {
-      setDeleteError('Gagal menghapus lokasi. Silakan coba lagi.');
-      addNotification('error', 'Gagal menghapus lokasi. Silakan coba lagi.');
+    onError: (err: Error & { response?: { data?: { message?: string } } }) => {
+      // Extract specific error message from backend
+      let errorMessage = 'Gagal menghapus lokasi. Silakan coba lagi.';
+      
+      if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      setDeleteError(errorMessage);
+      addNotification('error', errorMessage);
       console.error('Delete error:', err);
     }
   });
@@ -595,8 +604,25 @@ export default function LocationsPage() {
                           Apakah Anda yakin ingin menghapus lokasi <span className="font-semibold">{locationToDelete?.name}</span>? 
                           Tindakan ini tidak dapat dibatalkan.
                         </p>
+                        {locationToDelete?.asset_count && locationToDelete.asset_count > 0 && (
+                          <div className="mt-3 p-3 bg-yellow-50 rounded-md">
+                            <div className="flex">
+                              <div className="flex-shrink-0">
+                                <ExclamationCircleIcon className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+                              </div>
+                              <div className="ml-3">
+                                <p className="text-sm text-yellow-800">
+                                  <strong>Peringatan:</strong> Lokasi ini memiliki {locationToDelete.asset_count} aset yang terkait. 
+                                  Anda perlu memindahkan atau menghapus aset tersebut terlebih dahulu sebelum menghapus lokasi ini.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         {deleteError && (
-                          <p className="mt-2 text-sm text-red-600">{deleteError}</p>
+                          <div className="mt-3 p-3 bg-red-50 rounded-md">
+                            <p className="text-sm text-red-800">{deleteError}</p>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -606,8 +632,8 @@ export default function LocationsPage() {
                       variant="danger"
                       className="w-full sm:ml-3 sm:w-auto"
                       onClick={confirmDelete}
-                      disabled={deleteMutation.isPending}
-                      autoFocus
+                      disabled={deleteMutation.isPending || !!(locationToDelete?.asset_count && locationToDelete.asset_count > 0)}
+                      autoFocus={!(locationToDelete?.asset_count && locationToDelete.asset_count > 0)}
                     >
                       {deleteMutation.isPending && (
                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -615,7 +641,12 @@ export default function LocationsPage() {
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                       )}
-                      {deleteMutation.isPending ? 'Menghapus...' : 'Hapus'}
+                      {deleteMutation.isPending 
+                        ? 'Menghapus...' 
+                        : (locationToDelete?.asset_count && locationToDelete.asset_count > 0)
+                          ? 'Tidak dapat dihapus'
+                          : 'Hapus'
+                      }
                     </GradientButton>
                     <button
                       type="button"

@@ -101,14 +101,25 @@ class LocationController {
 
       res.status(200).json({
         success: true,
-        message: 'Location deleted successfully',
+        message: 'Lokasi berhasil dihapus',
       });
     } catch (error) {
       logger.error('Error in deleteLocation controller:', error);
-      const status = error.message === 'Location not found' ? 404 : 400;
+
+      let status = 400;
+      let errorMessage = error.message;
+
+      if (error.message === 'Location not found') {
+        status = 404;
+        errorMessage = 'Lokasi tidak ditemukan';
+      } else if (error.message.includes('Tidak dapat menghapus lokasi')) {
+        status = 409; // Conflict - cannot delete due to dependencies
+        errorMessage = error.message;
+      }
+
       res.status(status).json({
         success: false,
-        message: error.message,
+        message: errorMessage,
       });
     }
   }
