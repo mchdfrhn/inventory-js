@@ -12,6 +12,7 @@ import {
 import GlassCard from '../components/GlassCard';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
+import { formatToIndonesianScale } from '../utils/currencyFormatter';
 
 // Fungsi helper untuk mendapatkan data 6 bulan terakhir
 const getRecentMonthsData = () => {
@@ -510,13 +511,13 @@ export default function DashboardPage() {
           value={stats?.totalValue || 0}
           icon={ArrowTrendingUpIcon}
           color="blue"
-          formatter={(value) => `Rp ${formatToMillion(value)}`}
+          formatter={(value) => `Rp ${formatToIndonesianScale(value)}`}
         />        <StatCard
           title="Estimasi Nilai Saat Ini"
           value={stats?.estimatedCurrentValue || 0}
           icon={ArrowTrendingUpIcon}
           color="green"
-          formatter={(value) => `Rp ${formatToMillion(value)}`}
+          formatter={(value) => `Rp ${formatToIndonesianScale(value)}`}
         />
         <StatCard
           title="Aset Kondisi Baik"
@@ -545,7 +546,7 @@ export default function DashboardPage() {
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <div className="text-xs font-medium text-gray-700">Total Perolehan</div>
-                    <div className="font-bold text-gray-800 text-sm">Rp {formatToMillion(stats?.totalValue || 0)}</div>
+                    <div className="font-bold text-gray-800 text-sm">Rp {formatToIndonesianScale(stats?.totalValue || 0)}</div>
                   </div>
               <div className="w-full bg-gray-100 rounded-full h-2 shadow-inner overflow-hidden">
                 <div 
@@ -561,7 +562,7 @@ export default function DashboardPage() {
             <div>              <div className="flex justify-between items-center mb-1">
                 <div className="text-sm font-medium text-gray-700">Estimasi Saat Ini</div>
                 <div className="font-bold text-gray-800">
-                  Rp {formatToMillion(stats?.estimatedCurrentValue || 0)}
+                  Rp {formatToIndonesianScale(stats?.estimatedCurrentValue || 0)}
                 </div>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-2 shadow-inner overflow-hidden">
@@ -582,7 +583,7 @@ export default function DashboardPage() {
             <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">              <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-700">Selisih nilai:</span>
                 <span className="text-red-600 font-semibold">
-                  - Rp {formatToMillion((stats?.totalValue || 0) - (stats?.estimatedCurrentValue || 0))}
+                  - Rp {formatToIndonesianScale((stats?.totalValue || 0) - (stats?.estimatedCurrentValue || 0))}
                 </span>
               </div>
             </div>
@@ -682,30 +683,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-// Helper functions for number formatting
-const formatRupiah = (amount: number): string => {
-  // Handle NaN, undefined, null, or invalid numbers
-  if (isNaN(amount) || amount === null || amount === undefined) {
-    return '0';
-  }
-  return new Intl.NumberFormat('id-ID').format(Math.round(amount));
-};
-
-const formatToMillion = (amount: number): string => {
-  // Handle NaN, undefined, null, or invalid numbers
-  if (isNaN(amount) || amount === null || amount === undefined) {
-    return '0';
-  }
-  
-  const millions = amount / 1000000;
-  if (millions >= 1000) {
-    return `${(millions / 1000).toFixed(1)} milyar`;
-  } else if (millions >= 1) {
-    return `${millions.toFixed(1)} juta`;
-  } else if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(0)} ribu`;
-  } else {
-    return formatRupiah(amount);
-  }
-};
