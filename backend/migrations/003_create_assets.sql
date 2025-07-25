@@ -46,7 +46,11 @@ CREATE INDEX IF NOT EXISTS idx_assets_kode_gin ON assets USING gin(kode gin_trgm
 -- Create trigger for updated_at (only if it doesn't exist)
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_assets_updated_at') THEN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_assets_updated_at' 
+        AND tgrelid = 'assets'::regclass
+    ) THEN
         CREATE TRIGGER update_assets_updated_at 
             BEFORE UPDATE ON assets 
             FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

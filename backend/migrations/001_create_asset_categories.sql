@@ -30,7 +30,11 @@ $$ language 'plpgsql';
 -- Create trigger for updated_at (only if it doesn't exist)
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_asset_categories_updated_at') THEN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_asset_categories_updated_at' 
+        AND tgrelid = 'asset_categories'::regclass
+    ) THEN
         CREATE TRIGGER update_asset_categories_updated_at 
             BEFORE UPDATE ON asset_categories 
             FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

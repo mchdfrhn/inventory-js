@@ -11,12 +11,14 @@
     "test:watch": "jest --config jest.config.json --watch",
     "test:coverage": "jest --config jest.config.json --coverage",
     "test:api": "jest --config jest.config.json tests/api.test.js",
+    "setup-db": "node setup-database.js",
     "migrate": "node src/database/migrate-cli.js up",
     "migrate:status": "node src/database/migrate-cli.js status",
     "migrate:pg": "node-pg-migrate up",
     "migrate:pg:down": "node-pg-migrate down",
     "migrate:pg:create": "node-pg-migrate create",
     "migrate:create": "node-pg-migrate create",
+    "deploy": "npm run setup-db && npm run migrate",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },
@@ -69,7 +71,7 @@
     "builder": "nixpacks"
   },
   "deploy": {
-    "startCommand": "cd backend && npm run migrate && npm start",
+    "startCommand": "cd backend && npm run deploy && npm start",
     "restartPolicyType": "on_failure",
     "restartPolicyMaxRetries": 10
   }
