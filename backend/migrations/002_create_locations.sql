@@ -32,10 +32,10 @@ $$;
 
 -- Insert default locations
 INSERT INTO locations (name, code, description, building, floor, room) VALUES
-  ('Ruang Direktur', 'RD001', 'Ruang kerja direktur utama', 'Gedung Utama', 'Lantai 3', 'R301'),
-  ('Ruang Administrasi', 'RA001', 'Ruang administrasi umum', 'Gedung Utama', 'Lantai 1', 'R101'),
-  ('Ruang IT', 'RIT001', 'Ruang teknologi informasi', 'Gedung Utama', 'Lantai 2', 'R201'),
-  ('Ruang Rapat', 'RR001', 'Ruang rapat besar', 'Gedung Utama', 'Lantai 2', 'R202'),
-  ('Ruang Finance', 'RF001', 'Ruang keuangan', 'Gedung Utama', 'Lantai 1', 'R102'),
-  ('Gudang', 'GD001', 'Gudang penyimpanan', 'Gedung Gudang', 'Lantai 1', 'G101')
+  ('Ruang Direktur', '001', 'Ruang kerja direktur utama', 'Gedung Utama', 'Lantai 3', ''),
+  ('Ruang Administrasi', '002', 'Ruang administrasi umum', 'Gedung Utama', 'Lantai 1', ''),
+  ('Ruang IT', '003', 'Ruang teknologi informasi', 'Gedung Utama', 'Lantai 2', ''),
+  ('Ruang Rapat', '004', 'Ruang rapat besar', 'Gedung Utama', 'Lantai 2', ''),
+  ('Ruang Finance', '005', 'Ruang keuangan', 'Gedung Utama', 'Lantai 1', ''),
+  ('Gudang', '006', 'Gudang penyimpanan', 'Gedung Gudang', 'Lantai 1', '')
 ON CONFLICT (code) DO NOTHING;

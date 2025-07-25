@@ -40,9 +40,9 @@ $$;
 
 -- Insert default categories
 INSERT INTO asset_categories (code, name, description) VALUES
-  ('FURNITUR', 'Furniture', 'Perabotan kantor dan ruangan'),
-  ('ELEKTRONIK', 'Elektronik', 'Perangkat elektronik dan komputer'),
-  ('KENDARAAN', 'Kendaraan', 'Kendaraan dinas dan operasional'),
-  ('ALAT_TULIS', 'Alat Tulis', 'Perlengkapan tulis menulis'),
-  ('BANGUNAN', 'Bangunan', 'Aset berupa bangunan dan infrastruktur')
+  ('10', 'Furniture', 'Perabotan kantor dan ruangan'),
+  ('20', 'Elektronik', 'Perangkat elektronik dan komputer'),
+  ('30', 'Kendaraan', 'Kendaraan dinas dan operasional'),
+  ('40', 'Alat Tulis', 'Perlengkapan tulis menulis'),
+  ('50', 'Alat Kebun', 'Aset berupa alat kebun')
 ON CONFLICT (code) DO NOTHING;

@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { assetApi, categoryApi, locationApi } from '../services/api';
+import { assetApi, categoryApi, locationApi, API_BASE_URL } from '../services/api';
 import type { Asset, Category, Location } from '../services/api';
 import { 
   PlusIcon, 
@@ -333,8 +333,8 @@ export default function AssetsPage() {
 
     try {
       const formData = new FormData();
-      formData.append('file', importFile);      console.log('Sending import request to http://localhost:3001/api/v1/assets/import');
-      const response = await fetch('http://localhost:3001/api/v1/assets/import', {
+      formData.append('file', importFile);      console.log(`Sending import request to ${API_BASE_URL}/api/v1/assets/import`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/assets/import`, {
         method: 'POST',
         body: formData,
       });
@@ -972,7 +972,8 @@ export default function AssetsPage() {
               >
                 <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
               </Transition.Child>
-                <Transition.Child
+
+              <Transition.Child
                 as={Fragment}
                 enter="transition ease-in-out duration-300 transform"
                 enterFrom="translate-x-full"
@@ -980,7 +981,8 @@ export default function AssetsPage() {
                 leave="transition ease-in-out duration-300 transform"
                 leaveFrom="translate-x-0"
                 leaveTo="translate-x-full"
-              >                <div className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white pt-5 pb-4 shadow-xl">
+              >
+                <div className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-y-auto bg-white pt-5 pb-4 shadow-xl">
                   <div className="px-6 flex items-center justify-between border-b border-gray-200 pb-4">
                     <Dialog.Title className="text-base font-semibold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Filter Aset</Dialog.Title>
                     <button
@@ -993,7 +995,8 @@ export default function AssetsPage() {
                     </button>
                   </div>
                   
-                  <div className="mt-4 flex flex-col px-4 space-y-4 overflow-y-auto">                    {/* Status Filter */}
+                  <div className="mt-4 flex flex-col px-4 space-y-4 overflow-y-auto">
+                    {/* Status Filter */}
                     <div className="bg-gray-50 rounded-lg p-3 mb-2">
                       <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
                         <span className="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full mr-2"></span>

@@ -17,14 +17,33 @@ class LocationController {
 
       res.status(201).json({
         success: true,
-        message: 'Location created successfully',
+        message: 'Lokasi berhasil dibuat',
         data: location,
       });
     } catch (error) {
       logger.error('Error in createLocation controller:', error);
-      res.status(400).json({
+
+      // Handle specific error cases
+      let statusCode = 400;
+      let errorMessage = error.message;
+
+      if (error.message.includes('already exists')) {
+        statusCode = 409; // Conflict
+        errorMessage = error.message;
+      } else if (error.message.includes('Validation error') || error.message.includes('required')) {
+        statusCode = 400; // Bad Request
+        errorMessage = `Data tidak valid: ${error.message}`;
+      } else if (error.name === 'SequelizeValidationError') {
+        statusCode = 400;
+        errorMessage = `Validasi database gagal: ${error.errors?.map(e => e.message).join(', ') || error.message}`;
+      } else if (error.name === 'SequelizeUniqueConstraintError') {
+        statusCode = 409;
+        errorMessage = 'Kode atau nama lokasi sudah digunakan';
+      }
+
+      res.status(statusCode).json({
         success: false,
-        message: error.message,
+        message: errorMessage,
       });
     }
   }
@@ -39,15 +58,36 @@ class LocationController {
 
       res.status(200).json({
         success: true,
-        message: 'Location updated successfully',
+        message: 'Lokasi berhasil diperbarui',
         data: location,
       });
     } catch (error) {
       logger.error('Error in updateLocation controller:', error);
-      const status = error.message === 'Location not found' ? 404 : 400;
-      res.status(status).json({
+
+      // Handle specific error cases
+      let statusCode = 400;
+      let errorMessage = error.message;
+
+      if (error.message === 'Location not found') {
+        statusCode = 404;
+        errorMessage = 'Lokasi tidak ditemukan';
+      } else if (error.message.includes('already exists')) {
+        statusCode = 409;
+        errorMessage = error.message;
+      } else if (error.message.includes('Validation error') || error.message.includes('required')) {
+        statusCode = 400;
+        errorMessage = `Data tidak valid: ${error.message}`;
+      } else if (error.name === 'SequelizeValidationError') {
+        statusCode = 400;
+        errorMessage = `Validasi database gagal: ${error.errors?.map(e => e.message).join(', ') || error.message}`;
+      } else if (error.name === 'SequelizeUniqueConstraintError') {
+        statusCode = 409;
+        errorMessage = 'Kode atau nama lokasi sudah digunakan';
+      }
+
+      res.status(statusCode).json({
         success: false,
-        message: error.message,
+        message: errorMessage,
       });
     }
   }
@@ -61,14 +101,25 @@ class LocationController {
 
       res.status(200).json({
         success: true,
-        message: 'Location deleted successfully',
+        message: 'Lokasi berhasil dihapus',
       });
     } catch (error) {
       logger.error('Error in deleteLocation controller:', error);
-      const status = error.message === 'Location not found' ? 404 : 400;
+
+      let status = 400;
+      let errorMessage = error.message;
+
+      if (error.message === 'Location not found') {
+        status = 404;
+        errorMessage = 'Lokasi tidak ditemukan';
+      } else if (error.message.includes('Tidak dapat menghapus lokasi')) {
+        status = 409; // Conflict - cannot delete due to dependencies
+        errorMessage = error.message;
+      }
+
       res.status(status).json({
         success: false,
-        message: error.message,
+        message: errorMessage,
       });
     }
   }
@@ -254,8 +305,8 @@ class LocationController {
             console.log(`Processing row ${processedCount}:`, row);
 
             // Enhanced field mapping - support multiple column name variations
+            // Kode akan dibuat otomatis, jadi tidak perlu dari CSV
             const locationData = {
-              code: getFieldValue(row, ['code', 'kode', 'Kode', 'Kode*', 'CODE', 'Code']),
               name: getFieldValue(row, ['name', 'nama', 'Nama', 'Nama*', 'NAME', 'Name', 'location', 'lokasi']),
               description: getFieldValue(row, ['description', 'deskripsi', 'Deskripsi', 'DESCRIPTION', 'Description', 'desc']) || '',
               building: getFieldValue(row, ['building', 'gedung', 'Gedung', 'BUILDING', 'Building', 'bangunan']) || '',
@@ -264,15 +315,11 @@ class LocationController {
             };
 
             // eslint-disable-next-line no-console
-            console.log('Mapped location data:', locationData);
+            console.log('Mapped location data (before auto-code):', locationData);
 
-            // Enhanced validation
-            if (!locationData.code || !locationData.name) {
-              throw new Error(`Code and name are required. Got code: "${locationData.code}", name: "${locationData.name}"`);
-            }
-
-            if (locationData.code.length > 50) {
-              throw new Error('Code must be 50 characters or less');
+            // Enhanced validation - hanya nama yang wajib
+            if (!locationData.name) {
+              throw new Error(`Name is required. Got name: "${locationData.name}"`);
             }
 
             if (locationData.name.length > 255) {
@@ -291,14 +338,13 @@ class LocationController {
               throw new Error('Room must be 100 characters or less');
             }
 
-            // Check for duplicates within the CSV
+            // Check for duplicates within the CSV (by name only since code will be auto-generated)
             const isDuplicate = locations.some(loc =>
-              loc.code.toLowerCase() === locationData.code.toLowerCase() ||
               loc.name.toLowerCase() === locationData.name.toLowerCase(),
             );
 
             if (isDuplicate) {
-              throw new Error('Duplicate code or name found in CSV');
+              throw new Error('Duplicate name found in CSV');
             }
 
             locations.push(locationData);

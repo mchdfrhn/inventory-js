@@ -46,6 +46,34 @@ export const parseCurrencyValue = (formattedValue: string): number => {
 };
 
 /**
+ * Formats a number to Indonesian scale notation with appropriate decimal places
+ * @param amount The number to format
+ * @returns Formatted string with Indonesian scale notation
+ */
+export const formatToIndonesianScale = (amount: number): string => {
+  // Handle NaN, undefined, null, or invalid numbers
+  if (isNaN(amount) || amount === null || amount === undefined) {
+    return '0';
+  }
+  
+  const millions = amount / 1000000;
+  const billions = millions / 1000;
+  const trillions = billions / 1000;
+  
+  if (trillions >= 1) {
+    return `${trillions.toFixed(3)} trilyun`;  // 3 digit desimal untuk trilyun
+  } else if (billions >= 1) {
+    return `${billions.toFixed(2)} milyar`;    // 2 digit desimal untuk milyar
+  } else if (millions >= 1) {
+    return `${millions.toFixed(1)} juta`;      // 1 digit desimal untuk juta
+  } else if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(0)} ribu`;
+  } else {
+    return new Intl.NumberFormat('id-ID').format(Math.round(amount));
+  }
+};
+
+/**
  * Converts a number to Indonesian word representation (terbilang)
  * @param num The number to convert
  * @returns String representation of the number in Indonesian

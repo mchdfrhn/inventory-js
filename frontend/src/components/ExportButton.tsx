@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import type { Asset } from '../services/api';
 import { assetApi } from '../services/api';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/outline';
@@ -13,10 +13,14 @@ interface ExportButtonProps {
 export default function ExportButton({ assets, filename = 'assets' }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   
-  // Format date for display
-  const formatDate = (dateStr: string) => {
+  // Format date for display with null handling
+  const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('id-ID');
+    try {
+      return new Date(dateStr).toLocaleDateString('id-ID');
+    } catch {
+      return '';
+    }
   };
   
   const exportToExcel = async () => {
@@ -55,10 +59,15 @@ export default function ExportButton({ assets, filename = 'assets' }: ExportButt
             if (bulkResponse.data && bulkResponse.data.length > 0) {
               // Sort bulk assets by sequence number (ascending order)
               const sortedBulkAssets = bulkResponse.data.sort((a, b) => {
-                // Use natural string comparison for proper sorting
-                const keyA = createSortableKey(a.kode);
-                const keyB = createSortableKey(b.kode);
-                return keyA.localeCompare(keyB, undefined, { numeric: true });
+                // Sort by bulk_sequence if available, otherwise by sequence in kode
+                if (a.bulk_sequence && b.bulk_sequence) {
+                  return a.bulk_sequence - b.bulk_sequence;
+                }
+                
+                // Fallback to code-based sequence
+                const sequenceA = getSequenceFromCode(a.kode);
+                const sequenceB = getSequenceFromCode(b.kode);
+                return sequenceA - sequenceB;
               });
               
               expandedAssets.push(...sortedBulkAssets);
@@ -74,119 +83,135 @@ export default function ExportButton({ assets, filename = 'assets' }: ExportButt
         }
       }
       
-      // Sort all expanded assets by their codes (final sorting)
+      // Sort all expanded assets by sequence number (3 digit terakhir) as primary key
       expandedAssets.sort((a, b) => {
-        const keyA = createSortableKey(a.kode);
-        const keyB = createSortableKey(b.kode);
-        return keyA.localeCompare(keyB);
+        // Primary sort: by sequence number (3 digit terakhir)
+        const sequenceA = getSequenceFromCode(a.kode);
+        const sequenceB = getSequenceFromCode(b.kode);
+        
+        if (sequenceA !== sequenceB) {
+          return sequenceA - sequenceB;
+        }
+        
+        // Secondary sort: if sequences are the same, sort by full code
+        return a.kode.localeCompare(b.kode);
       });
       
-      // Map assets to rows
+      // Map assets to rows with proper null handling
       const rows = expandedAssets.map(asset => {
         const status = 
           asset.status === 'baik' ? 'Baik' :
           asset.status === 'rusak' ? 'Rusak' :
           asset.status === 'tidak_memadai' ? 'Tidak Memadai' : 'Baik';
         
-        // Calculate depreciation percentage
-        const depreciationPercentage = asset.harga_perolehan > 0
-          ? Math.round((asset.akumulasi_penyusutan / asset.harga_perolehan) * 100)
+        // Safe number conversion with fallbacks
+        const hargaPerolehan = Number(asset.harga_perolehan) || 0;
+        const akumulasiPenyusutan = Number(asset.akumulasi_penyusutan) || 0;
+        const nilaiSisa = Number(asset.nilai_sisa) || 0;
+        const umurEkonomisTahun = Number(asset.umur_ekonomis_tahun) || 0;
+        const umurEkonomisBulan = Number(asset.umur_ekonomis_bulan) || 0;
+        
+        // Calculate depreciation percentage safely
+        const depreciationPercentage = hargaPerolehan > 0
+          ? Math.round((akumulasiPenyusutan / hargaPerolehan) * 100)
           : 0;
           
         return [
-          asset.kode,
-          asset.nama,
-          asset.spesifikasi,
-          asset.quantity, // This will now be 1 for each individual bulk asset
-          asset.satuan,
+          asset.kode || '',
+          asset.nama || '',
+          asset.spesifikasi || '',
+          Number(asset.quantity) || 1,
+          asset.satuan || '',
           asset.category?.name || '',
           asset.lokasi_id && asset.location_info ? 
             `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})` 
             : asset.lokasi || '',
           status,
           formatDate(asset.tanggal_perolehan),
-          asset.harga_perolehan,
-          asset.umur_ekonomis_tahun,
-          asset.umur_ekonomis_bulan,
-          asset.akumulasi_penyusutan,
-          asset.nilai_sisa,
+          hargaPerolehan,
+          umurEkonomisTahun,
+          umurEkonomisBulan,
+          akumulasiPenyusutan,
+          nilaiSisa,
           depreciationPercentage,
-          asset.keterangan,
+          asset.keterangan || '',
         ];
       });
       
       // Create workbook and worksheet
-      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Inventory');
+      
+      // Add headers
+      worksheet.addRow(headers);
+      
+      // Add data rows
+      rows.forEach(row => {
+        worksheet.addRow(row);
+      });
       
       // Set column widths
-      const columnWidths = [
-        { wch: 12 },  // Kode
-        { wch: 30 },  // Nama
-        { wch: 40 },  // Spesifikasi
-        { wch: 8 },   // Jumlah
-        { wch: 10 },  // Satuan
-        { wch: 20 },  // Kategori
-        { wch: 20 },  // Lokasi
-        { wch: 15 },  // Status
-        { wch: 15 },  // Tanggal Perolehan
-        { wch: 15 },  // Harga Perolehan
-        { wch: 15 },  // Umur Ekonomis (Tahun)
-        { wch: 15 },  // Umur Ekonomis (Bulan)
-        { wch: 20 },  // Akumulasi Penyusutan
-        { wch: 15 },  // Nilai Sisa
-        { wch: 15 },  // Persentase Penyusutan (%)
-        { wch: 30 },  // Keterangan
-      ];
-      ws['!cols'] = columnWidths;
+      const columnWidths = [12, 30, 40, 8, 10, 20, 20, 15, 15, 15, 15, 15, 20, 15, 15, 30];
+      columnWidths.forEach((width, index) => {
+        const column = worksheet.getColumn(index + 1);
+        column.width = width;
+      });
       
-      // Add styling for header row
-      const headerStyle = {
-        font: { bold: true, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: "4472C4" } },
-        alignment: { horizontal: "center", vertical: "center" }
-      };
+      // Style header row
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4472C4' }
+        };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      });
       
-      // Apply header styling
-      for (let i = 0; i < headers.length; i++) {
-        const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-        if (!ws[cellRef]) ws[cellRef] = {};
-        ws[cellRef].s = headerStyle;
-      }
-      
-      // Style the currency columns
-      for (let rowIndex = 1; rowIndex <= rows.length; rowIndex++) {
-        // Columns with currency format (Harga Perolehan, Akumulasi Penyusutan, Nilai Sisa)
-        const currencyCols = [9, 12, 13]; 
+      // Style data rows
+      for (let rowIndex = 2; rowIndex <= rows.length + 1; rowIndex++) {
+        const row = worksheet.getRow(rowIndex);
         
-        for (const colIndex of currencyCols) {
-          const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
-          if (!ws[cellRef]) ws[cellRef] = {};
-          ws[cellRef].z = '"Rp"#,##0';
-        }
-        
-        // Apply percentage format to depreciation percentage column
-        const percentCellRef = XLSX.utils.encode_cell({ r: rowIndex, c: 14 });
-        if (!ws[percentCellRef]) ws[percentCellRef] = {};
-        ws[percentCellRef].z = '0.00"%"';
-      }
-      
-      // Apply alternating row colors
-      for (let rowIndex = 1; rowIndex <= rows.length; rowIndex++) {
+        // Apply alternating row colors
         if (rowIndex % 2 === 0) {
-          for (let colIndex = 0; colIndex < headers.length; colIndex++) {
-            const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
-            if (!ws[cellRef]) ws[cellRef] = {};
-            if (!ws[cellRef].s) ws[cellRef].s = {};
-            ws[cellRef].s.fill = { fgColor: { rgb: "F2F2F2" } };
-          }
+          row.eachCell((cell) => {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFF2F2F2' }
+            };
+          });
         }
+        
+        // Format currency columns (Harga Perolehan, Akumulasi Penyusutan, Nilai Sisa)
+        const currencyCols = [10, 13, 14]; // 1-based indexing
+        currencyCols.forEach(colIndex => {
+          const cell = row.getCell(colIndex);
+          cell.numFmt = '"Rp"#,##0';
+        });
+        
+        // Format percentage column
+        const percentCell = row.getCell(15);
+        percentCell.numFmt = '0.00"%"';
       }
       
       // Generate the Excel file
       const date = new Date().toISOString().split('T')[0];
-      XLSX.writeFile(wb, `${filename}_${date}.xlsx`);
+      const buffer = await workbook.xlsx.writeBuffer();
+      
+      // Create download link
+      const blob = new Blob([buffer], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${filename}_${date}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
     } catch (error) {
       console.error('Export error:', error);
@@ -195,22 +220,17 @@ export default function ExportButton({ assets, filename = 'assets' }: ExportButt
     }
   };
   
-  // Helper function to create sortable key from asset code
-  const createSortableKey = (kode: string): string => {
-    // Split the code by periods to handle each segment properly
-    const parts = kode.split('.');
-    
-    // If it has suffix (bulk asset like "009.20.4.25.002-003")
+  // Helper function to extract sequence number (3 digit terakhir)
+  const getSequenceFromCode = (kode: string): number => {
     if (kode.includes('-')) {
-      const [mainCode, suffix] = kode.split('-');
-      const mainParts = mainCode.split('.');
-      // Pad each segment to ensure proper sorting
-      const paddedMain = mainParts.map(part => part.padStart(3, '0')).join('.');
-      return `${paddedMain}-${suffix.padStart(3, '0')}`;
+      const [, suffix] = kode.split('-');
+      return parseInt(suffix) || 0;
     }
     
-    // For regular assets, pad each segment
-    return parts.map(part => part.padStart(3, '0')).join('.');
+    // For regular assets, try to get last part as sequence
+    const parts = kode.split('.');
+    const lastPart = parts[parts.length - 1];
+    return parseInt(lastPart) || 0;
   };    return (
     <button
       onClick={exportToExcel}

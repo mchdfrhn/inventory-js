@@ -182,6 +182,19 @@ class AssetCategoryRepository {
       throw error;
     }
   }
+
+  async getAllCodes() {
+    try {
+      const categories = await AssetCategory.findAll({
+        attributes: ['code'],
+        order: [['code', 'ASC']],
+      });
+      return categories;
+    } catch (error) {
+      logger.error('Error getting all category codes:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AssetCategoryRepository;

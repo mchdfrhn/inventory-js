@@ -198,6 +198,19 @@ class LocationRepository {
       throw error;
     }
   }
+
+  async getAllCodes() {
+    try {
+      const locations = await Location.findAll({
+        attributes: ['code'],
+        order: [['code', 'ASC']],
+      });
+      return locations;
+    } catch (error) {
+      logger.error('Error getting all location codes:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = LocationRepository;

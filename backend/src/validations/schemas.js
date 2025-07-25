@@ -28,34 +28,54 @@ const updateAssetCategorySchema = Joi.object({
 
 const createLocationSchema = Joi.object({
   code: Joi.string().trim().min(1).max(50).required().messages({
-    'string.empty': 'Location code is required',
-    'string.max': 'Location code must be 50 characters or less',
-    'any.required': 'Location code is required',
+    'string.empty': 'Kode lokasi harus diisi',
+    'string.min': 'Kode lokasi minimal 1 karakter',
+    'string.max': 'Kode lokasi maksimal 50 karakter',
+    'any.required': 'Kode lokasi harus diisi',
   }),
   name: Joi.string().trim().min(1).max(255).required().messages({
-    'string.empty': 'Location name is required',
-    'string.max': 'Location name must be 255 characters or less',
-    'any.required': 'Location name is required',
+    'string.empty': 'Nama lokasi harus diisi',
+    'string.min': 'Nama lokasi minimal 1 karakter',
+    'string.max': 'Nama lokasi maksimal 255 karakter',
+    'any.required': 'Nama lokasi harus diisi',
   }),
-  description: Joi.string().trim().allow('').optional(),
-  building: Joi.string().trim().max(255).allow('').optional(),
-  floor: Joi.string().trim().max(50).allow('').optional(),
-  room: Joi.string().trim().max(100).allow('').optional(),
+  description: Joi.string().trim().allow('').optional().messages({
+    'string.max': 'Deskripsi terlalu panjang',
+  }),
+  building: Joi.string().trim().max(255).allow('').optional().messages({
+    'string.max': 'Nama gedung maksimal 255 karakter',
+  }),
+  floor: Joi.string().trim().max(50).allow('').optional().messages({
+    'string.max': 'Lantai maksimal 50 karakter',
+  }),
+  room: Joi.string().trim().max(100).allow('').optional().messages({
+    'string.max': 'Ruangan maksimal 100 karakter',
+  }),
 });
 
 const updateLocationSchema = Joi.object({
   code: Joi.string().trim().min(1).max(50).optional().messages({
-    'string.empty': 'Location code cannot be empty',
-    'string.max': 'Location code must be 50 characters or less',
+    'string.empty': 'Kode lokasi tidak boleh kosong',
+    'string.min': 'Kode lokasi minimal 1 karakter',
+    'string.max': 'Kode lokasi maksimal 50 karakter',
   }),
   name: Joi.string().trim().min(1).max(255).optional().messages({
-    'string.empty': 'Location name cannot be empty',
-    'string.max': 'Location name must be 255 characters or less',
+    'string.empty': 'Nama lokasi tidak boleh kosong',
+    'string.min': 'Nama lokasi minimal 1 karakter',
+    'string.max': 'Nama lokasi maksimal 255 karakter',
   }),
-  description: Joi.string().trim().allow('').optional(),
-  building: Joi.string().trim().max(255).allow('').optional(),
-  floor: Joi.string().trim().max(50).allow('').optional(),
-  room: Joi.string().trim().max(100).allow('').optional(),
+  description: Joi.string().trim().allow('').optional().messages({
+    'string.max': 'Deskripsi terlalu panjang',
+  }),
+  building: Joi.string().trim().max(255).allow('').optional().messages({
+    'string.max': 'Nama gedung maksimal 255 karakter',
+  }),
+  floor: Joi.string().trim().max(50).allow('').optional().messages({
+    'string.max': 'Lantai maksimal 50 karakter',
+  }),
+  room: Joi.string().trim().max(100).allow('').optional().messages({
+    'string.max': 'Ruangan maksimal 100 karakter',
+  }),
 });
 
 const createAssetSchema = Joi.object({

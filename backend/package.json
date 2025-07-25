@@ -17,8 +17,6 @@
     "migrate:pg:down": "node-pg-migrate down",
     "migrate:pg:create": "node-pg-migrate create",
     "migrate:create": "node-pg-migrate create",
-    "migrate:legacy": "node src/database/migrate.js",
-    "seed": "node src/database/seed.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },

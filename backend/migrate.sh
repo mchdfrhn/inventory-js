@@ -47,19 +47,6 @@ create_migration() {
     npm run migrate:create $1
 }
 
-# Function to seed database
-seed_database() {
-    echo "🌱 Seeding database with sample data..."
-    npm run seed
-    
-    if [ $? -eq 0 ]; then
-        echo "✅ Database seeded successfully"
-    else
-        echo "❌ Seeding failed"
-        exit 1
-    fi
-}
-
 # Handle command line arguments
 case "$1" in
     "up"|"migrate"|"")
@@ -71,24 +58,20 @@ case "$1" in
     "create")
         create_migration "$2"
         ;;
-    "seed")
-        seed_database
-        ;;
     "setup")
         echo "🔧 Setting up database..."
         run_migrations
-        seed_database
-        echo "✅ Database setup completed"
+        echo "✅ Database setup completed (including demo data)"
         ;;
     "help"|"-h"|"--help")
-        echo "Usage: $0 {up|status|create|seed|setup|help}"
+                echo "❌ Unknown command: $1"
+        echo "Use '$0 help' to see available commands"
         echo ""
         echo "Commands:"
         echo "  up/migrate  - Run pending migrations (default)"
         echo "  status      - Show migration status"
         echo "  create      - Create new migration"
-        echo "  seed        - Seed database with sample data"
-        echo "  setup       - Run migrations and seed data"
+        echo "  setup       - Run all migrations (includes demo data)"
         echo "  help        - Show this help message"
         ;;
     *)
