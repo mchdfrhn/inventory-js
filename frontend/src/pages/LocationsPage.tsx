@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { locationApi } from '../services/api';
+import { locationApi, API_BASE_URL } from '../services/api';
 import type { Location } from '../services/api';
 import { Dialog, Transition } from '@headlessui/react';
 import { 
@@ -146,8 +146,8 @@ export default function LocationsPage() {
     setImportError(null);
     setImportSuccess(null);    try {
       const formData = new FormData();
-      formData.append('file', importFile);      console.log('Sending import request to http://localhost:3001/api/v1/locations/import');
-      const response = await fetch('http://localhost:3001/api/v1/locations/import', {
+      formData.append('file', importFile);      console.log(`Sending import request to ${API_BASE_URL}/api/v1/locations/import`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/locations/import`, {
         method: 'POST',
         body: formData,
       });
@@ -230,13 +230,14 @@ export default function LocationsPage() {
   // Download template Excel file
   const downloadTemplate = () => {    // Create template data with Indonesian headers
     // Tanda * menunjukkan kolom yang wajib diisi (required)
+    // Kode tidak perlu disertakan karena akan dibuat otomatis
     const templateData = [
-      ['Kode*', 'Nama*', 'Gedung', 'Lantai', 'Ruangan', 'Deskripsi'],
-      ['001', 'Ruang Kelas 1A', 'Gedung Utama', '1', 'A101', 'Ruang kelas untuk mata kuliah umum dan teori'],
-      ['002', 'Laboratorium Komputer', 'Gedung Teknik', '2', 'B201', 'Lab untuk praktikum programming dan sistem informasi'],
-      ['003', 'Perpustakaan', 'Gedung Utama', '1', 'C101', 'Ruang baca dan koleksi buku referensi'],
-      ['004', 'Ruang Rapat Besar', 'Gedung Utama', '3', 'D301', 'Ruang rapat untuk acara besar dan seminar'],
-      ['005', 'Kantor Dekan', 'Gedung Administrasi', '2', 'E201', 'Kantor pimpinan fakultas dan staf administrasi']
+      ['Nama*', 'Gedung', 'Lantai', 'Ruangan', 'Deskripsi'],
+      ['Ruang Kelas 1A', 'Gedung Utama', '1', 'A101', 'Ruang kelas untuk mata kuliah umum dan teori'],
+      ['Laboratorium Komputer', 'Gedung Teknik', '2', 'B201', 'Lab untuk praktikum programming dan sistem informasi'],
+      ['Perpustakaan', 'Gedung Utama', '1', 'C101', 'Ruang baca dan koleksi buku referensi'],
+      ['Ruang Rapat Besar', 'Gedung Utama', '3', 'D301', 'Ruang rapat untuk acara besar dan seminar'],
+      ['Kantor Dekan', 'Gedung Administrasi', '2', 'E201', 'Kantor pimpinan fakultas dan staf administrasi']
     ];
 
     // Create CSV content with proper escaping
@@ -718,7 +719,7 @@ export default function LocationsPage() {
                       
                       <div className="space-y-1">
                         <p><strong>Format file:</strong> Excel (.xlsx, .xls) atau CSV (.csv)</p>
-                        <p><strong>Kode Lokasi:</strong> Gunakan format 3 digit (001, 002, 003, dst)</p>
+                        <p><strong>Kode Lokasi:</strong> Dibuat otomatis dengan format 3 digit (001, 002, 003, dst)</p>
                         <p><strong>Nama Lokasi:</strong> Nama unik untuk setiap lokasi</p>
                         <p><strong>Gedung & Lantai:</strong> Informasi opsional untuk detail lokasi</p>
                       </div>
@@ -732,8 +733,8 @@ export default function LocationsPage() {
                       Tips & Panduan
                     </h3>
                     <div className="text-xs text-blue-700 space-y-2">
-                      <p>💡 <strong>Tips:</strong> Pastikan kode lokasi unik dan belum ada di sistem untuk menghindari duplikasi data.</p>
-                      <p>🏢 <strong>Struktur:</strong> Gunakan struktur hierarki yang konsisten untuk kemudahan pengelolaan lokasi.</p>
+                      <p>💡 <strong>Tips:</strong> Pastikan nama lokasi unik dan belum ada di sistem untuk menghindari duplikasi data.</p>
+                      <p>🏢 <strong>Otomatis:</strong> Kode lokasi akan dibuat otomatis oleh sistem dengan format 3 digit berurutan.</p>
                     </div>
                   </div>
                   

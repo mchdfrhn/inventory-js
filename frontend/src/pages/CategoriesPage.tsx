@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { categoryApi } from '../services/api';
+import { categoryApi, API_BASE_URL } from '../services/api';
 import { Dialog, Transition } from '@headlessui/react';
 import { 
   PlusIcon, 
@@ -227,8 +227,8 @@ export default function CategoriesPage() {
     setImportError(null);
     setImportSuccess(null);    try {
       const formData = new FormData();
-      formData.append('file', importFile);      console.log('Sending import request to http://localhost:3001/api/v1/categories/import');
-      const response = await fetch('http://localhost:3001/api/v1/categories/import', {
+      formData.append('file', importFile);      console.log(`Sending import request to ${API_BASE_URL}/api/v1/categories/import`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/categories/import`, {
         method: 'POST',
         body: formData,
       });
@@ -258,17 +258,14 @@ export default function CategoriesPage() {
 
       setImportSuccess(`Berhasil mengimport ${result.imported_count || 0} kategori`);
       
-      // Refresh the categories list
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
-      queryClient.invalidateQueries({ queryKey: ['categoriesWithCounts'] });
-      
-      // Reset form after success
-      setTimeout(() => {
-        setImportModalOpen(false);
-        setImportFile(null);
-        setImportSuccess(null);
+      // Show import errors if any
+      if (result.data?.errors && result.data.errors.length > 0) {
+        console.log('Import errors:', result.data.errors);
+        // Add notification for errors but still show success for imported ones
+        addNotification('warning', `${result.imported_count || 0} kategori berhasil diimport, ${result.data.errors.length} gagal/dilewati`);
+      } else {
         addNotification('success', `Berhasil mengimport ${result.imported_count || 0} kategori`);
-      }, 2000);
+      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan saat mengimport data';
@@ -280,13 +277,14 @@ export default function CategoriesPage() {
   };  // Download template Excel file
   const downloadTemplate = () => {    // Create template data with Indonesian headers
     // Tanda * menunjukkan kolom yang wajib diisi (required)
+    // Kode tidak perlu disertakan karena akan dibuat otomatis
     const templateData = [
-      ['Kode*', 'Nama*', 'Deskripsi'],
-      ['10', 'Peralatan Komputer', 'Kategori untuk komputer desktop laptop printer scanner dan aksesoris IT'],
-      ['20', 'Furniture Kantor', 'Kategori untuk meja kursi lemari filing cabinet dan furniture kantor lainnya'],
-      ['30', 'Kendaraan', 'Kategori untuk mobil dinas motor operasional dan kendaraan transportasi'],
-      ['40', 'Peralatan Audio Visual', 'Kategori untuk projector sound system microphone dan peralatan presentasi'],
-      ['50', 'Peralatan Laboratorium', 'Kategori untuk alat ukur instrumen penelitian dan peralatan praktikum']
+      ['Nama*', 'Deskripsi'],
+      ['Peralatan Komputer', 'Kategori untuk komputer desktop laptop printer scanner dan aksesoris IT'],
+      ['Furniture Kantor', 'Kategori untuk meja kursi lemari filing cabinet dan furniture kantor lainnya'],
+      ['Kendaraan', 'Kategori untuk mobil dinas motor operasional dan kendaraan transportasi'],
+      ['Peralatan Audio Visual', 'Kategori untuk projector sound system microphone dan peralatan presentasi'],
+      ['Peralatan Laboratorium', 'Kategori untuk alat ukur instrumen penelitian dan peralatan praktikum']
     ];
 
     // Create CSV content with proper escaping
@@ -667,7 +665,7 @@ export default function CategoriesPage() {
                       
                       <div className="space-y-1">
                         <p><strong>Format file:</strong> Excel (.xlsx, .xls) atau CSV (.csv)</p>
-                        <p><strong>Kode Kategori:</strong> Gunakan format 2 digit (10, 20, 30, dst)</p>
+                        <p><strong>Kode Kategori:</strong> Dibuat otomatis dengan kelipatan 10 (10, 20, 30, dst)</p>
                         <p><strong>Nama Kategori:</strong> Nama unik untuk setiap kategori</p>
                         <p><strong>Deskripsi:</strong> Informasi opsional untuk detail kategori</p>
                       </div>
@@ -681,8 +679,8 @@ export default function CategoriesPage() {
                       Tips & Panduan
                     </h3>
                     <div className="text-xs text-blue-700 space-y-2">
-                      <p>💡 <strong>Tips:</strong> Pastikan kode kategori unik dan belum ada di sistem untuk menghindari duplikasi data.</p>
-                      <p>📋 <strong>Standar:</strong> Gunakan kode kategori standar untuk kemudahan pengelolaan aset.</p>
+                      <p>💡 <strong>Tips:</strong> Pastikan nama kategori unik dan belum ada di sistem untuk menghindari duplikasi data.</p>
+                      <p>📋 <strong>Otomatis:</strong> Kode kategori akan dibuat otomatis oleh sistem dengan format standar kelipatan 10.</p>
                     </div>
                   </div>
                   

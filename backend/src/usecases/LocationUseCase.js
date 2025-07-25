@@ -10,6 +10,11 @@ class LocationUseCase {
 
   async create(locationData, metadata = {}) {
     try {
+      // Generate automatic code if not provided
+      if (!locationData.code) {
+        locationData.code = await this.generateNextLocationCode();
+      }
+
       // Validate required fields
       this.validateLocationData(locationData);
 
@@ -241,6 +246,56 @@ class LocationUseCase {
 
     if (locationData.description !== undefined && locationData.description) {
       locationData.description = locationData.description.trim();
+    }
+  }
+
+  async generateNextLocationCode() {
+    try {
+      // Get all existing locations to find the highest code
+      const existingLocations = await this.locationRepository.getAllCodes();
+
+      if (!existingLocations || existingLocations.length === 0) {
+        return '001';
+      }
+
+      // Extract numeric codes from different patterns and find the highest
+      const numericCodes = existingLocations
+        .map(location => {
+          // Try to extract numbers from different patterns:
+          // 1. Pure numeric codes like "001", "002", "052" etc.
+          let match = location.code.match(/^(\d+)$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            return num;
+          }
+
+          // 2. Alphanumeric codes ending with numbers like "RD001", "RA001" etc.
+          match = location.code.match(/^[A-Za-z]+(\d+)$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            return num;
+          }
+
+          // 3. Mixed patterns with numbers at the end
+          match = location.code.match(/(\d+)$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            return num;
+          }
+
+          return 0;
+        })
+        .filter(code => !isNaN(code) && code > 0);
+
+      const maxCode = numericCodes.length > 0 ? Math.max(...numericCodes) : 0;
+      const nextCode = maxCode + 1;
+
+      // Format with leading zeros to maintain 3-digit format
+      return nextCode.toString().padStart(3, '0');
+    } catch (error) {
+      logger.error('Error generating next location code:', error);
+      // Fallback to timestamp-based code if generation fails
+      return `L${Date.now().toString().slice(-6)}`;
     }
   }
 }

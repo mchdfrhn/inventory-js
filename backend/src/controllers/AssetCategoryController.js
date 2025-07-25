@@ -243,36 +243,31 @@ class AssetCategoryController {
             console.log(`Processing row ${processedCount}:`, row);
 
             // Enhanced field mapping - support multiple column name variations
+            // Kode akan dibuat otomatis, jadi tidak perlu dari CSV
             const categoryData = {
-              code: getFieldValue(row, ['code', 'kode', 'Kode', 'Kode*', 'CODE', 'Code']),
               name: getFieldValue(row, ['name', 'nama', 'Nama', 'Nama*', 'NAME', 'Name']),
               description: getFieldValue(row, ['description', 'deskripsi', 'Deskripsi', 'DESCRIPTION', 'Description', 'desc']) || '',
             };
 
             // eslint-disable-next-line no-console
-            console.log('Mapped category data:', categoryData);
+            console.log('Mapped category data (before auto-code):', categoryData);
 
-            // Enhanced validation
-            if (!categoryData.code || !categoryData.name) {
-              throw new Error(`Code and name are required. Got code: "${categoryData.code}", name: "${categoryData.name}"`);
-            }
-
-            if (categoryData.code.length > 50) {
-              throw new Error('Code must be 50 characters or less');
+            // Enhanced validation - hanya nama yang wajib
+            if (!categoryData.name) {
+              throw new Error(`Name is required. Got name: "${categoryData.name}"`);
             }
 
             if (categoryData.name.length > 255) {
               throw new Error('Name must be 255 characters or less');
             }
 
-            // Check for duplicates within the CSV
+            // Check for duplicates within the CSV (by name only since code will be auto-generated)
             const isDuplicate = categories.some(cat =>
-              cat.code.toLowerCase() === categoryData.code.toLowerCase() ||
               cat.name.toLowerCase() === categoryData.name.toLowerCase(),
             );
 
             if (isDuplicate) {
-              throw new Error('Duplicate code or name found in CSV');
+              throw new Error('Duplicate name found in CSV');
             }
 
             categories.push(categoryData);
@@ -307,6 +302,7 @@ class AssetCategoryController {
                 errors,
                 processed_rows: processedCount,
                 valid_rows: categories.length,
+                detail: 'Some rows had validation errors during parsing',
               });
             }
 
@@ -314,16 +310,21 @@ class AssetCategoryController {
             const importedCategories = [];
             const importErrors = [];
 
+            console.log(`Starting import process for ${categories.length} categories`);
+
             for (let i = 0; i < categories.length; i++) {
               try {
+                console.log(`Importing category ${i + 1}:`, categories[i]);
                 const category = await this.categoryUseCase.createCategory(categories[i], req.metadata);
                 importedCategories.push(category);
+                console.log(`Successfully imported category ${i + 1}:`, category);
               } catch (error) {
+                console.error(`Failed to import category ${i + 1}:`, error.message);
                 // Handle specific error types
-                if (error.message.includes('already exists')) {
-                  importErrors.push(`Row ${i + 1}: ${error.message} (skipped)`);
+                if (error.message.includes('sudah digunakan') || error.message.includes('already exists')) {
+                  importErrors.push(`Row ${i + 1} (${categories[i].name}): ${error.message} (skipped)`);
                 } else {
-                  importErrors.push(`Row ${i + 1}: ${error.message}`);
+                  importErrors.push(`Row ${i + 1} (${categories[i].name}): ${error.message}`);
                 }
               }
             }
@@ -337,6 +338,7 @@ class AssetCategoryController {
               data: {
                 imported: importedCategories.length,
                 errors: importErrors,
+                imported_categories: importedCategories.map(cat => ({ id: cat.id, code: cat.code, name: cat.name })),
                 summary: {
                   total_processed: processedCount,
                   valid_data: categories.length,

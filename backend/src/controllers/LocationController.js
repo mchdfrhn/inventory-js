@@ -305,8 +305,8 @@ class LocationController {
             console.log(`Processing row ${processedCount}:`, row);
 
             // Enhanced field mapping - support multiple column name variations
+            // Kode akan dibuat otomatis, jadi tidak perlu dari CSV
             const locationData = {
-              code: getFieldValue(row, ['code', 'kode', 'Kode', 'Kode*', 'CODE', 'Code']),
               name: getFieldValue(row, ['name', 'nama', 'Nama', 'Nama*', 'NAME', 'Name', 'location', 'lokasi']),
               description: getFieldValue(row, ['description', 'deskripsi', 'Deskripsi', 'DESCRIPTION', 'Description', 'desc']) || '',
               building: getFieldValue(row, ['building', 'gedung', 'Gedung', 'BUILDING', 'Building', 'bangunan']) || '',
@@ -315,15 +315,11 @@ class LocationController {
             };
 
             // eslint-disable-next-line no-console
-            console.log('Mapped location data:', locationData);
+            console.log('Mapped location data (before auto-code):', locationData);
 
-            // Enhanced validation
-            if (!locationData.code || !locationData.name) {
-              throw new Error(`Code and name are required. Got code: "${locationData.code}", name: "${locationData.name}"`);
-            }
-
-            if (locationData.code.length > 50) {
-              throw new Error('Code must be 50 characters or less');
+            // Enhanced validation - hanya nama yang wajib
+            if (!locationData.name) {
+              throw new Error(`Name is required. Got name: "${locationData.name}"`);
             }
 
             if (locationData.name.length > 255) {
@@ -342,14 +338,13 @@ class LocationController {
               throw new Error('Room must be 100 characters or less');
             }
 
-            // Check for duplicates within the CSV
+            // Check for duplicates within the CSV (by name only since code will be auto-generated)
             const isDuplicate = locations.some(loc =>
-              loc.code.toLowerCase() === locationData.code.toLowerCase() ||
               loc.name.toLowerCase() === locationData.name.toLowerCase(),
             );
 
             if (isDuplicate) {
-              throw new Error('Duplicate code or name found in CSV');
+              throw new Error('Duplicate name found in CSV');
             }
 
             locations.push(locationData);

@@ -10,6 +10,14 @@ class AssetCategoryUseCase {
 
   async createCategory(categoryData, metadata = {}) {
     try {
+      console.log('Creating category with data:', categoryData);
+
+      // Generate automatic code if not provided
+      if (!categoryData.code) {
+        categoryData.code = await this.generateNextCategoryCode();
+        console.log('Generated automatic code:', categoryData.code);
+      }
+
       // Validate required fields
       this.validateCategoryData(categoryData);
 
@@ -199,6 +207,34 @@ class AssetCategoryUseCase {
 
     if (categoryData.description !== undefined && categoryData.description) {
       categoryData.description = categoryData.description.trim();
+    }
+  }
+
+  async generateNextCategoryCode() {
+    try {
+      // Get all existing categories to find the highest code
+      const existingCategories = await this.categoryRepository.getAllCodes();
+
+      if (!existingCategories || existingCategories.length === 0) {
+        return '10';
+      }
+
+      // Extract numeric codes and find the highest
+      const numericCodes = existingCategories
+        .map(category => {
+          const match = category.code.match(/^(\d+)$/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter(code => !isNaN(code) && code > 0);
+
+      const maxCode = numericCodes.length > 0 ? Math.max(...numericCodes) : 0;
+      const nextCode = maxCode + 10;
+
+      return nextCode.toString();
+    } catch (error) {
+      logger.error('Error generating next category code:', error);
+      // Fallback to timestamp-based code if generation fails
+      return `C${Date.now().toString().slice(-6)}`;
     }
   }
 }

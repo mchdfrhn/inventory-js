@@ -5,6 +5,9 @@ const API_URL = import.meta.env.VITE_API_BASE_URL
   ? `${import.meta.env.VITE_API_BASE_URL}/api/v1`
   : '/api/v1'; // Use relative URL for proxy
 
+// Export base URL for use in components that need raw fetch
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: API_URL,
