@@ -363,8 +363,8 @@ export default function DashboardPage() {
     queryKey: ['all_assets'],
     queryFn: async () => {
       try {
-        // Get all assets by fetching without pagination parameters
-        const result = await assetApi.list(1, 50); // Reduce limit temporarily for testing
+        // Get all assets without pagination to ensure we get complete data
+        const result = await assetApi.listAll();
         return result;
       } catch (error) {
         console.error('Error fetching assets:', error);
@@ -376,8 +376,8 @@ export default function DashboardPage() {
     queryKey: ['all_categories'],
     queryFn: async () => {
       try {
-        // Get all categories by fetching without pagination parameters
-        const result = await categoryApi.list(1, 50); // Reduce limit temporarily for testing
+        // Get all categories without pagination to ensure we get complete data
+        const result = await categoryApi.listAll();
         return result;
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -390,8 +390,8 @@ export default function DashboardPage() {
     queryKey: ['all_locations'],
     queryFn: async () => {
       try {
-        // Get all locations by fetching without pagination parameters
-        const result = await locationApi.list(1, 50); // Reduce limit temporarily for testing
+        // Get all locations without pagination to ensure we get complete data
+        const result = await locationApi.listAll();
         return result;
       } catch (error) {
         console.error('Error fetching locations:', error);
@@ -405,11 +405,54 @@ export default function DashboardPage() {
     if (!assetData || !categoryData || !locationData) return null;
 
     const assets = assetData.data as Asset[];
-    const totalAssets = assets.length;
+    
+    // Function to calculate correct nilai sisa for an asset
+    const getTotalNilaiSisa = (asset: Asset): number => {
+      let nilaiSisa = Number(asset.nilai_sisa) || 0;
+      
+      // If nilai_sisa is 0 or missing, calculate it from depreciation
+      if (nilaiSisa === 0 && asset.harga_perolehan) {
+        const hargaPerolehan = Number(asset.harga_perolehan);
+        let akumulasiPenyusutan = Number(asset.akumulasi_penyusutan) || 0;
+        
+        // If akumulasi_penyusutan is also 0, calculate it
+        if (akumulasiPenyusutan === 0 && asset.tanggal_perolehan) {
+          const acquisitionDate = new Date(asset.tanggal_perolehan);
+          const currentDate = new Date();
+          const monthsOld = Math.max(0, (currentDate.getTime() - acquisitionDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+          const economicLifeMonths = Math.max(12, (asset.umur_ekonomis_tahun || 5) * 12);
+          
+          // Simple straight-line depreciation calculation
+          const monthlyDepreciation = hargaPerolehan / economicLifeMonths;
+          akumulasiPenyusutan = Math.min(hargaPerolehan * 0.9, monthlyDepreciation * monthsOld); // Max 90% depreciation
+        }
+        
+        nilaiSisa = Math.max(0, hargaPerolehan - akumulasiPenyusutan);
+      }
+      
+      // For bulk assets, multiply nilai_sisa by bulk_total_count
+      if (asset.bulk_total_count && asset.bulk_total_count > 1) {
+        return nilaiSisa * asset.bulk_total_count;
+      }
+      // For regular assets, return nilai_sisa as is
+      return nilaiSisa;
+    };
+
     const totalValue = assets.reduce((sum, asset) => {
       const price = Number(asset.harga_perolehan) || 0;
-      return sum + price;
+      // For bulk assets, multiply by bulk_total_count if available
+      const bulkCount = asset.bulk_total_count || 1;
+      return sum + (price * bulkCount);
     }, 0);
+    
+    // Calculate correct estimated current value using nilai sisa
+    const estimatedCurrentValue = assets.reduce((sum, asset) => {
+      return sum + getTotalNilaiSisa(asset);
+    }, 0);
+    
+    // Calculate total depreciation amount
+    const depreciationAmount = totalValue - estimatedCurrentValue;
+    const depreciationPercentage = totalValue > 0 ? Math.round((depreciationAmount / totalValue) * 100) : 0;
     
     // Simple status counts
     const statusCounts: Record<string, number> = {
@@ -419,12 +462,18 @@ export default function DashboardPage() {
     };
     
     assets.forEach(asset => {
+      const count = asset.bulk_total_count || 1;
       if (statusCounts[asset.status] !== undefined) {
-        statusCounts[asset.status]++;
+        statusCounts[asset.status] += count;
       } else {
-        statusCounts.baik++;
+        statusCounts.baik += count;
       }
     });
+    
+    // Calculate actual total asset count including bulk assets
+    const actualTotalAssets = assets.reduce((sum, asset) => {
+      return sum + (asset.bulk_total_count || 1);
+    }, 0);
     
     // Simple category breakdown
     const assetsByCategory: Array<{
@@ -437,10 +486,11 @@ export default function DashboardPage() {
     
     categoryData.data.forEach(category => {
       const categoryAssets = assets.filter(asset => asset.category_id === category.id);
-      const count = categoryAssets.length;
+      const count = categoryAssets.reduce((sum, asset) => sum + (asset.bulk_total_count || 1), 0);
       const value = categoryAssets.reduce((sum, asset) => {
         const price = Number(asset.harga_perolehan) || 0;
-        return sum + price;
+        const bulkCount = asset.bulk_total_count || 1;
+        return sum + (price * bulkCount);
       }, 0);
       
       assetsByCategory.push({
@@ -456,19 +506,19 @@ export default function DashboardPage() {
     assetsByCategory.sort((a, b) => b.count - a.count);
 
     return {
-      totalAssets,
+      totalAssets: actualTotalAssets, // Use actual total including bulk assets
       totalValue,
-      estimatedCurrentValue: totalValue * 0.8, // Simplified estimate
-      depreciationPercentage: 80, // Simplified
-      depreciationAmount: totalValue * 0.2, // Simplified
+      estimatedCurrentValue, // Use calculated nilai sisa
+      depreciationPercentage, // Use calculated depreciation percentage
+      depreciationAmount, // Use calculated depreciation amount
       categoryCount: categoryData.data.length,
       locationCount: locationData.data.length,
       statusCounts,
       assetsByCategory: assetsByCategory.slice(0, 5), // Top 5 categories
       assetsByLocation: [], // Simplified - empty for now
       topCategoriesByValue: assetsByCategory.slice(0, 3),
-      baikAssetsPercent: Math.round((statusCounts.baik / totalAssets) * 100) || 0,
-      rusakAssetsPercent: Math.round((statusCounts.rusak / totalAssets) * 100) || 0,
+      baikAssetsPercent: Math.round((statusCounts.baik / actualTotalAssets) * 100) || 0,
+      rusakAssetsPercent: Math.round((statusCounts.rusak / actualTotalAssets) * 100) || 0,
       monthlyGrowth: getRecentMonthsData(), // Use simple empty data
       assetAgeDistribution: {
         lessThan1Year: 0,
@@ -569,14 +619,14 @@ export default function DashboardPage() {
                 <div 
                   className="h-full rounded-full bg-blue-600" 
                   style={{ 
-                    width: `${stats?.depreciationPercentage || 0}%`,
+                    width: `${Math.max(0, 100 - (stats?.depreciationPercentage || 0))}%`,
                     animation: 'growWidth 1.5s ease-out forwards',
                     animationDelay: '0.3s',
                   }}
                 ></div>
               </div>              <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                <span className="text-red-600">Penyusutan {Math.max(0, 100 - (stats?.depreciationPercentage || 0))}%</span>
-                <span className="text-blue-600">Nilai tersisa {Math.max(0, stats?.depreciationPercentage || 0)}%</span>
+                <span className="text-red-600">Penyusutan {stats?.depreciationPercentage || 0}%</span>
+                <span className="text-blue-600">Nilai tersisa {Math.max(0, 100 - (stats?.depreciationPercentage || 0))}%</span>
               </div>
             </div>
 
@@ -622,7 +672,7 @@ export default function DashboardPage() {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-600">Penyusutan</span>
                 <span className="text-xs font-semibold text-red-600">
-                  {Math.max(0, 100 - (stats?.depreciationPercentage || 0))}%
+                  {stats?.depreciationPercentage || 0}%
                 </span>
               </div>
             </div>

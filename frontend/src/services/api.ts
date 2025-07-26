@@ -137,6 +137,13 @@ export interface SingleResourceResponse<T> {
   data: T;
 }
 
+// Response interface for non-paginated data
+export interface UnpaginatedResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T[];
+}
+
 export interface PaginatedResponse<T> {
   success: boolean;
   message?: string;
@@ -150,10 +157,29 @@ export interface PaginatedResponse<T> {
 }
 
 export const assetApi = {
-  list: async (page = 1, pageSize = 10) => {
+  list: async (page?: number, pageSize?: number) => {
     const timestamp = Date.now();
-    const response = await api.get<PaginatedResponse<Asset>>(`/assets?page=${page}&pageSize=${pageSize}&_t=${timestamp}`);
+    let url = `/assets?_t=${timestamp}`;
+    if (page && pageSize) {
+      url += `&page=${page}&pageSize=${pageSize}`;
+    }
+    const response = await api.get<PaginatedResponse<Asset>>(url);
     return response.data;
+  },
+
+  // New method to get all assets without pagination - optimized for dashboard
+  listAll: async () => {
+    const timestamp = Date.now();
+    try {
+      // Try using the with-bulk endpoint for better performance 
+      const response = await api.get<UnpaginatedResponse<Asset>>(`/assets/with-bulk?_t=${timestamp}`);
+      return response.data;
+    } catch (error) {
+      console.warn('with-bulk endpoint failed, falling back to regular assets endpoint:', error);
+      // Fallback to regular endpoint
+      const response = await api.get<UnpaginatedResponse<Asset>>(`/assets?_t=${timestamp}`);
+      return response.data;
+    }
   },
 
   getById: async (id: string) => {
@@ -221,8 +247,18 @@ export const assetApi = {
 };
 
 export const categoryApi = {
-  list: async (page = 1, pageSize = 10) => {
-    const response = await api.get<PaginatedResponse<Category>>(`/categories?page=${page}&pageSize=${pageSize}`);
+  list: async (page?: number, pageSize?: number) => {
+    let url = '/categories';
+    if (page && pageSize) {
+      url += `?page=${page}&pageSize=${pageSize}`;
+    }
+    const response = await api.get<PaginatedResponse<Category>>(url);
+    return response.data;
+  },
+
+  // New method to get all categories without pagination
+  listAll: async () => {
+    const response = await api.get<UnpaginatedResponse<Category>>('/categories');
     return response.data;
   },
   search: async (query: string, page = 1, pageSize = 10) => {
@@ -293,8 +329,18 @@ export const categoryApi = {
 };
 
 export const locationApi = {
-  list: async (page = 1, pageSize = 10) => {
-    const response = await api.get<PaginatedResponse<Location>>(`/locations?page=${page}&pageSize=${pageSize}`);
+  list: async (page?: number, pageSize?: number) => {
+    let url = '/locations';
+    if (page && pageSize) {
+      url += `?page=${page}&pageSize=${pageSize}`;
+    }
+    const response = await api.get<PaginatedResponse<Location>>(url);
+    return response.data;
+  },
+
+  // New method to get all locations without pagination
+  listAll: async () => {
+    const response = await api.get<UnpaginatedResponse<Location>>('/locations');
     return response.data;
   },
 
