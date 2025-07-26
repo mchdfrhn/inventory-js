@@ -188,6 +188,68 @@ class AssetRepository {
     }
   }
 
+  async listForExport(filter = {}) {
+    try {
+      const whereClause = this.buildWhereClause(filter);
+
+      const assets = await Asset.findAll({
+        where: whereClause,
+        order: [['kode', 'ASC']], // Simple alphanumeric sort first
+        include: [
+          {
+            model: AssetCategory,
+            as: 'category',
+            attributes: ['id', 'code', 'name'],
+          },
+          {
+            model: Location,
+            as: 'location_info',
+            attributes: ['id', 'code', 'name', 'building', 'floor', 'room'],
+          },
+        ],
+      });
+
+      // Sort by proper numeric sequence in JavaScript for precise control
+      return assets.sort((a, b) => {
+        const parseAssetCode = (kode) => {
+          // Expected format: xxx.xx.x.xx.xxx
+          const parts = kode.split('.');
+          if (parts.length === 5) {
+            return {
+              location: parseInt(parts[0]) || 0,
+              category: parseInt(parts[1]) || 0,
+              procurement: parseInt(parts[2]) || 0,
+              year: parseInt(parts[3]) || 0,
+              sequence: parseInt(parts[4]) || 0,
+            };
+          }
+          return { location: 0, category: 0, procurement: 0, year: 0, sequence: 0 };
+        };
+
+        const codeA = parseAssetCode(a.kode);
+        const codeB = parseAssetCode(b.kode);
+
+        // Sort by location first, then category, then procurement, then year, then sequence
+        if (codeA.location !== codeB.location) {
+          return codeA.location - codeB.location;
+        }
+        if (codeA.category !== codeB.category) {
+          return codeA.category - codeB.category;
+        }
+        if (codeA.procurement !== codeB.procurement) {
+          return codeA.procurement - codeB.procurement;
+        }
+        if (codeA.year !== codeB.year) {
+          return codeA.year - codeB.year;
+        }
+        return codeA.sequence - codeB.sequence;
+      });
+    } catch (error) {
+      logger.error('Error listing assets for export:', error);
+      throw error;
+    }
+  }
+
   async listPaginated(filter = {}, page = 1, pageSize = 10) {
     try {
       const offset = (page - 1) * pageSize;
