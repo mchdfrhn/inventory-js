@@ -30,55 +30,7 @@ export default function LocationForm() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});  // Fetch all locations to generate next code
-  const { data: allLocationsData, isLoading: isLoadingLocations, error: locationsError } = useQuery({
-    queryKey: ['locations-all'],
-    queryFn: async () => {
-      console.log('Fetching all locations from API...');
-      
-      // Fetch first page to get total count
-      const firstPage = await locationApi.list(1, 100);
-      console.log('First page result:', firstPage);
-      
-      let allLocations = [...firstPage.data];
-      const totalPages = Math.ceil(firstPage.pagination.total / 100);
-      
-      console.log(`Total locations: ${firstPage.pagination.total}, Total pages needed: ${totalPages}`);
-      
-      // Fetch remaining pages if needed
-      for (let page = 2; page <= totalPages; page++) {
-        console.log(`Fetching page ${page}...`);
-        const pageResult = await locationApi.list(page, 100);
-        allLocations = [...allLocations, ...pageResult.data];
-      }
-      
-      console.log(`Fetched all ${allLocations.length} locations`);
-      
-      return {
-        data: allLocations,
-        pagination: {
-          total: firstPage.pagination.total,
-          page: 1,
-          pageSize: allLocations.length,
-          totalPages: 1
-        }
-      };
-    },
-    enabled: !isEditMode, // Only fetch when creating new location
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache
-  });
-
-  // Add debug for query status
-  useEffect(() => {
-    console.log('Query status:', {
-      isEditMode,
-      isLoadingLocations,
-      hasData: !!allLocationsData,
-      error: locationsError,
-      dataLength: allLocationsData?.data?.length || 0
-    });
-  }, [isEditMode, isLoadingLocations, allLocationsData, locationsError]);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   // Fetch location data if in edit mode
   const { data: locationData, isLoading: isLoadingLocation } = useQuery({
@@ -87,61 +39,6 @@ export default function LocationForm() {
     enabled: isEditMode,
   });
 
-  // Generate next location code
-  const generateNextCode = (existingLocations: Location[]): string => {
-    if (!existingLocations || existingLocations.length === 0) {
-      console.log('No existing locations, returning 001');
-      return '001';
-    }
-
-    console.log('Existing locations:', existingLocations.map(loc => ({ id: loc.id, code: loc.code, name: loc.name })));
-
-    // Extract numeric codes from different patterns and find the highest
-    const numericCodes = existingLocations
-      .map(location => {
-        // Try to extract numbers from different patterns:
-        // 1. Pure numeric codes like "001", "002", "052" etc.
-        let match = location.code.match(/^(\d+)$/);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          console.log(`  Pure numeric code "${location.code}" -> ${num}`);
-          return num;
-        }
-        
-        // 2. Alphanumeric codes ending with numbers like "RD001", "RA001" etc.
-        match = location.code.match(/^[A-Za-z]+(\d+)$/);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          console.log(`  Alphanumeric code "${location.code}" -> ${num}`);
-          return num;
-        }
-        
-        // 3. Any sequence of digits in the code
-        match = location.code.match(/(\d+)/);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          console.log(`  Any digits in "${location.code}" -> ${num}`);
-          return num;
-        }
-        
-        console.log(`  No digits found in code: ${location.code}`);
-        return 0;
-      })
-      .filter(code => !isNaN(code) && code > 0);
-
-    console.log('All extracted numeric codes:', numericCodes);
-    
-    const maxCode = numericCodes.length > 0 ? Math.max(...numericCodes) : 0;
-    const nextCode = maxCode + 1;
-    
-    console.log(`Max code: ${maxCode}, next code: ${nextCode}`);
-
-    // Format with leading zeros (3 digits)
-    const formattedCode = nextCode.toString().padStart(3, '0');
-    console.log(`Final formatted code: ${formattedCode}`);
-    
-    return formattedCode;
-  };
   // Update form data when location data is loaded (edit mode)
   useEffect(() => {
     if (locationData?.data) {
@@ -157,67 +54,6 @@ export default function LocationForm() {
     }
   }, [locationData]);
 
-  // Auto-generate code for new location
-  useEffect(() => {
-    console.log('Auto-generate effect triggered:', {
-      isEditMode,
-      hasAllLocationsData: !!allLocationsData,
-      dataLength: allLocationsData?.data?.length,
-      currentFormCode: formData.code
-    });
-    
-    if (!isEditMode && allLocationsData?.data && allLocationsData.data.length > 0) {
-      console.log('All locations data:', allLocationsData);
-      console.log('Location codes:', allLocationsData.data.map(loc => loc.code));
-      const nextCode = generateNextCode(allLocationsData.data);
-      console.log('Generated next code:', nextCode);
-      
-      setFormData(prev => {
-        console.log('Setting form data, previous code:', prev.code, 'new code:', nextCode);
-        return {
-          ...prev,
-          code: nextCode
-        };
-      });
-    } else if (!isEditMode && !isLoadingLocations && (!allLocationsData || !allLocationsData.data)) {
-      console.log('No location data available, using default 001');
-      
-      setFormData(prev => ({
-        ...prev,
-        code: '001'
-      }));
-    } else {
-      console.log('Not generating code because:', {
-        isEditMode,
-        hasData: !!allLocationsData?.data,
-        dataLength: allLocationsData?.data?.length,
-        isLoading: isLoadingLocations
-      });
-    }
-  }, [allLocationsData, isEditMode, isLoadingLocations]);
-
-  // Manual fetch as fallback if React Query fails
-  useEffect(() => {
-    if (!isEditMode && !allLocationsData && !isLoadingLocations && !locationsError) {
-      console.log('Manual fetch triggered as fallback');
-      locationApi.list(1, 1000)
-        .then(result => {
-          console.log('Manual fetch result:', result);
-          if (result?.data && result.data.length > 0) {
-            const nextCode = generateNextCode(result.data);
-            console.log('Manual fetch generated code:', nextCode);
-            setFormData(prev => ({
-              ...prev,
-              code: nextCode
-            }));
-          }
-        })
-        .catch(err => {
-          console.error('Manual fetch failed:', err);
-        });
-    }
-  }, [isEditMode, allLocationsData, isLoadingLocations, locationsError]);
-
   // Handle errors from fetching location
   useEffect(() => {
     if (isEditMode && !isLoadingLocation && !locationData) {
@@ -229,11 +65,12 @@ export default function LocationForm() {
       // Transform data to match backend expected format (lowercase field names)
       const transformedData = {
         name: data.name,
-        code: data.code,
         description: data.description,
         building: data.building,
         floor: data.floor,
         room: data.room,
+        // Only include code if in edit mode, let backend generate for new locations
+        ...(isEditMode && { code: data.code })
       };
 
       if (isEditMode && id) {
@@ -266,8 +103,6 @@ export default function LocationForm() {
     switch (name) {
       case 'name':
         return value ? '' : 'Nama lokasi wajib diisi';
-      case 'code':
-        return value ? '' : 'Kode lokasi wajib diisi';
       default:
         return '';
     }
@@ -300,7 +135,7 @@ export default function LocationForm() {
     setIsSubmitting(true);
     
     // Mark all required fields as touched for styling purposes
-    const requiredFields = ['name', 'code'];
+    const requiredFields = ['name'];
     const touchedFields = requiredFields.reduce((acc, field) => ({...acc, [field]: true}), {});
     setTouched(touchedFields);
     
@@ -361,21 +196,20 @@ export default function LocationForm() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">            {/* Code field */}
             <div>
               <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-                Kode Lokasi <span className="text-red-500">*</span>
+                Kode Lokasi
                 <span className="text-xs text-gray-500 ml-2">(Otomatis)</span>
               </label>              <input
                 type="text"
                 name="code"
                 id="code"
-                placeholder={!isEditMode ? (isLoadingLocations ? "Membuat kode..." : "001") : "Kode tidak dapat diubah"}
-                required
-                value={formData.code}
+                placeholder={!isEditMode ? "Akan dibuat otomatis" : "Kode tidak dapat diubah"}
+                value={isEditMode ? formData.code : ""}
                 readOnly={true}
                 disabled={true}
                 className="block w-full rounded-md bg-gray-50 cursor-not-allowed text-gray-600 border-gray-300 shadow-sm sm:text-sm"              />
               {!isEditMode ? (
                 <p className="mt-1 text-xs text-gray-500">
-                  Kode lokasi akan dibuat secara otomatis berdasarkan urutan terbaru
+                  Kode lokasi akan dibuat secara otomatis oleh sistem 001, 002, dst.
                 </p>
               ) : (
                 <p className="mt-1 text-xs text-gray-500">

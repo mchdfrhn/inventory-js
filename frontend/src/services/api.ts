@@ -137,6 +137,13 @@ export interface SingleResourceResponse<T> {
   data: T;
 }
 
+// Response interface for non-paginated data
+export interface UnpaginatedResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T[];
+}
+
 export interface PaginatedResponse<T> {
   success: boolean;
   message?: string;
@@ -150,10 +157,29 @@ export interface PaginatedResponse<T> {
 }
 
 export const assetApi = {
-  list: async (page = 1, pageSize = 10) => {
+  list: async (page?: number, pageSize?: number) => {
     const timestamp = Date.now();
-    const response = await api.get<PaginatedResponse<Asset>>(`/assets?page=${page}&pageSize=${pageSize}&_t=${timestamp}`);
+    let url = `/assets?_t=${timestamp}`;
+    if (page && pageSize) {
+      url += `&page=${page}&pageSize=${pageSize}`;
+    }
+    const response = await api.get<PaginatedResponse<Asset>>(url);
     return response.data;
+  },
+
+  // New method to get all assets without pagination - optimized for dashboard
+  listAll: async () => {
+    const timestamp = Date.now();
+    try {
+      // Try using the with-bulk endpoint for better performance 
+      const response = await api.get<UnpaginatedResponse<Asset>>(`/assets/with-bulk?_t=${timestamp}`);
+      return response.data;
+    } catch (error) {
+      console.warn('with-bulk endpoint failed, falling back to regular assets endpoint:', error);
+      // Fallback to regular endpoint
+      const response = await api.get<UnpaginatedResponse<Asset>>(`/assets?_t=${timestamp}`);
+      return response.data;
+    }
   },
 
   getById: async (id: string) => {
@@ -221,8 +247,18 @@ export const assetApi = {
 };
 
 export const categoryApi = {
-  list: async (page = 1, pageSize = 10) => {
-    const response = await api.get<PaginatedResponse<Category>>(`/categories?page=${page}&pageSize=${pageSize}`);
+  list: async (page?: number, pageSize?: number) => {
+    let url = '/categories';
+    if (page && pageSize) {
+      url += `?page=${page}&pageSize=${pageSize}`;
+    }
+    const response = await api.get<PaginatedResponse<Category>>(url);
+    return response.data;
+  },
+
+  // New method to get all categories without pagination
+  listAll: async () => {
+    const response = await api.get<UnpaginatedResponse<Category>>('/categories');
     return response.data;
   },
   search: async (query: string, page = 1, pageSize = 10) => {
@@ -293,8 +329,18 @@ export const categoryApi = {
 };
 
 export const locationApi = {
-  list: async (page = 1, pageSize = 10) => {
-    const response = await api.get<PaginatedResponse<Location>>(`/locations?page=${page}&pageSize=${pageSize}`);
+  list: async (page?: number, pageSize?: number) => {
+    let url = '/locations';
+    if (page && pageSize) {
+      url += `?page=${page}&pageSize=${pageSize}`;
+    }
+    const response = await api.get<PaginatedResponse<Location>>(url);
+    return response.data;
+  },
+
+  // New method to get all locations without pagination
+  listAll: async () => {
+    const response = await api.get<UnpaginatedResponse<Location>>('/locations');
     return response.data;
   },
 
@@ -341,55 +387,22 @@ export const locationApi = {
   // Function to get locations with asset counts
   listWithAssetCounts: async (page = 1, pageSize = 10) => {
     try {
-      // Get locations with pagination
-      const locationsResponse = await api.get<PaginatedResponse<Location>>(`/locations?page=${page}&pageSize=${pageSize}`);
+      // Define interface for location with assets from backend
+      interface LocationWithAssets extends Location {
+        assets?: Array<{ id: string }>;
+      }
+      
+      // Get locations with pagination - backend already includes assets array
+      const locationsResponse = await api.get<PaginatedResponse<LocationWithAssets>>(`/locations?page=${page}&pageSize=${pageSize}`);
       const locations = locationsResponse.data.data;
       
-      // The backend already supports pagination, so let's get just the locations from this page
-      // Get count of assets first to determine how many to fetch
-      const timestamp = Date.now();
-      const countResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&pageSize=1&_t=${timestamp}`);
-      const totalItems = countResponse.data.pagination.total;
-      
-      // Get assets for asset counts
-      const assetsResponse = await api.get<PaginatedResponse<Asset>>(`/assets?page=1&pageSize=${totalItems > 0 ? totalItems : 10}&_t=${timestamp}`);
-      const allAssets = assetsResponse.data.data;
-      
-      console.log(`Total assets: ${totalItems}, fetched: ${allAssets.length}`);
-      
-      // Initialize a counter for each location
-      const locationCounts = new Map<number, number>();
-      locations.forEach(loc => {
-        locationCounts.set(loc.id, 0);
-      });
-      
-      // Count assets per location
-      allAssets.forEach(asset => {
-        if (asset.lokasi_id) {
-          // Debug logging for BAAK and BAUK assets
-          const locationName = locations.find(loc => loc.id === asset.lokasi_id)?.name;
-          if (locationName && (locationName.includes('BAAK') || locationName.includes('BAUK'))) {
-            console.log(`Asset ${asset.kode} (${asset.nama}) is assigned to location: ${locationName} (ID: ${asset.lokasi_id})`);
-          }
-          
-          // Increment the count for this location
-          const currentCount = locationCounts.get(asset.lokasi_id) || 0;
-          locationCounts.set(asset.lokasi_id, currentCount + 1);
-        }
-      });
-      
-      // Add counts to locations
+      // Add asset counts based on the assets array from backend
       const locationsWithCounts = locations.map(location => {
-        const count = locationCounts.get(location.id) || 0;
-        
-        // Debug logging for BAAK and BAUK locations
-        if (location.name.includes('BAAK') || location.name.includes('BAUK')) {
-          console.log(`Location ${location.name} (D: ${location.id}) has ${count} assets`);
-        }
+        const assetCount = location.assets ? location.assets.length : 0;
         
         return {
           ...location,
-          asset_count: count
+          asset_count: assetCount
         };
       });
       

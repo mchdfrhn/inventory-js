@@ -485,7 +485,7 @@ class AssetController {
 
   async exportAssets(req, res) {
     try {
-      const assets = await this.assetUseCase.getAllAssets();
+      const assets = await this.assetUseCase.getAllAssetsForExport();
 
       const fileName = `assets_export_${new Date().toISOString().split('T')[0]}.csv`;
       const filePath = path.join(process.cwd(), 'temp', fileName);
@@ -531,7 +531,9 @@ class AssetController {
         akumulasi_penyusutan: asset.akumulasi_penyusutan,
         nilai_sisa: asset.nilai_sisa,
         keterangan: asset.keterangan,
-        lokasi: asset.lokasi,
+        lokasi: asset.location_info ?
+          `${asset.location_info.name} (${asset.location_info.building}${asset.location_info.floor ? ` Lt. ${asset.location_info.floor}` : ''}${asset.location_info.room ? ` ${asset.location_info.room}` : ''})`
+          : asset.lokasi || '',
         asal_pengadaan: asset.asal_pengadaan,
         category_name: asset.category ? asset.category.name : '',
         status: asset.status,

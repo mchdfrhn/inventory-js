@@ -86,6 +86,19 @@ router.get(
   assetController.listAssetsWithBulk.bind(assetController),
 );
 
+// Export assets to CSV (must be before /:id route)
+router.get(
+  '/export',
+  assetController.exportAssets.bind(assetController),
+);
+
+// Import assets from CSV
+router.post(
+  '/import',
+  upload.single('file'),
+  assetController.importAssets.bind(assetController),
+);
+
 // Get single asset
 router.get(
   '/:id',
@@ -96,19 +109,6 @@ router.get(
 router.get(
   '/bulk/:bulk_id',
   assetController.getBulkAssets.bind(assetController),
-);
-
-// Import assets from CSV
-router.post(
-  '/import',
-  upload.single('file'),
-  assetController.importAssets.bind(assetController),
-);
-
-// Export assets to CSV
-router.get(
-  '/export',
-  assetController.exportAssets.bind(assetController),
 );
 
 // List assets (with filtering and pagination)

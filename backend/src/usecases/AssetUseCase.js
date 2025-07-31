@@ -469,6 +469,16 @@ class AssetUseCase {
     }
   }
 
+  async getAllAssetsForExport() {
+    try {
+      const assets = await this.assetRepository.listForExport({});
+      return assets;
+    } catch (error) {
+      logger.error('Error in getAllAssetsForExport usecase:', error);
+      throw error;
+    }
+  }
+
   async getLocationById(id) {
     try {
       const location = await this.locationRepository.getById(id);
