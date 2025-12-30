@@ -40,10 +40,21 @@ class PgMigrationManager {
       await this.client.query(`
         CREATE TABLE IF NOT EXISTS pgmigrations (
           id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL UNIQUE,
+          name VARCHAR(255) NOT NULL,
           run_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
+
+      // Ensure the unique constraint exists for ON CONFLICT to work
+      try {
+        await this.client.query('ALTER TABLE pgmigrations ADD CONSTRAINT pgmigrations_name_unique UNIQUE (name);');
+      } catch (error) {
+        // Ignore error if constraint already exists (code 42P07 in some PG versions, 23505 for unique_violation)
+        if (error.code !== '42P07' && error.code !== '23505' && !error.message.includes('already exists')) {
+          throw error;
+        }
+      }
+
       logger.info('Migrations table created/verified');
     } catch (error) {
       logger.error('Error creating migrations table:', error);
@@ -89,7 +100,7 @@ class PgMigrationManager {
 
         // Record migration only if execution was successful
         await this.client.query(
-          'INSERT INTO pgmigrations (name) VALUES ($1) ON CONFLICT (name) DO NOTHING',
+          'INSERT INTO pgmigrations (name, run_on) VALUES ($1, CURRENT_TIMESTAMP) ON CONFLICT (name) DO NOTHING',
           [filename],
         );
 
@@ -108,7 +119,7 @@ class PgMigrationManager {
           // Record migration as applied since objects already exist
           await this.client.query('BEGIN');
           await this.client.query(
-            'INSERT INTO pgmigrations (name) VALUES ($1) ON CONFLICT (name) DO NOTHING',
+            'INSERT INTO pgmigrations (name, run_on) VALUES ($1, CURRENT_TIMESTAMP) ON CONFLICT (name) DO NOTHING',
             [filename],
           );
           await this.client.query('COMMIT');

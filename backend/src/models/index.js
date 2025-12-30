@@ -3,6 +3,7 @@ const Asset = require('./Asset');
 const AssetCategory = require('./AssetCategory');
 const Location = require('./Location');
 const AuditLog = require('./AuditLog');
+const User = require('./User');
 
 // Define associations
 Asset.belongsTo(AssetCategory, {
@@ -44,4 +45,5 @@ module.exports = {
   AssetCategory,
   Location,
   AuditLog,
+  User,
 };

@@ -452,3 +452,5 @@ export const auditLogApi = {
     return response.data;
   },
 }
+
+export default api;

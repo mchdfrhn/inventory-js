@@ -15,14 +15,15 @@ import {
   ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import BackToTopButton from './BackToTopButton'
 import Watermark from './Watermark'
 import AppCredits from './AppCredits'
+import { useAuth } from '../context/AuthContext'
 
 // Enhanced navigation items with subtle animations
 const navigation = [  
-  { name: 'Dashboard', href: '/', icon: HomeIcon },
+  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Aset', href: '/assets', icon: CubeIcon },
   { name: 'Kategori', href: '/categories', icon: TagIcon },
   { name: 'Lokasi', href: '/locations', icon: MapPinIcon },
@@ -34,7 +35,7 @@ const navigation = [
 
 // Function to get dynamic header content based on current pathname
 function getHeaderContent(pathname: string) {
-  if (pathname === '/') {
+  if (pathname === '/dashboard') {
     return {
       title: 'Dashboard',
       description: 'Gambaran umum sistem inventaris'
@@ -135,6 +136,8 @@ function classNames(...classes: string[]) {
 
 export default function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -142,6 +145,11 @@ export default function Layout() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  }
 
   // Get dynamic header content based on current route
   const headerContent = getHeaderContent(location.pathname);
@@ -250,16 +258,16 @@ export default function Layout() {
                             </Menu.Item>
                             <Menu.Item>
                               {({ active }) => (
-                                <a
-                                  href="#"
+                                <button
+                                  onClick={handleLogout}
                                   className={classNames(
                                     active ? 'bg-red-50 text-red-700' : 'text-gray-700',
-                                    'group flex items-center px-4 py-2 text-sm'
+                                    'group flex items-center px-4 py-2 text-sm w-full'
                                   )}
                                 >
                                   <ArrowRightOnRectangleIcon className="mr-3 h-4 w-4" aria-hidden="true" />
                                   Logout
-                                </a>
+                                </button>
                               )}
                             </Menu.Item>
                           </div>
@@ -369,16 +377,16 @@ export default function Layout() {
                     </Menu.Item>
                     <Menu.Item>
                       {({ active }) => (
-                        <a
-                          href="#"
+                        <button
+                          onClick={handleLogout}
                           className={classNames(
                             active ? 'bg-red-50 text-red-700' : 'text-gray-700',
-                            'group flex items-center px-4 py-2 text-sm'
+                            'group flex items-center px-4 py-2 text-sm w-full'
                           )}
                         >
                           <ArrowRightOnRectangleIcon className="mr-3 h-4 w-4" aria-hidden="true" />
                           Logout
-                        </a>
+                        </button>
                       )}
                     </Menu.Item>
                   </div>

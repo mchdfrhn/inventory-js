@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const AssetController = require('../controllers/AssetController');
 const validate = require('../middlewares/validate');
+const { authenticateToken, authorizeRoles } = require('../middlewares/auth');
 const {
   createAssetSchema,
   updateAssetSchema,
@@ -42,6 +43,7 @@ const upload = multer({
 // Create single asset
 router.post(
   '/',
+  authenticateToken,
   validate(createAssetSchema),
   assetController.createAsset.bind(assetController),
 );
@@ -49,6 +51,7 @@ router.post(
 // Create bulk assets
 router.post(
   '/bulk',
+  authenticateToken,
   validate(createBulkAssetSchema),
   assetController.createBulkAsset.bind(assetController),
 );
@@ -56,6 +59,7 @@ router.post(
 // Update single asset
 router.put(
   '/:id',
+  authenticateToken,
   validate(updateAssetSchema),
   assetController.updateAsset.bind(assetController),
 );
@@ -63,6 +67,7 @@ router.put(
 // Update bulk assets
 router.put(
   '/bulk/:bulk_id',
+  authenticateToken,
   validate(bulkUpdateAssetSchema),
   assetController.updateBulkAssets.bind(assetController),
 );
@@ -70,12 +75,16 @@ router.put(
 // Delete single asset
 router.delete(
   '/:id',
+  authenticateToken,
+  authorizeRoles('admin'),
   assetController.deleteAsset.bind(assetController),
 );
 
 // Delete bulk assets
 router.delete(
   '/bulk/:bulk_id',
+  authenticateToken,
+  authorizeRoles('admin'),
   assetController.deleteBulkAssets.bind(assetController),
 );
 
@@ -95,6 +104,7 @@ router.get(
 // Import assets from CSV
 router.post(
   '/import',
+  authenticateToken,
   upload.single('file'),
   assetController.importAssets.bind(assetController),
 );
@@ -119,3 +129,4 @@ router.get(
 );
 
 module.exports = router;
+

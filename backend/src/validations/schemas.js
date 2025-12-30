@@ -224,6 +224,17 @@ const auditLogFilterSchema = paginationSchema.keys({
   to_date: Joi.date().min(Joi.ref('from_date')).optional(),
 });
 
+const registerSchema = Joi.object({
+    username: Joi.string().alphanum().min(3).max(30).required(),
+    password: Joi.string().min(6).max(255).required(),
+    fullName: Joi.string().max(255).optional(),
+});
+
+const loginSchema = Joi.object({
+    username: Joi.string().required(),
+    password: Joi.string().required(),
+});
+
 module.exports = {
   createAssetCategorySchema,
   updateAssetCategorySchema,
@@ -237,4 +248,6 @@ module.exports = {
   searchLocationSchema,
   assetFilterSchema,
   auditLogFilterSchema,
+  registerSchema,
+  loginSchema,
 };

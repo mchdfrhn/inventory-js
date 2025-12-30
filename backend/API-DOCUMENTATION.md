@@ -1,6 +1,6 @@
-# STTPU Inventory Management System - Backend API
+# API Documentation - STTPU Inventory Management System
 
-Backend API untuk sistem manajemen inventaris STTPU yang dibangun dengan Node.js, Express, dan Sequelize.
+This document provides detailed information about the backend API for the STTPU Inventory Management System.
 
 ## 🚀 Features
 
@@ -48,12 +48,25 @@ Backend API untuk sistem manajemen inventaris STTPU yang dibangun dengan Node.js
    
    # Jalankan migrasi
    npm run migrate
-   
-   # Insert data dummy (optional)
-   npm run seed
    ```
 
-5. **Start application**
+5. **Create a User (Penting!)**
+
+   Karena tidak ada user default, Anda harus membuat user baru untuk bisa login. Gunakan endpoint registrasi berikut.
+
+   ```bash
+   curl -X POST http://localhost:8080/api/auth/register \
+     -H "Content-Type: application/json" \
+     -d '{
+       "username": "admin",
+       "password": "password",
+       "fullName": "Admin User"
+     }'
+   ```
+   
+   > **Catatan:** Di lingkungan pengembangan, database akan di-reset setiap kali server dimulai ulang. Anda perlu membuat ulang user setiap kali me-restart server.
+
+6. **Start application**
    ```bash
    # Development
    npm run dev
@@ -102,45 +115,681 @@ src/
 - `GET /health` - Health check endpoint
 - `GET /health/detailed` - Detailed health check dengan info database
 
+### Authentication
+
+#### Register a New User
+- **Endpoint:** `POST /api/auth/register`
+- **Description:** Register a new user to the system.
+- **Request Body:** `application/json`
+  ```json
+  {
+    "username": "yourusername",
+    "password": "yourpassword",
+    "fullName": "Your Full Name"
+  }
+  ```
+- **Validation Rules:**
+  - `username`: (string, required) - Must be alphanumeric, between 3 and 30 characters.
+  - `password`: (string, required) - Must be between 6 and 255 characters.
+  - `fullName`: (string, optional) - Maximum 255 characters.
+- **Success Response (201):**
+  ```json
+  {
+    "success": true,
+    "message": "User registered successfully",
+    "data": {
+        "id": "cfa3f7e0-69b6-4c48-8a8b-3e35c7e0bfe7",
+        "username": "yourusername",
+        "fullName": "Your Full Name",
+        "role": "user",
+        "created_at": "2025-12-30T10:00:00.000Z",
+        "updated_at": "2025-12-30T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### Login
+- **Endpoint:** `POST /api/auth/login`
+- **Description:** Login to get a JWT token.
+- **Request Body:** `application/json`
+  ```json
+  {
+    "username": "yourusername",
+    "password": "yourpassword"
+  }
+  ```
+- **Validation Rules:**
+  - `username`: (string, required)
+  - `password`: (string, required)
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Login successful",
+    "data": {
+      "token": "your.jwt.token"
+    }
+  }
+  ```
+
+> **Note on Protected Routes:**
+> Endpoints marked with a 🔒 require a valid JWT. You must include it in the request header like this:
+> `Authorization: Bearer <your_jwt_token>`
+
 ### Asset Management
-- `GET /api/v1/assets` - List assets dengan filtering dan pagination
-- `GET /api/v1/assets/:id` - Get asset by ID
-- `POST /api/v1/assets` - Create new asset
-- `PUT /api/v1/assets/:id` - Update asset
-- `DELETE /api/v1/assets/:id` - Delete asset
 
-### Bulk Asset Operations
-- `POST /api/v1/assets/bulk` - Create bulk assets
-- `GET /api/v1/assets/bulk/:bulk_id` - Get bulk assets
-- `PUT /api/v1/assets/bulk/:bulk_id` - Update bulk assets
-- `DELETE /api/v1/assets/bulk/:bulk_id` - Delete bulk assets
-- `GET /api/v1/assets/with-bulk` - List assets with bulk view
+#### List Assets
+- **Endpoint:** `GET /api/v1/assets`
+- **Description:** Retrieves a paginated list of assets with filtering options.
+- **Query Parameters:** See `assetFilterSchema` below.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Assets retrieved successfully",
+    "data": {
+      "total": 1,
+      "page": 1,
+      "pageSize": 10,
+      "assets": [
+        {
+          "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+          "kode": "ASSET001",
+          "nama": "Laptop Pro",
+          "spesifikasi": "16GB RAM, 512GB SSD",
+          "quantity": 1,
+          "satuan": "unit",
+          "tanggal_perolehan": "2023-01-15T00:00:00.000Z",
+          "harga_perolehan": 1500,
+          "umur_ekonomis_tahun": 5,
+          "umur_ekonomis_bulan": 60,
+          "akumulasi_penyusutan": 300,
+          "nilai_sisa": 1200,
+          "keterangan": "For developer",
+          "lokasi_id": 1,
+          "category_id": "cfa3f7e0-69b6-4c48-8a8b-3e35c7e0bfe7",
+          "status": "baik",
+          "created_at": "2025-12-30T10:00:00.000Z",
+          "updated_at": "2025-12-30T10:00:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
 
-### Import/Export
-- `POST /api/v1/assets/import` - Import assets from CSV
-- `GET /api/v1/assets/export` - Export assets to CSV
+#### Get Asset by ID
+- **Endpoint:** `GET /api/v1/assets/:id`
+- **Description:** Retrieves a single asset by its ID.
+- **URL Parameters:**
+  - `id`: (string, required) - The UUID of the asset.
+- **Success Response (200):** (similar to the asset object in the list response)
+
+#### 🔒 Create New Asset
+- **Endpoint:** `POST /api/v1/assets`
+- **Description:** Creates a new single asset.
+- **Request Body:** `application/json` (see `createAssetSchema` in `backend/src/validations/schemas.js`)
+- **Success Response (201):** (returns the created asset object)
+
+#### 🔒 Update Asset
+- **Endpoint:** `PUT /api/v1/assets/:id`
+- **Description:** Updates an existing asset.
+- **URL Parameters:**
+  - `id`: (string, required) - The UUID of the asset.
+- **Request Body:** `application/json` (see `updateAssetSchema` in `backend/src/validations/schemas.js`)
+- **Success Response (200):** (returns the updated asset object)
+
+#### 🔒 Delete Asset
+- **Endpoint:** `DELETE /api/v1/assets/:id`
+- **Description:** Deletes an asset. Requires 'admin' role.
+- **URL Parameters:**
+  - `id`: (string, required) - The UUID of the asset.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Asset deleted successfully",
+    "data": null
+  }
+  ```
+
+#### Bulk Asset Operations
+
+#### 🔒 Create Bulk Assets
+- **Endpoint:** `POST /api/v1/assets/bulk`
+- **Description:** Creates multiple assets in a single operation.
+- **Request Body:** `application/json` (see `createBulkAssetSchema` in `backend/src/validations/schemas.js`)
+- **Success Response (201):**
+  ```json
+  {
+      "success": true,
+      "message": "Bulk assets created successfully",
+      "data": {
+          "bulk_id": "b1c2d3e4-f5g6-7890-1234-567890abcdef",
+          "createdCount": 10
+      }
+  }
+  ```
+
+#### Get Bulk Assets
+- **Endpoint:** `GET /api/v1/assets/bulk/:bulk_id`
+- **Description:** Retrieves all assets belonging to a bulk operation.
+- **URL Parameters:**
+  - `bulk_id`: (string, required) - The UUID of the bulk operation.
+- **Success Response (200):** (returns a list of asset objects)
+
+#### 🔒 Update Bulk Assets
+- **Endpoint:** `PUT /api/v1/assets/bulk/:bulk_id`
+- **Description:** Updates all assets belonging to a bulk operation.
+- **URL Parameters:**
+  - `bulk_id`: (string, required) - The UUID of the bulk operation.
+- **Request Body:** `application/json` (see `bulkUpdateAssetSchema` in `backend/src/validations/schemas.js`)
+- **Success Response (200):**
+  ```json
+  {
+      "success": true,
+      "message": "Bulk assets updated successfully",
+      "data": {
+          "updatedCount": 10
+      }
+  }
+  ```
+
+#### 🔒 Delete Bulk Assets
+- **Endpoint:** `DELETE /api/v1/assets/bulk/:bulk_id`
+- **Description:** Deletes all assets belonging to a bulk operation. Requires 'admin' role.
+- **URL Parameters:**
+  - `bulk_id`: (string, required) - The UUID of the bulk operation.
+- **Success Response (200):**
+  ```json
+  {
+      "success": true,
+      "message": "Bulk assets deleted successfully",
+      "data": {
+          "deletedCount": 10
+      }
+  }
+  ```
+
+#### List Assets with Bulk View
+- **Endpoint:** `GET /api/v1/assets/with-bulk`
+- **Description:** List assets with bulk view information.
+- **Query Parameters:** See `assetFilterSchema` below.
+- **Success Response (200):** (similar to list assets but with bulk info)
+
+
+#### Import/Export
+
+#### 🔒 Import Assets from CSV
+- **Endpoint:** `POST /api/v1/assets/import`
+- **Description:** Imports assets from a CSV file.
+- **Request Body:** `multipart/form-data`
+  - `file`: (file, required) - A CSV file with asset data. See documentation for required columns.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Assets imported successfully",
+    "data": {
+      "successCount": 5,
+      "errorCount": 0,
+      "errors": []
+    }
+  }
+  ```
+
+#### Export Assets to CSV
+- **Endpoint:** `GET /api/v1/assets/export`
+- **Description:** Exports assets to a CSV file.
+- **Query Parameters:** Can use the same filters as List Assets.
+- **Success Response (200):** A CSV file download.
 
 ### Asset Categories
-- `GET /api/v1/categories` - List categories
-- `GET /api/v1/categories/:id` - Get category by ID
-- `GET /api/v1/categories/code/:code` - Get category by code
-- `POST /api/v1/categories` - Create category
-- `PUT /api/v1/categories/:id` - Update category
-- `DELETE /api/v1/categories/:id` - Delete category
+
+#### List Categories
+- **Endpoint:** `GET /api/v1/categories`
+- **Description:** Retrieves a paginated list of asset categories.
+- **Query Parameters:**
+  - `page`: (integer, optional, default: 1) - The page number to retrieve.
+  - `pageSize`: (integer, optional, default: 10) - The number of items per page.
+  - `search`: (string, optional) - A search term to filter categories by name or code.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Categories retrieved successfully",
+    "data": {
+      "total": 1,
+      "page": 1,
+      "pageSize": 10,
+      "categories": [
+        {
+          "id": "cfa3f7e0-69b6-4c48-8a8b-3e35c7e0bfe7",
+          "code": "CAT001",
+          "name": "Electronics",
+          "description": "Electronic devices",
+          "created_at": "2025-12-30T10:00:00.000Z",
+          "updated_at": "2025-12-30T10:00:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
+
+#### Get Category by ID
+- **Endpoint:** `GET /api/v1/categories/:id`
+- **Description:** Retrieves a single asset category by its ID.
+- **URL Parameters:**
+  - `id`: (string, required) - The UUID of the category.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Category retrieved successfully",
+    "data": {
+      "id": "cfa3f7e0-69b6-4c48-8a8b-3e35c7e0bfe7",
+      "code": "CAT001",
+      "name": "Electronics",
+      "description": "Electronic devices",
+      "created_at": "2025-12-30T10:00:00.000Z",
+      "updated_at": "2025-12-30T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### Get Category by Code
+- **Endpoint:** `GET /api/v1/categories/code/:code`
+- **Description:** Retrieves a single asset category by its code.
+- **URL Parameters:**
+  - `code`: (string, required) - The code of the category.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Category retrieved successfully",
+    "data": {
+      "id": "cfa3f7e0-69b6-4c48-8a8b-3e35c7e0bfe7",
+      "code": "CAT001",
+      "name": "Electronics",
+      "description": "Electronic devices",
+      "created_at": "2025-12-30T10:00:00.000Z",
+      "updated_at": "2025-12-30T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### 🔒 Create Category
+- **Endpoint:** `POST /api/v1/categories`
+- **Description:** Creates a new asset category.
+- **Request Body:** `application/json`
+  ```json
+  {
+    "code": "CAT002",
+    "name": "Furniture",
+    "description": "Office furniture"
+  }
+  ```
+- **Validation Rules:**
+  - `code`: (string, optional) - Max 50 characters.
+  - `name`: (string, required) - Max 255 characters.
+  - `description`: (string, optional).
+- **Success Response (201):**
+  ```json
+  {
+    "success": true,
+    "message": "Category created successfully",
+    "data": {
+      "id": "d8f4g8e1-79c7-5d59-9b9c-4f46d8f1cde8",
+      "code": "CAT002",
+      "name": "Furniture",
+      "description": "Office furniture",
+      "created_at": "2025-12-30T10:05:00.000Z",
+      "updated_at": "2025-12-30T10:05:00.000Z"
+    }
+  }
+  ```
+
+#### 🔒 Update Category
+- **Endpoint:** `PUT /api/v1/categories/:id`
+- **Description:** Updates an existing asset category.
+- **URL Parameters:**
+  - `id`: (string, required) - The UUID of the category.
+- **Request Body:** `application/json`
+  ```json
+  {
+    "name": "Updated Furniture Name",
+    "description": "Updated description for office furniture"
+  }
+  ```
+- **Validation Rules:**
+  - `code`: (string, optional) - Max 50 characters.
+  - `name`: (string, optional) - Max 255 characters.
+  - `description`: (string, optional).
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Category updated successfully",
+    "data": {
+      "id": "d8f4g8e1-79c7-5d59-9b9c-4f46d8f1cde8",
+      "code": "CAT002",
+      "name": "Updated Furniture Name",
+      "description": "Updated description for office furniture",
+      "created_at": "2025-12-30T10:05:00.000Z",
+      "updated_at": "2025-12-30T10:10:00.000Z"
+    }
+  }
+  ```
+
+#### 🔒 Delete Category
+- **Endpoint:** `DELETE /api/v1/categories/:id`
+- **Description:** Deletes an asset category.
+- **URL Parameters:**
+  - `id`: (string, required) - The UUID of the category.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Category deleted successfully",
+    "data": null
+  }
+  ```
+
+#### 🔒 Import Categories
+- **Endpoint:** `POST /api/v1/categories/import`
+- **Description:** Imports asset categories from a CSV file.
+- **Request Body:** `multipart/form-data`
+  - `file`: (file, required) - A CSV file with columns: `code`, `name`, `description`. The header must be present.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Categories imported successfully",
+    "data": {
+      "successCount": 5,
+      "errorCount": 0,
+      "errors": []
+    }
+  }
+  ```
 
 ### Locations
-- `GET /api/v1/locations` - List locations dengan pagination
-- `GET /api/v1/locations/:id` - Get location by ID
-- `GET /api/v1/locations/code/:code` - Get location by code
-- `GET /api/v1/locations/search` - Search locations
-- `POST /api/v1/locations` - Create location
-- `PUT /api/v1/locations/:id` - Update location
-- `DELETE /api/v1/locations/:id` - Delete location
+
+#### List Locations
+- **Endpoint:** `GET /api/v1/locations`
+- **Description:** Retrieves a paginated list of locations.
+- **Query Parameters:**
+  - `page`: (integer, optional, default: 1) - The page number to retrieve.
+  - `pageSize`: (integer, optional, default: 10) - The number of items per page.
+  - `search`: (string, optional) - A search term to filter locations by name, code, or building.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Locations retrieved successfully",
+    "data": {
+      "total": 1,
+      "page": 1,
+      "pageSize": 10,
+      "locations": [
+        {
+          "id": 1,
+          "code": "LOK001",
+          "name": "Main Office",
+          "description": "Main office building",
+          "building": "A",
+          "floor": "1",
+          "room": "101",
+          "created_at": "2025-12-30T10:00:00.000Z",
+          "updated_at": "2025-12-30T10:00:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
+
+#### Get Location by ID
+- **Endpoint:** `GET /api/v1/locations/:id`
+- **Description:** Retrieves a single location by its ID.
+- **URL Parameters:**
+  - `id`: (integer, required) - The ID of the location.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Location retrieved successfully",
+    "data": {
+      "id": 1,
+      "code": "LOK001",
+      "name": "Main Office",
+      "description": "Main office building",
+      "building": "A",
+      "floor": "1",
+      "room": "101",
+      "created_at": "2025-12-30T10:00:00.000Z",
+      "updated_at": "2025-12-30T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### Get Location by Code
+- **Endpoint:** `GET /api/v1/locations/code/:code`
+- **Description:** Retrieves a single location by its code.
+- **URL Parameters:**
+  - `code`: (string, required) - The code of the location.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Location retrieved successfully",
+    "data": {
+      "id": 1,
+      "code": "LOK001",
+      "name": "Main Office",
+      "description": "Main office building",
+      "building": "A",
+      "floor": "1",
+      "room": "101",
+      "created_at": "2025-12-30T10:00:00.000Z",
+      "updated_at": "2025-12-30T10:00:00.000Z"
+    }
+  }
+  ```
+
+#### Search Locations
+- **Endpoint:** `GET /api/v1/locations/search`
+- **Description:** Searches for locations based on a query.
+- **Query Parameters:**
+  - `query`: (string, required) - The search term.
+  - `page`: (integer, optional, default: 1)
+  - `pageSize`: (integer, optional, default: 10)
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Locations retrieved successfully",
+    "data": {
+      "total": 1,
+      "page": 1,
+      "pageSize": 10,
+      "locations": [
+        {
+          "id": 1,
+          "code": "LOK001",
+          "name": "Main Office",
+          "description": "Main office building",
+          "building": "A",
+          "floor": "1",
+          "room": "101",
+          "created_at": "2025-12-30T10:00:00.000Z",
+          "updated_at": "2025-12-30T10:00:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
+
+#### 🔒 Create Location
+- **Endpoint:** `POST /api/v1/locations`
+- **Description:** Creates a new location.
+- **Request Body:** `application/json`
+  ```json
+  {
+    "code": "LOK002",
+    "name": "Warehouse",
+    "description": "Storage warehouse",
+    "building": "B",
+    "floor": "1",
+    "room": "WH-1"
+  }
+  ```
+- **Validation Rules:**
+  - `code`: (string, optional) - Max 50 characters.
+  - `name`: (string, required) - Max 255 characters.
+  - `description`: (string, optional).
+  - `building`: (string, optional) - Max 255 characters.
+  - `floor`: (string, optional) - Max 50 characters.
+  - `room`: (string, optional) - Max 100 characters.
+- **Success Response (201):**
+  ```json
+  {
+    "success": true,
+    "message": "Location created successfully",
+    "data": {
+      "id": 2,
+      "code": "LOK002",
+      "name": "Warehouse",
+      "description": "Storage warehouse",
+      "building": "B",
+      "floor": "1",
+      "room": "WH-1",
+      "created_at": "2025-12-30T10:05:00.000Z",
+      "updated_at": "2025-12-30T10:05:00.000Z"
+    }
+  }
+  ```
+
+#### 🔒 Update Location
+- **Endpoint:** `PUT /api/v1/locations/:id`
+- **Description:** Updates an existing location.
+- **URL Parameters:**
+  - `id`: (integer, required) - The ID of the location.
+- **Request Body:** `application/json`
+  ```json
+  {
+    "name": "Main Warehouse",
+    "description": "Main storage warehouse"
+  }
+  ```
+- **Validation Rules:**
+  - `code`: (string, optional) - Max 50 characters.
+  - `name`: (string, optional) - Max 255 characters.
+  - `description`: (string, optional).
+  - `building`: (string, optional) - Max 255 characters.
+  - `floor`: (string, optional) - Max 50 characters.
+  - `room`: (string, optional) - Max 100 characters.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Location updated successfully",
+    "data": {
+      "id": 2,
+      "code": "LOK002",
+      "name": "Main Warehouse",
+      "description": "Main storage warehouse",
+      "building": "B",
+      "floor": "1",
+      "room": "WH-1",
+      "created_at": "2025-12-30T10:05:00.000Z",
+      "updated_at": "2025-12-30T10:10:00.000Z"
+    }
+  }
+  ```
+
+#### 🔒 Delete Location
+- **Endpoint:** `DELETE /api/v1/locations/:id`
+- **Description:** Deletes a location.
+- **URL Parameters:**
+  - `id`: (integer, required) - The ID of the location.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Location deleted successfully",
+    "data": null
+  }
+  ```
+
+#### 🔒 Import Locations
+- **Endpoint:** `POST /api/v1/locations/import`
+- **Description:** Imports locations from a CSV file.
+- **Request Body:** `multipart/form-data`
+  - `file`: (file, required) - A CSV file with columns: `code`, `name`, `description`, `building`, `floor`, `room`. The header must be present.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Locations imported successfully",
+    "data": {
+      "successCount": 5,
+      "errorCount": 0,
+      "errors": []
+    }
+  }
+  ```
 
 ### Audit Logs
-- `GET /api/v1/audit-logs` - List audit logs dengan filtering
-- `GET /api/v1/audit-logs/history/:entityType/:entityId` - Get activity history
-- `POST /api/v1/audit-logs/cleanup` - Cleanup old logs
+
+#### List Audit Logs
+- **Endpoint:** `GET /api/v1/audit-logs`
+- **Description:** Retrieves a paginated list of audit logs with filtering options.
+- **Query Parameters:** See `auditLogFilterSchema` for all available filters (e.g., `page`, `pageSize`, `entity_type`, `action`, `user_id`, date ranges).
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Audit logs retrieved successfully",
+    "data": {
+      "total": 1,
+      "page": 1,
+      "pageSize": 10,
+      "logs": [
+        {
+          "id": 1,
+          "entity_type": "asset",
+          "entity_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+          "action": "create",
+          "old_values": null,
+          "new_values": { "nama": "Laptop Pro" },
+          "user_id": "cfa3f7e0-69b6-4c48-8a8b-3e35c7e0bfe7",
+          "timestamp": "2025-12-30T10:00:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
+
+#### Get Activity History for Entity
+- **Endpoint:** `GET /api/v1/audit-logs/history/:entityType/:entityId`
+- **Description:** Retrieves the complete history of actions for a specific entity.
+- **URL Parameters:**
+  - `entityType`: (string, required) - The type of the entity (e.g., 'asset', 'category', 'location').
+  - `entityId`: (string, required) - The ID of the entity.
+- **Success Response (200):** (returns a list of audit log objects for that entity)
+
+#### 🔒 Cleanup Old Logs
+- **Endpoint:** `POST /api/v1/audit-logs/cleanup`
+- **Description:** Deletes audit logs older than a specified retention period (e.g., 90 days). Requires 'admin' role.
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "message": "Old audit logs cleaned up successfully",
+    "data": {
+      "deletedCount": 50
+    }
+  }
+  ```
 
 ## 🔍 Query Parameters
 
@@ -159,60 +808,7 @@ src/
 - `sort_by` - Field untuk sorting (default: created_at)
 - `sort_order` - Order direction (asc, desc) (default: desc)
 
-## 📝 Request/Response Examples
 
-### Create Asset
-```bash
-curl -X POST http://localhost:8080/api/v1/assets \
-  -H "Content-Type: application/json" \
-  -d '{
-    "asset_number": "IT001",
-    "name": "Laptop Dell",
-    "description": "Laptop untuk development",
-    "category_id": 1,
-    "location_id": 1,
-    "purchase_date": "2024-01-01",
-    "purchase_price": 15000000,
-    "condition": "baik",
-    "status": "aktif"
-  }'
-```
-
-### Response Success (201)
-```json
-{
-  "success": true,
-  "message": "Asset created successfully",
-  "data": {
-    "id": 1,
-    "asset_number": "IT001",
-    "name": "Laptop Dell",
-    "description": "Laptop untuk development",
-    "category_id": 1,
-    "location_id": 1,
-    "purchase_date": "2024-01-01",
-    "purchase_price": 15000000,
-    "condition": "baik",
-    "status": "aktif",
-    "created_at": "2024-07-22T10:00:00.000Z",
-    "updated_at": "2024-07-22T10:00:00.000Z"
-  }
-}
-```
-
-### Error Response (400)
-```json
-{
-  "success": false,
-  "message": "Validation error",
-  "errors": [
-    {
-      "field": "asset_number",
-      "message": "Asset number is required"
-    }
-  ]
-}
-```
 
 ## 🗃 Database Schema
 

@@ -55,7 +55,15 @@ inventory-js/
    createdb inventaris  # untuk PostgreSQL
    npm run migrate
    ```
-   
+
+   > **Penting:** Setelah migrasi, Anda perlu membuat user baru untuk bisa login.
+   > ```bash
+   > curl -X POST http://localhost:8080/api/auth/register \
+   >   -H "Content-Type: application/json" \
+   >   -d '{"username": "admin", "password": "password", "fullName": "Admin User"}'
+   > ```
+   > **Catatan:** Di lingkungan pengembangan, database akan di-reset setiap kali server dimulai ulang. Anda perlu membuat ulang user setiap kali me-restart server.
+
    > 💡 **Database Support**: Aplikasi mendukung PostgreSQL, MySQL, SQLite, dan SQL Server. 
    > Lihat [DATABASE_SETUP.md](DATABASE_SETUP.md) untuk panduan setup database lain.
 
