@@ -156,7 +156,7 @@ const BulkTableRow: React.FC<BulkTableRowProps> = ({
       {/* Main row */}
       <tr className="table-row-hover hover:bg-blue-50/30 transition-all">
         <td className="py-3 pl-4 pr-2 w-20">
-          <div className="flex flex-col space-y-1">
+          <div className="flex flex-col items-start space-y-1 justify-start">
             {isBulkAsset ? (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}

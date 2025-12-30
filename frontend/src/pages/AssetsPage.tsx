@@ -1389,7 +1389,7 @@ export default function AssetsPage() {
                 <tr>
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                     <button 
-                      onClick={() => handleSort('kode')}
+                      onClick={() => handleSort('kode xxx')}
                       className="flex items-center hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
                     >
                       Kode
@@ -1479,7 +1479,7 @@ export default function AssetsPage() {
                     ) : (
                       <tr key={asset.id} className="table-row-hover hover:bg-blue-50/30 transition-all">
                         <td className="py-3 pl-4 pr-2 w-20">
-                          <div className="flex flex-col space-y-1">
+                          <div className="flex space-y-1 justify-start">
                             <button
                               onClick={() => openDetailPopup(asset)}
                               className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md truncate hover:bg-blue-100 transition-colors cursor-pointer text-left"
@@ -1491,7 +1491,7 @@ export default function AssetsPage() {
                         </td>
                         <td className="px-2 py-3 max-w-48">
                           <div className="flex items-center">
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0 flex-1 border">
                               <button 
                                 onClick={() => openDetailPopup(asset)}
                                 className="text-xs font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200 text-left block truncate"

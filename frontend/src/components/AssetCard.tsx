@@ -54,7 +54,8 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onDelete, onDetailClick })
   const normalizedStatus = normalizeStatus(asset.status);
   return (
     <div className="relative bg-white/90 backdrop-blur-sm rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-      <div className="p-5">        <div className="flex items-center justify-between mb-3">
+      <div className="p-5"> 
+        <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-md">{asset.kode}</span>
           <span className={`status-badge inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium bg-gradient-to-r ${statusGradients[normalizedStatus] || 'from-gray-50 to-gray-100 border-gray-200'} border shadow-sm whitespace-nowrap`}>
             {formatStatusLabel(normalizedStatus)}
